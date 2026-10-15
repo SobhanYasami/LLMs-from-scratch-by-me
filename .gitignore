@@ -1,0 +1,78 @@
+# ---------------------------------------------------------------
+# Monorepo root .gitignore
+# Subprojects: go-version/, python-version/, rust-version/
+# ---------------------------------------------------------------
+
+# ---- Go (go-version/) ----
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.prof
+/go-version/bin/
+/go-version/dist/
+/go-version/vendor/
+go.work
+go.work.sum
+
+# ---- Python (python-version/) ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+*.log
+
+# ---- Rust (rust-version/) ----
+target/
+**/*.rs.bk
+Cargo.lock.bak
+
+# ---- Model artifacts / large generated data ----
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+*.onnx
+checkpoints/
+runs/
+wandb/
+data/cache/
+
+# ---- Environment & secrets ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- Editors / IDEs ----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ---- Tooling / local state ----
+.claude/settings.local.json
+graphify-out/
