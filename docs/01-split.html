@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Step 1: Split text into tokens</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+</head><body><div class="layout">
+<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
+<h4>Start</h4>
+<a href="index.html">Overview</a>
+<h4>Tutorial</h4>
+<a class="on" href="01-split.html">1. Split text</a>
+<a href="02-vocab.html">2. Vocabulary</a>
+<a href="03-simple.html">3. Encode & decode</a>
+<a href="bpe.html">Bonus: BPE</a>
+<a href="04-sampling.html">4. Data sampling</a>
+<a href="05-embeddings.html">5. Embeddings</a>
+<h4>Reference</h4>
+<a href="reference.html">Reference</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
+<main><h1>Step 1: Split text into tokens</h1>
+
+<div class="aim"><b>Aim.</b> A model cannot read text, only numbers. Before numbering anything, cut the text into pieces called <i>tokens</i>.</div>
+<p>A token here is a word or a punctuation mark. A regular expression finds the delimiters (punctuation, <code>--</code>, whitespace), and we <em>keep</em> the delimiters so punctuation becomes its own token. Whitespace pieces are then dropped.</p>
+<pre class="out">"Hello, world!"  -&gt;  ['Hello', ',', 'world', '!']</pre>
+<div class="tip">In Python, <code>re.split</code> keeps delimiters only when the pattern is in parentheses (a capture group). Go and Rust have no such feature, so they walk the matches by hand. Same result, more visible mechanism.</div>
+<h2>Code</h2>
+<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/preprocess.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 1 - Split raw text into tokens (and join them back).
+
+A token here is a word, a punctuation mark, or a whitespace-free piece of text.
+The regex keeps the delimiters, so punctuation becomes its own token:
+
+    &quot;Hello, world!&quot;  -&gt;  [&#x27;&quot;&#x27;, &#x27;Hello&#x27;, &#x27;,&#x27;, &#x27;world&#x27;, &#x27;!&#x27;, &#x27;&quot;&#x27;]   (roughly)
+
+Note: ``re.split`` with a *capturing* group returns the separators too.
+Without the parentheses in ``SPLIT_PATTERN`` they would be dropped.
+&quot;&quot;&quot;
+
+import re
+
+# Tip: start reading here, then vocab -&gt; simple -&gt; dataset -&gt; embedding.
+# Each file uses the one before it.
+
+# Captures: , . ? _ ! &quot; ( ) &#x27; , the double dash &quot;--&quot;, and any whitespace.
+SPLIT_PATTERN = r&#x27;([,.?_!&quot;()\&#x27;]|--|\s)&#x27;
+
+# Used when decoding: removes the space that &quot; &quot;.join() put before punctuation.
+DETOKENIZE_PATTERN = r&#x27;\s+([,.?!&quot;()\&#x27;])&#x27;
+
+# Special tokens. They are not produced by splitting text; they are added on purpose.
+END_OF_TEXT = &quot;&lt;|endoftext|&gt;&quot;
+UNK_TOKEN = &quot;&lt;|unk|&gt;&quot;
+
+
+def split_text(text: str) -&gt; list[str]:
+    &quot;&quot;&quot;Return the tokens of ``text``, with whitespace-only pieces removed.
+
+    &gt;&gt;&gt; split_text(&#x27;Hello, world!&#x27;)
+    [&#x27;Hello&#x27;, &#x27;,&#x27;, &#x27;world&#x27;, &#x27;!&#x27;]
+    &quot;&quot;&quot;
+    pieces = re.split(SPLIT_PATTERN, text)
+    # re.split leaves empty strings and lone spaces behind; drop them.
+    return [piece.strip() for piece in pieces if piece.strip()]
+
+
+def detokenize(tokens: list[str]) -&gt; str:
+    &quot;&quot;&quot;Join tokens back into text, undoing the spaces added before punctuation.
+
+    &gt;&gt;&gt; detokenize([&#x27;Hello&#x27;, &#x27;,&#x27;, &#x27;world&#x27;, &#x27;!&#x27;])
+    &#x27;Hello, world!&#x27;
+
+    This is not a perfect inverse: the original spacing is lost, so
+    ``detokenize(split_text(t)) == t`` only holds for &quot;simple&quot; text.
+    &quot;&quot;&quot;
+    text = &quot; &quot;.join(tokens)
+    return re.sub(DETOKENIZE_PATTERN, r&quot;\1&quot;, text)
+</code></pre></div><div class="pane" data-lang="go"><div class="file">go-version/tokenization/preprocess.go</div><pre><code class="language-go">// Package tokenization holds the educational tokenizer building blocks.
+//
+// Files, in the order you learn them:
+//   - preprocess.go: split raw text into tokens and join them back.
+//   - vocab.go:      map each unique token to an integer ID.
+//   - simple.go:     SimpleTokenizerV1 and SimpleTokenizerV2.
+//   - dataset.go:    sliding-window (input, target) pairs for next-token prediction.
+//   - dataloader.go: batching and shuffling of those pairs.
+//   - embedding.go:  token + positional embeddings.
+//
+// Step 1 - split raw text into tokens. A token is a word or a punctuation mark.
+//
+//	&quot;Hello, world!&quot; -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;, &quot;!&quot;]
+//
+// Tip: start reading here, then vocab.go -&gt; simple.go -&gt; dataset.go -&gt;
+// dataloader.go -&gt; embedding.go. Each file uses the one before it.
+package tokenization
+
+import (
+	&quot;regexp&quot;
+	&quot;strings&quot;
+)
+
+// Special tokens. They are not produced by splitting text; they are added on purpose.
+const (
+	EndOfText = &quot;&lt;|endoftext|&gt;&quot;
+	Unknown   = &quot;&lt;|unk|&gt;&quot;
+)
+
+// Tip: the regex lists the delimiters. Keeping them (instead of dropping them)
+// is what turns punctuation into tokens of its own.
+// splitRe mirrors the Python pattern: captured delimiters are kept in the output.
+var splitRe = regexp.MustCompile(`([,.?_!&quot;()&#x27;]|--|\s)`)
+
+// punctSpaceRe removes the space that Detokenize inserts before punctuation.
+var punctSpaceRe = regexp.MustCompile(`\s+([,.?!&quot;()&#x27;])`)
+
+// splitKeep behaves like Python&#x27;s re.split with a capturing group.
+func splitKeep(re *regexp.Regexp, s string) []string {
+	var out []string
+	last := 0
+	for _, m := range re.FindAllStringIndex(s, -1) {
+		out = append(out, s[last:m[0]], s[m[0]:m[1]])
+		last = m[1]
+	}
+	return append(out, s[last:])
+}
+
+// SplitText returns the tokens of text, with whitespace-only pieces removed.
+func SplitText(text string) []string {
+	var out []string
+	for _, item := range splitKeep(splitRe, text) {
+		if t := strings.TrimSpace(item); t != &quot;&quot; {
+			out = append(out, t)
+		}
+	}
+	return out
+}
+
+// Detokenize joins tokens back into text, undoing the spaces added before
+// punctuation. Not a perfect inverse: the original spacing is lost.
+func Detokenize(tokens []string) string {
+	return punctSpaceRe.ReplaceAllString(strings.Join(tokens, &quot; &quot;), &quot;${1}&quot;)
+}
+</code></pre></div><div class="pane" data-lang="rust"><div class="file">rust-version/src/tokenization/preprocess.rs</div><pre><code class="language-rust">//! Step 1 - split raw text into tokens (and join them back).
+//!
+//! A token is a word or a punctuation mark.
+//!
+//! Tip: start reading here, then vocab -&gt; simple -&gt; dataset -&gt; dataloader -&gt;
+//! embedding. Each file uses the one before it. The pattern keeps its delimiters,
+//! so punctuation becomes its own token. Rust&#x27;s `regex` has no capturing split,
+//! so `split_text` walks the matches by hand (Go does the same).
+
+use std::sync::LazyLock;
+
+use regex::Regex;
+
+/// Special tokens. They are not produced by splitting text; they are added on purpose.
+pub const END_OF_TEXT: &amp;str = &quot;&lt;|endoftext|&gt;&quot;;
+pub const UNK_TOKEN: &amp;str = &quot;&lt;|unk|&gt;&quot;;
+
+/// Matches: , . ? _ ! &quot; ( ) &#x27; , the double dash &quot;--&quot;, and any whitespace.
+static SPLIT_RE: LazyLock&lt;Regex&gt; = LazyLock::new(|| Regex::new(r#&quot;[,.?_!&quot;()&#x27;]|--|\s&quot;#).unwrap());
+
+/// Used when decoding: removes the space that join(&quot; &quot;) put before punctuation.
+static DETOKENIZE_RE: LazyLock&lt;Regex&gt; = LazyLock::new(|| Regex::new(r#&quot;\s+([,.?!&quot;()&#x27;])&quot;#).unwrap());
+
+/// Return the tokens of `text`, with whitespace-only pieces removed.
+///
+/// ```
+/// use llm_from_scratch::tokenization::split_text;
+/// assert_eq!(split_text(&quot;Hello, world!&quot;), [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;, &quot;!&quot;]);
+/// ```
+pub fn split_text(text: &amp;str) -&gt; Vec&lt;String&gt; {
+    let mut pieces = Vec::new();
+    let mut last = 0;
+    for m in SPLIT_RE.find_iter(text) {
+        pieces.push(&amp;text[last..m.start()]);
+        pieces.push(m.as_str());
+        last = m.end();
+    }
+    pieces.push(&amp;text[last..]);
+    pieces
+        .into_iter()
+        .map(str::trim)
+        .filter(|p| !p.is_empty())
+        .map(String::from)
+        .collect()
+}
+
+/// Join tokens back into text, undoing the spaces added before punctuation.
+///
+/// Not a perfect inverse: the original spacing is lost.
+pub fn detokenize(tokens: &amp;[String]) -&gt; String {
+    DETOKENIZE_RE
+        .replace_all(&amp;tokens.join(&quot; &quot;), &quot;$1&quot;)
+        .into_owned()
+}
+</code></pre></div></div>
+<h2>Detokenize is lossy</h2>
+<p>Decoding joins tokens with spaces, then removes the space before punctuation. Original spacing is not stored, so <code>detokenize(split(text))</code> only round-trips for simple text.</p>
+<h2>Exercises</h2>
+<ol><li>Feed a sentence with <code>--</code>. One token or two?</li><li>Remove the parentheses from the Python pattern. What happens to punctuation?</li></ol>
+
+<div class="pager"><a href="index.html">&larr; Overview</a><a href="02-vocab.html">2. Vocabulary &rarr;</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="site.js"></script>
+</body></html>

@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Step 5: Token and positional embeddings</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+</head><body><div class="layout">
+<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
+<h4>Start</h4>
+<a href="index.html">Overview</a>
+<h4>Tutorial</h4>
+<a href="01-split.html">1. Split text</a>
+<a href="02-vocab.html">2. Vocabulary</a>
+<a href="03-simple.html">3. Encode & decode</a>
+<a href="bpe.html">Bonus: BPE</a>
+<a href="04-sampling.html">4. Data sampling</a>
+<a class="on" href="05-embeddings.html">5. Embeddings</a>
+<h4>Reference</h4>
+<a href="reference.html">Reference</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
+<main><h1>Step 5: Token and positional embeddings</h1>
+
+<div class="aim"><b>Aim.</b> Turn integer IDs into vectors the model can learn from, and put word order into those vectors.</div>
+<pre class="out">ids [8, 4]        --token embedding-->  [8, 4, 256]
+positions 0..3    --pos embedding--->   [4, 256]
+input embeddings = token + position  ->  [8, 4, 256]</pre>
+<ul>
+<li>An <b>embedding layer</b> is a lookup table: one trainable vector per token ID.</li>
+<li>Attention (later chapters) cannot see order by itself, so a second table gives one vector per <b>position</b>, added to the token vectors.</li>
+<li>Weights start random and are learned in training. Here they stay untrained, so you can study shapes.</li>
+</ul>
+<h2>Code</h2>
+<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/embedding.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 5 - Token and positional embeddings.
+
+A token ID is just an integer. An embedding layer is a lookup table with one
+trainable vector per ID, so every token becomes a vector the model can learn from:
+
+    ids [8, 4]  --token_embedding--&gt;  [8, 4, D]
+    positions 0..3 --pos_embedding--&gt; [4, D]  (broadcast over the batch)
+    input_embeddings = token_embeddings + pos_embeddings   -&gt; [8, 4, D]
+
+Position vectors are needed because attention (later chapters) does not know
+word order by itself. GPT-style models learn them as absolute positions.
+&quot;&quot;&quot;
+
+import torch
+from torch import nn
+
+
+class InputEmbedding(nn.Module):
+    &quot;&quot;&quot;Token embedding plus absolute positional embedding.&quot;&quot;&quot;
+
+    def __init__(self, vocab_size: int, context_length: int, output_dim: int):
+        super().__init__()
+        self.token_embedding = nn.Embedding(vocab_size, output_dim)
+        self.pos_embedding = nn.Embedding(context_length, output_dim)
+
+    def forward(self, ids: torch.Tensor) -&gt; torch.Tensor:
+        &quot;&quot;&quot;``ids`` has shape [batch, seq_len]; returns [batch, seq_len, output_dim].&quot;&quot;&quot;
+        token_embeddings = self.token_embedding(ids)
+        positions = torch.arange(ids.shape[1])
+        return token_embeddings + self.pos_embedding(positions)
+</code></pre></div><div class="pane" data-lang="go"><div class="file">go-version/tokenization/embedding.go</div><pre><code class="language-go">package tokenization
+
+import &quot;math/rand&quot;
+
+// Step 5 - token and positional embeddings.
+//
+// A token ID is just an integer. An embedding layer is a lookup table with one
+// vector per ID, so every token becomes a vector the model can learn from:
+//
+//	ids [B][T]  --token embedding--&gt;  [B][T][D]
+//	positions 0..T-1 --pos embedding-&gt; [T][D]  (added to every batch row)
+//	input embeddings = token + position  -&gt; [B][T][D]
+//
+// Why add positions? Attention (later chapters) treats its input as a bag of
+// vectors, so word order must be put into the vectors themselves.
+//
+// There is no tensor library here: tensors are nested slices, and weights are
+// random (normal, mean 0, std 1) and untrained, like torch&#x27;s nn.Embedding at init.
+
+// Embedding is a lookup table of numRows vectors of size dim.
+type Embedding struct {
+	Weight [][]float32
+}
+
+func NewEmbedding(numRows, dim int, rng *rand.Rand) *Embedding {
+	w := make([][]float32, numRows)
+	for i := range w {
+		w[i] = make([]float32, dim)
+		for j := range w[i] {
+			w[i][j] = float32(rng.NormFloat64())
+		}
+	}
+	return &amp;Embedding{Weight: w}
+}
+
+// Forward looks up one vector per ID.
+func (e *Embedding) Forward(ids []int) [][]float32 {
+	out := make([][]float32, len(ids))
+	for i, id := range ids {
+		out[i] = e.Weight[id]
+	}
+	return out
+}
+
+// InputEmbedding is a token embedding plus an absolute positional embedding.
+type InputEmbedding struct {
+	Token *Embedding
+	Pos   *Embedding
+}
+
+func NewInputEmbedding(vocabSize, contextLength, dim int, seed int64) *InputEmbedding {
+	rng := rand.New(rand.NewSource(seed))
+	return &amp;InputEmbedding{
+		Token: NewEmbedding(vocabSize, dim, rng),
+		Pos:   NewEmbedding(contextLength, dim, rng),
+	}
+}
+
+// Forward takes ids of shape [batch][seqLen] and returns [batch][seqLen][dim].
+func (m *InputEmbedding) Forward(ids [][]int) [][][]float32 {
+	out := make([][][]float32, len(ids))
+	for b, row := range ids {
+		tok := m.Token.Forward(row)
+		sum := make([][]float32, len(row))
+		for t := range row {
+			sum[t] = make([]float32, len(tok[t]))
+			for d := range sum[t] {
+				sum[t][d] = tok[t][d] + m.Pos.Weight[t][d]
+			}
+		}
+		out[b] = sum
+	}
+	return out
+}
+</code></pre></div><div class="pane" data-lang="rust"><div class="file">rust-version/src/tokenization/embedding.rs</div><pre><code class="language-rust">//! Step 5 - token and positional embeddings.
+//!
+//! A token ID is just an integer. An embedding layer is a lookup table with one
+//! vector per ID, so every token becomes a vector the model can learn from:
+//!
+//! ```text
+//! ids [B][T]  --token embedding--&gt;  [B][T][D]
+//! positions 0..T-1 --pos embedding-&gt; [T][D]  (added to every batch row)
+//! input embeddings = token + position  -&gt; [B][T][D]
+//! ```
+//!
+//! Why add positions? Attention (later chapters) treats its input as a bag of
+//! vectors, so word order must be put into the vectors themselves.
+//!
+//! No tensor library: tensors are nested `Vec`s, and weights are random
+//! (normal, mean 0, std 1) and untrained, like torch&#x27;s `nn.Embedding` at init.
+
+use super::rng::Rng;
+
+/// A lookup table of `num_rows` vectors of size `dim`.
+pub struct Embedding {
+    pub weight: Vec&lt;Vec&lt;f32&gt;&gt;,
+}
+
+impl Embedding {
+    pub fn new(num_rows: usize, dim: usize, rng: &amp;mut Rng) -&gt; Self {
+        let weight = (0..num_rows)
+            .map(|_| (0..dim).map(|_| rng.normal()).collect())
+            .collect();
+        Self { weight }
+    }
+
+    /// Look up one vector per ID.
+    pub fn forward(&amp;self, ids: &amp;[u32]) -&gt; Vec&lt;Vec&lt;f32&gt;&gt; {
+        ids.iter()
+            .map(|&amp;id| self.weight[id as usize].clone())
+            .collect()
+    }
+}
+
+/// Token embedding plus absolute positional embedding.
+pub struct InputEmbedding {
+    pub token: Embedding,
+    pub pos: Embedding,
+}
+
+impl InputEmbedding {
+    pub fn new(vocab_size: usize, context_length: usize, dim: usize, seed: u64) -&gt; Self {
+        let mut rng = Rng::new(seed);
+        let token = Embedding::new(vocab_size, dim, &amp;mut rng);
+        let pos = Embedding::new(context_length, dim, &amp;mut rng);
+        Self { token, pos }
+    }
+
+    /// `ids` has shape [batch][seq_len]; returns [batch][seq_len][dim].
+    pub fn forward(&amp;self, ids: &amp;[Vec&lt;u32&gt;]) -&gt; Vec&lt;Vec&lt;Vec&lt;f32&gt;&gt;&gt; {
+        ids.iter()
+            .map(|row| {
+                self.token
+                    .forward(row)
+                    .into_iter()
+                    .zip(&amp;self.pos.weight)
+                    .map(|(tok, pos)| tok.iter().zip(pos).map(|(a, b)| a + b).collect())
+                    .collect()
+            })
+            .collect()
+    }
+}
+</code></pre><div class="file">rust-version/src/tokenization/rng.rs</div><pre><code class="language-rust">//! Tiny seeded random generator (splitmix64), so the crate needs no `rand`.
+//!
+//! Used for shuffling batches and for random embedding weights. Same seed,
+//! same numbers, on every run.
+
+pub struct Rng(u64);
+
+impl Rng {
+    pub fn new(seed: u64) -&gt; Self {
+        Self(seed)
+    }
+
+    fn next_u64(&amp;mut self) -&gt; u64 {
+        self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
+        let mut z = self.0;
+        z = (z ^ (z &gt;&gt; 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+        z = (z ^ (z &gt;&gt; 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+        z ^ (z &gt;&gt; 31)
+    }
+
+    /// Uniform in [0, 1).
+    pub fn next_f64(&amp;mut self) -&gt; f64 {
+        (self.next_u64() &gt;&gt; 11) as f64 / (1u64 &lt;&lt; 53) as f64
+    }
+
+    /// Uniform integer in [0, n).
+    pub fn below(&amp;mut self, n: usize) -&gt; usize {
+        (self.next_u64() % n as u64) as usize
+    }
+
+    /// Normal(0, 1) via the Box-Muller transform.
+    pub fn normal(&amp;mut self) -&gt; f32 {
+        let u1 = 1.0 - self.next_f64(); // avoid ln(0)
+        let u2 = self.next_f64();
+        ((-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()) as f32
+    }
+
+    /// Fisher-Yates shuffle.
+    pub fn shuffle&lt;T&gt;(&amp;mut self, items: &amp;mut [T]) {
+        for i in (1..items.len()).rev() {
+            items.swap(i, self.below(i + 1));
+        }
+    }
+}
+</code></pre></div></div>
+<h2>Sample output</h2>
+<pre class="out">token ids shape:      (8, 4)
+token embeddings:     (8, 4, 256)
+position embeddings:  (4, 256)  &lt;- one vector per position, shared by all rows
+input embeddings:     (8, 4, 256)  &lt;- token + position</pre>
+<div class="tip">Python uses <code>torch.nn.Embedding</code>. Go and Rust use nested slices and a small seeded random generator (<code>rng.rs</code> in Rust), so there are no heavy dependencies. Values differ across languages; shapes do not.</div>
+<h2>Where next?</h2>
+<p>These input embeddings are exactly what chapter 3 (attention) consumes.</p>
+
+<div class="pager"><a href="04-sampling.html">&larr; 4. Data sampling</a><a href="reference.html">Reference &rarr;</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="site.js"></script>
+</body></html>

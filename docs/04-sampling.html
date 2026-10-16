@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Step 4: Sliding-window data sampling</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+</head><body><div class="layout">
+<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
+<h4>Start</h4>
+<a href="index.html">Overview</a>
+<h4>Tutorial</h4>
+<a href="01-split.html">1. Split text</a>
+<a href="02-vocab.html">2. Vocabulary</a>
+<a href="03-simple.html">3. Encode & decode</a>
+<a href="bpe.html">Bonus: BPE</a>
+<a class="on" href="04-sampling.html">4. Data sampling</a>
+<a href="05-embeddings.html">5. Embeddings</a>
+<h4>Reference</h4>
+<a href="reference.html">Reference</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
+<main><h1>Step 4: Sliding-window data sampling</h1>
+
+<div class="aim"><b>Aim.</b> Turn one long list of token IDs into training examples for <i>next-token prediction</i>.</div>
+<p>Each example is a window of IDs (the <b>input</b>) and the same window shifted by one (the <b>target</b>). Every position in a window is a free question: "given these tokens, what comes next?"</p>
+<pre class="out">ids    = [10, 11, 12, 13, 14, 15]
+input  = [10, 11, 12, 13]
+target = [11, 12, 13, 14]</pre>
+<p><b>stride</b> is how far the window moves. <code>stride &lt; max_length</code>: windows overlap (more samples). <code>stride == max_length</code>: no overlap.</p>
+<p>A <b>DataLoader</b> groups windows into batches. The GPU handles many at once; shuffling smooths training; dropping a short last batch keeps sizes equal.</p>
+<h2>Code</h2>
+<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/dataset.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 4 - Sliding-window data sampling for next-token prediction.
+
+Given a long list of token IDs, cut it into overlapping windows:
+
+    ids     = [10, 11, 12, 13, 14, 15]
+    window 0: input [10, 11, 12, 13]  target [11, 12, 13, 14]
+    window 1: input [12, 13, 14, 15]  target [13, 14, 15, 16]   (if it fits)
+
+Why shifted by one? The model&#x27;s job is: given the tokens so far, guess the
+next one, so every position in a window is a free training example.
+The target is the input shifted by one position. ``stride`` is how far the
+window moves each step; ``stride == max_length`` means no overlap.
+&quot;&quot;&quot;
+
+import torch
+from torch.utils.data import DataLoader, Dataset
+
+
+class GPTDatasetV1(Dataset):
+    &quot;&quot;&quot;Holds every (input, target) window of one tokenized text.&quot;&quot;&quot;
+
+    def __init__(self, txt, tokenizer, max_length, stride):
+        self.input_ids = []
+        self.target_ids = []
+        token_ids = tokenizer.encode(txt)
+        # Stop at len - max_length: the target reaches one token past the input.
+        for i in range(0, len(token_ids) - max_length, stride):
+            input_chunk = token_ids[i : i + max_length]
+            target_chunk = token_ids[i + 1 : i + max_length + 1]
+            self.input_ids.append(torch.tensor(input_chunk))
+            self.target_ids.append(torch.tensor(target_chunk))
+
+    def __len__(self):
+        return len(self.input_ids)
+
+    def __getitem__(self, idx):
+        return self.input_ids[idx], self.target_ids[idx]
+
+
+def create_dataloader_v1(txt, tokenizer, batch_size=4, max_length=256, stride=128, shuffle=True, drop_last=True):
+    &quot;&quot;&quot;Wrap ``GPTDatasetV1`` in a batching ``DataLoader``.
+
+    Why batch? The GPU processes many windows at once. Why shuffle? Random order
+    smooths training. Why ``drop_last``? A short final batch can upset training.
+    &quot;&quot;&quot;
+    dataset = GPTDatasetV1(txt, tokenizer, max_length, stride)
+    return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last)
+</code></pre></div><div class="pane" data-lang="go"><div class="file">go-version/tokenization/dataset.go</div><pre><code class="language-go">package tokenization
+
+// Step 4 - sliding-window data sampling for next-token prediction.
+//
+//	ids      = [10 11 12 13 14 15]
+//	window 0: input [10 11 12 13]  target [11 12 13 14]
+//
+// Why shifted by one? The model&#x27;s job is: given the tokens so far, guess the
+// next one. Every position in a window is a free training example.
+//
+// The target is the input shifted by one position. Stride is how far the window
+// moves each step; stride == maxLength means no overlap.
+
+// GPTDataset holds every (input, target) window of one tokenized text.
+type GPTDataset struct {
+	inputIDs  [][]int
+	targetIDs [][]int
+}
+
+// NewGPTDataset cuts tokenIDs into windows, like Python&#x27;s GPTDatasetV1.
+func NewGPTDataset(tokenIDs []int, maxLength, stride int) *GPTDataset {
+	d := &amp;GPTDataset{}
+	// Stop at len-maxLength: the target reaches one token past the input.
+	for i := 0; i &lt; len(tokenIDs)-maxLength; i += stride {
+		d.inputIDs = append(d.inputIDs, tokenIDs[i:i+maxLength])
+		d.targetIDs = append(d.targetIDs, tokenIDs[i+1:i+maxLength+1])
+	}
+	return d
+}
+
+func (d *GPTDataset) Len() int { return len(d.inputIDs) }
+
+// Get returns the input and target of window idx.
+func (d *GPTDataset) Get(idx int) (input, target []int) {
+	return d.inputIDs[idx], d.targetIDs[idx]
+}
+
+// Batches groups consecutive windows, dropping a final short batch.
+func (d *GPTDataset) Batches(batchSize int) (inputs, targets [][][]int) {
+	for i := 0; i+batchSize &lt;= d.Len(); i += batchSize {
+		inputs = append(inputs, d.inputIDs[i:i+batchSize])
+		targets = append(targets, d.targetIDs[i:i+batchSize])
+	}
+	return inputs, targets
+}
+</code></pre><div class="file">go-version/tokenization/dataloader.go</div><pre><code class="language-go">package tokenization
+
+import &quot;math/rand&quot;
+
+// Step 4b - batching. Mirrors torch&#x27;s DataLoader.
+//
+// Why batch? The GPU processes many windows at once, which is much faster.
+// Why shuffle? Windows in book order make training swing; random order smooths it.
+// Why drop the last short batch? A different size can upset training.
+
+// Batch is one group of windows: inputs[b] and targets[b] are one (input, target) pair.
+type Batch struct {
+	Inputs  [][]int
+	Targets [][]int
+}
+
+// DataLoader serves a GPTDataset in batches.
+type DataLoader struct {
+	ds        *GPTDataset
+	batchSize int
+	shuffle   bool
+	dropLast  bool
+	rng       *rand.Rand
+}
+
+// NewDataLoader seeds the shuffle so runs are repeatable.
+func NewDataLoader(ds *GPTDataset, batchSize int, shuffle, dropLast bool, seed int64) *DataLoader {
+	return &amp;DataLoader{ds, batchSize, shuffle, dropLast, rand.New(rand.NewSource(seed))}
+}
+
+// Epoch returns every batch once. With shuffle, each call uses a new order.
+func (l *DataLoader) Epoch() []Batch {
+	order := make([]int, l.ds.Len())
+	for i := range order {
+		order[i] = i
+	}
+	if l.shuffle {
+		l.rng.Shuffle(len(order), func(i, j int) { order[i], order[j] = order[j], order[i] })
+	}
+	var batches []Batch
+	for i := 0; i &lt; len(order); i += l.batchSize {
+		end := min(i+l.batchSize, len(order))
+		if end-i &lt; l.batchSize &amp;&amp; l.dropLast {
+			break
+		}
+		var b Batch
+		for _, idx := range order[i:end] {
+			in, tg := l.ds.Get(idx)
+			b.Inputs = append(b.Inputs, in)
+			b.Targets = append(b.Targets, tg)
+		}
+		batches = append(batches, b)
+	}
+	return batches
+}
+</code></pre></div><div class="pane" data-lang="rust"><div class="file">rust-version/src/tokenization/dataset.rs</div><pre><code class="language-rust">//! Step 4 - sliding-window data sampling for next-token prediction.
+//!
+//! ```text
+//! ids      = [10 11 12 13 14 15]
+//! window 0: input [10 11 12 13]  target [11 12 13 14]
+//! ```
+//!
+//! Why shifted by one? The model&#x27;s job is: given the tokens so far, guess the
+//! next one. Every position in a window is a free training example.
+//!
+//! The target is the input shifted by one position. `stride` is how far the
+//! window moves each step; `stride == max_length` means no overlap.
+
+/// Holds every (input, target) window of one tokenized text.
+pub struct GptDataset {
+    input_ids: Vec&lt;Vec&lt;u32&gt;&gt;,
+    target_ids: Vec&lt;Vec&lt;u32&gt;&gt;,
+}
+
+impl GptDataset {
+    /// Cut `token_ids` into windows, like Python&#x27;s `GPTDatasetV1`.
+    pub fn new(token_ids: &amp;[u32], max_length: usize, stride: usize) -&gt; Self {
+        let mut input_ids = Vec::new();
+        let mut target_ids = Vec::new();
+        // Stop at len - max_length: the target reaches one token past the input.
+        for i in (0..token_ids.len().saturating_sub(max_length)).step_by(stride) {
+            input_ids.push(token_ids[i..i + max_length].to_vec());
+            target_ids.push(token_ids[i + 1..i + max_length + 1].to_vec());
+        }
+        Self {
+            input_ids,
+            target_ids,
+        }
+    }
+
+    pub fn len(&amp;self) -&gt; usize {
+        self.input_ids.len()
+    }
+
+    pub fn is_empty(&amp;self) -&gt; bool {
+        self.input_ids.is_empty()
+    }
+
+    /// The input and target of window `idx`.
+    pub fn get(&amp;self, idx: usize) -&gt; (&amp;[u32], &amp;[u32]) {
+        (&amp;self.input_ids[idx], &amp;self.target_ids[idx])
+    }
+
+    /// Group consecutive windows, dropping a final short batch.
+    pub fn batches(&amp;self, batch_size: usize) -&gt; impl Iterator&lt;Item = (&amp;[Vec&lt;u32&gt;], &amp;[Vec&lt;u32&gt;])&gt; {
+        self.input_ids
+            .chunks_exact(batch_size)
+            .zip(self.target_ids.chunks_exact(batch_size))
+    }
+}
+</code></pre><div class="file">rust-version/src/tokenization/dataloader.rs</div><pre><code class="language-rust">//! Step 4b - batching. Mirrors torch&#x27;s `DataLoader`.
+//!
+//! Why batch? The GPU processes many windows at once, which is much faster.
+//! Why shuffle? Windows in book order make training swing; random order smooths it.
+//! Why drop the last short batch? A different size can upset training.
+
+use super::dataset::GptDataset;
+use super::rng::Rng;
+
+/// One group of windows: `inputs[b]` and `targets[b]` are one (input, target) pair.
+pub struct Batch {
+    pub inputs: Vec&lt;Vec&lt;u32&gt;&gt;,
+    pub targets: Vec&lt;Vec&lt;u32&gt;&gt;,
+}
+
+/// Serves a `GptDataset` in batches.
+pub struct DataLoader&lt;&#x27;a&gt; {
+    dataset: &amp;&#x27;a GptDataset,
+    batch_size: usize,
+    shuffle: bool,
+    drop_last: bool,
+    rng: Rng,
+}
+
+impl&lt;&#x27;a&gt; DataLoader&lt;&#x27;a&gt; {
+    /// `seed` makes the shuffle repeatable.
+    pub fn new(
+        dataset: &amp;&#x27;a GptDataset,
+        batch_size: usize,
+        shuffle: bool,
+        drop_last: bool,
+        seed: u64,
+    ) -&gt; Self {
+        Self {
+            dataset,
+            batch_size,
+            shuffle,
+            drop_last,
+            rng: Rng::new(seed),
+        }
+    }
+
+    /// Every batch once. With shuffle, each call uses a new order.
+    pub fn epoch(&amp;mut self) -&gt; Vec&lt;Batch&gt; {
+        let mut order: Vec&lt;usize&gt; = (0..self.dataset.len()).collect();
+        if self.shuffle {
+            self.rng.shuffle(&amp;mut order);
+        }
+        order
+            .chunks(self.batch_size)
+            .filter(|c| !(self.drop_last &amp;&amp; c.len() &lt; self.batch_size))
+            .map(|chunk| {
+                let (inputs, targets) = chunk
+                    .iter()
+                    .map(|&amp;i| {
+                        let (x, y) = self.dataset.get(i);
+                        (x.to_vec(), y.to_vec())
+                    })
+                    .unzip();
+                Batch { inputs, targets }
+            })
+            .collect()
+    }
+}
+</code></pre></div></div>
+<h2>Sample output</h2>
+<pre class="out">x: [290, 4920, 2241, 287]
+y:      [4920, 2241, 287, 257]
+ and ----&gt;  established
+ and established ----&gt;  himself
+windows: 1286
+inputs shape: (8, 4)</pre>
+<div class="tip">The loop stops at <code>len - max_length</code> because the target reaches one token past the input.</div>
+<h2>Exercise</h2>
+<p>Set <code>stride=1</code>. How many windows now? Compare with <code>stride=4</code>.</p>
+
+<div class="pager"><a href="bpe.html">&larr; Bonus: BPE</a><a href="05-embeddings.html">5. Embeddings &rarr;</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="site.js"></script>
+</body></html>

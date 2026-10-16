@@ -21,3 +21,13 @@ Every version has a README, a demo runner, and a `tokenization` module with one 
 5. `embedding`: token + positional embeddings
 
 New chapters (embeddings, attention, ...) get a new sibling module in each language, in the same order as the book. `python-version/README.md` holds the concept walkthrough; the others note language differences only.
+
+## Docs site
+
+Tutorial and reference live in `docs/` (GitHub Pages). Code on the site is read from the source files, so regenerate after changing code:
+
+```bash
+python3 docs/build.py
+```
+
+To publish: GitHub repo -> Settings -> Pages -> Source: "Deploy from a branch", branch `main`, folder `/docs`.

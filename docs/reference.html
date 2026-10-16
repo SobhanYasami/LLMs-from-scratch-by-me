@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reference: one table, three languages</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+</head><body><div class="layout">
+<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
+<h4>Start</h4>
+<a href="index.html">Overview</a>
+<h4>Tutorial</h4>
+<a href="01-split.html">1. Split text</a>
+<a href="02-vocab.html">2. Vocabulary</a>
+<a href="03-simple.html">3. Encode & decode</a>
+<a href="bpe.html">Bonus: BPE</a>
+<a href="04-sampling.html">4. Data sampling</a>
+<a href="05-embeddings.html">5. Embeddings</a>
+<h4>Reference</h4>
+<a class="on" href="reference.html">Reference</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
+<main><h1>Reference: one table, three languages</h1>
+
+<p class="lede">Every public piece, side by side. Names follow each language's convention.</p>
+<table>
+<tr><th>Step</th><th>Python</th><th>Go</th><th>Rust</th></tr>
+<tr><td>1 split</td><td><code>split_text</code></td><td><code>SplitText</code></td><td><code>split_text</code></td></tr>
+<tr><td>1 join</td><td><code>detokenize</code></td><td><code>Detokenize</code></td><td><code>detokenize</code></td></tr>
+<tr><td>2 vocab</td><td><code>build_vocab(tokens)</code></td><td><code>BuildVocab(tokens)</code></td><td><code>build_vocab(&amp;tokens)</code></td></tr>
+<tr><td>3 tokenizers</td><td><code>SimpleTokenizerV1/V2</code></td><td><code>NewSimpleTokenizerV1/V2</code></td><td><code>SimpleTokenizerV1/V2::new</code></td></tr>
+<tr><td>3 encode / decode</td><td>raises <code>KeyError</code></td><td>returns <code>error</code></td><td>returns <code>Result</code></td></tr>
+<tr><td>4 windows</td><td><code>GPTDatasetV1</code></td><td><code>NewGPTDataset</code></td><td><code>GptDataset::new</code></td></tr>
+<tr><td>4 batches</td><td><code>create_dataloader_v1</code></td><td><code>NewDataLoader(...).Epoch()</code></td><td><code>DataLoader::new(...).epoch()</code></td></tr>
+<tr><td>5 embeddings</td><td><code>InputEmbedding</code> (torch)</td><td><code>NewInputEmbedding</code></td><td><code>InputEmbedding::new</code></td></tr>
+<tr><td>special tokens</td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>EndOfText</code>, <code>Unknown</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td></tr>
+</table>
+<h2>Layout, identical in each language</h2>
+<pre class="out">&lt;lang&gt;/
+  README.md
+  main                 demo runner
+  tokenization/
+    preprocess         step 1
+    vocab              step 2
+    simple             step 3
+    dataset            step 4 (+ dataloader)
+    embedding          step 5</pre>
+<h2>Adding the next chapter</h2>
+<p>Add a sibling module in each language (for example <code>attention</code>), in the book's order, with the same names and a demo in each <code>main</code>. Then add a page to <code>PAGES</code> in <code>docs/build.py</code> and run <code>python3 docs/build.py</code>.</p>
+<h2>Language differences</h2>
+<table>
+<tr><th>Topic</th><th>Python</th><th>Go</th><th>Rust</th></tr>
+<tr><td>Capturing split</td><td><code>re.split</code></td><td>manual</td><td>manual</td></tr>
+<tr><td>V2 reuses V1</td><td>subclass</td><td>embed struct</td><td>wrap</td></tr>
+<tr><td>Tensors</td><td>torch</td><td>nested slices</td><td>nested <code>Vec</code></td></tr>
+<tr><td>GPT-2 BPE</td><td><code>tiktoken</code></td><td><code>tiktoken-go</code> + offline loader</td><td><code>tiktoken-rs</code></td></tr>
+<tr><td>Random weights</td><td><code>torch</code></td><td><code>math/rand</code></td><td>built-in splitmix64</td></tr>
+</table>
+
+<div class="pager"><a href="05-embeddings.html">&larr; 5. Embeddings</a><span></span></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="site.js"></script>
+</body></html>

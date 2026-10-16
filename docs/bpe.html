@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bonus: Byte pair encoding</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+</head><body><div class="layout">
+<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
+<h4>Start</h4>
+<a href="index.html">Overview</a>
+<h4>Tutorial</h4>
+<a href="01-split.html">1. Split text</a>
+<a href="02-vocab.html">2. Vocabulary</a>
+<a href="03-simple.html">3. Encode & decode</a>
+<a class="on" href="bpe.html">Bonus: BPE</a>
+<a href="04-sampling.html">4. Data sampling</a>
+<a href="05-embeddings.html">5. Embeddings</a>
+<h4>Reference</h4>
+<a href="reference.html">Reference</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
+<main><h1>Bonus: Byte pair encoding</h1>
+
+<div class="aim"><b>Aim.</b> Replace the word-level tokenizer with the one real GPT models use: sub-word pieces, so no <code>&lt;|unk|&gt;</code> is ever needed.</div>
+<p>We do not implement BPE training here. We call <b>tiktoken</b> (OpenAI) with the GPT-2 vocabulary, about 50,257 tokens. An unknown word is broken into smaller known pieces, down to single bytes if needed.</p>
+<pre class="out">[15496, 11, 466, 345, 588, 8887, 30, 220, 50256, 554, 262, 4252, 18250, 8812, 2114, 286, 262, 20562, 13]
+Hello, do you like tea? &lt;|endoftext|&gt; In the sunlit terraces of the palace.</pre>
+<div class="tip">tiktoken refuses special-token text by default, to prevent injection. Python passes <code>allowed_special</code> to opt in. Go and Rust use <code>r50k_base</code>, the same vocabulary as GPT-2 under its tiktoken name.</div>
+<h2>Demo runners (BPE demo is <code>demo_bpe</code> / <code>demoBPE</code> / <code>demo_bpe</code>)</h2>
+<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button></div><div class="pane" data-lang="python"><div class="file">python-version/main.py</div><pre><code class="language-python">&quot;&quot;&quot;Demo runner for the educational tokenizers and data sampling.
+
+Run from anywhere:
+
+    python-version/.venv/bin/python python-version/main.py
+
+Pipeline:
+    raw text -&gt; split_text -&gt; build_vocab -&gt; SimpleTokenizerV1/V2 -&gt; tiktoken (GPT-2 BPE)
+    -&gt; sliding-window dataset
+
+Tip: read ``main()`` first, then jump into ``tokenization/`` following each demo.
+See python-version/README.md for a walkthrough of each step.
+&quot;&quot;&quot;
+
+from pathlib import Path
+
+import tiktoken
+import torch
+
+from tokenization import (
+    END_OF_TEXT,
+    GPTDatasetV1,
+    InputEmbedding,
+    SimpleTokenizerV1,
+    SimpleTokenizerV2,
+    build_vocab,
+    create_dataloader_v1,
+    split_text,
+)
+
+# Resolved from this file, so the script works no matter the current directory.
+DATA_PATH = Path(__file__).resolve().parent.parent / &quot;assets&quot; / &quot;the-verdict.txt&quot;
+
+V1_TEXT = &#x27;&quot;It\&#x27;s the last he painted, you know,&quot; Mrs. Gisburn said with pardonable pride.&#x27;
+V2_TEXT = f&quot;Hello, do you like tea? {END_OF_TEXT} In the sunlit terraces of the palace.&quot;
+
+
+def load_text() -&gt; str:
+    return DATA_PATH.read_text(encoding=&quot;utf-8&quot;)
+
+
+def load_vocab() -&gt; dict[str, int]:
+    &quot;&quot;&quot;Read the corpus, tokenize it, and build the vocabulary.&quot;&quot;&quot;
+    return build_vocab(split_text(load_text()))
+
+
+def show_vocab_tail(vocab: dict[str, int], count: int = 5) -&gt; None:
+    &quot;&quot;&quot;Print the last ``count`` vocabulary entries (the highest IDs).&quot;&quot;&quot;
+    for item in list(vocab.items())[-count:]:
+        print(item)
+
+
+def demo_v1(vocab: dict[str, int]) -&gt; None:
+    &quot;&quot;&quot;V1 works only on words it has seen in the corpus.&quot;&quot;&quot;
+    tokenizer = SimpleTokenizerV1(vocab)
+    print(&quot;version 1 tokenizer :&quot;)
+    ids = tokenizer.encode(V1_TEXT)
+    print(ids)
+    print(tokenizer.decode(ids))
+    print(&quot;-------------------------&quot;)
+
+
+def demo_v2(vocab: dict[str, int]) -&gt; None:
+    &quot;&quot;&quot;V2 maps unknown words to &lt;|unk|&gt; and handles the &lt;|endoftext|&gt; separator.&quot;&quot;&quot;
+    tokenizer = SimpleTokenizerV2(vocab)
+    print(&quot;version 2 tokenizer :&quot;)
+    ids = tokenizer.encode(V2_TEXT)
+    print(ids)
+    print(tokenizer.decode(ids))
+    print(&quot;---------------------&quot;)
+
+
+def demo_bpe() -&gt; None:
+    &quot;&quot;&quot;Byte pair encoding with OpenAI&#x27;s tiktoken (GPT-2 vocabulary, ~50k tokens).
+
+    Unlike the simple tokenizers above, BPE learns sub-word pieces, so it never
+    needs an &lt;|unk|&gt; token: any string can be broken into known pieces.
+    &quot;&quot;&quot;
+    tokenizer = tiktoken.get_encoding(&quot;gpt2&quot;)
+    print(&quot;bpe tokenizer :&quot;)
+    ids = tokenizer.encode(V2_TEXT, allowed_special={END_OF_TEXT})
+    print(ids)
+    print(tokenizer.decode(ids))
+    print(&quot;---------------------&quot;)
+
+
+def demo_sampling() -&gt; None:
+    &quot;&quot;&quot;Next-word prediction pairs: the target is the input shifted by one.&quot;&quot;&quot;
+    tokenizer = tiktoken.get_encoding(&quot;gpt2&quot;)
+    # Drop the first 50 tokens: gives a slightly more interesting passage.
+    enc_sample = tokenizer.encode(load_text())[50:]
+
+    context_size = 4
+    x = enc_sample[:context_size]
+    y = enc_sample[1 : context_size + 1]
+    print(&quot;data sampling :&quot;)
+    print(f&quot;x: {x}&quot;)
+    print(f&quot;y:      {y}&quot;)
+
+    for i in range(1, context_size + 1):
+        context = enc_sample[:i]
+        desired = enc_sample[i]
+        print(tokenizer.decode(context), &quot;----&gt;&quot;, tokenizer.decode([desired]))
+
+    # The same idea, packaged: every window of the whole text, in batches.
+    dataset = GPTDatasetV1(load_text(), tokenizer, max_length=4, stride=4)
+    print(f&quot;windows: {len(dataset)}, first pair: {dataset[0]}&quot;)
+    loader = create_dataloader_v1(load_text(), tokenizer, batch_size=8, max_length=4, stride=4, shuffle=False)
+    inputs, targets = next(iter(loader))
+    print(&quot;inputs:\n&quot;, inputs)
+    print(&quot;targets:\n&quot;, targets)
+    print(&quot;---------------------&quot;)
+
+
+def demo_dataloader() -&gt; None:
+    &quot;&quot;&quot;Batches of windows. stride &lt; max_length overlaps windows; stride == max_length does not.&quot;&quot;&quot;
+    tokenizer = tiktoken.get_encoding(&quot;gpt2&quot;)
+    text = load_text()
+    print(&quot;data loader :&quot;)
+    loader = create_dataloader_v1(text, tokenizer, batch_size=1, max_length=4, stride=1, shuffle=False)
+    it = iter(loader)
+    print(next(it))  # first window
+    print(next(it))  # second window: shifted by one token
+    loader = create_dataloader_v1(text, tokenizer, batch_size=8, max_length=4, stride=4, shuffle=False)
+    inputs, targets = next(iter(loader))
+    print(&quot;inputs shape:&quot;, tuple(inputs.shape))
+    print(&quot;---------------------&quot;)
+
+
+def demo_embeddings() -&gt; None:
+    &quot;&quot;&quot;Token IDs -&gt; vectors, then add position vectors.&quot;&quot;&quot;
+    torch.manual_seed(123)  # embedding weights start random; fix them for repeatable output
+    tokenizer = tiktoken.get_encoding(&quot;gpt2&quot;)
+    max_length, output_dim = 4, 256
+    loader = create_dataloader_v1(
+        load_text(), tokenizer, batch_size=8, max_length=max_length, stride=max_length, shuffle=False
+    )
+    inputs, _ = next(iter(loader))
+
+    embedding = InputEmbedding(tokenizer.n_vocab, max_length, output_dim)
+    token_embeddings = embedding.token_embedding(inputs)
+    pos_embeddings = embedding.pos_embedding(torch.arange(max_length))
+    input_embeddings = embedding(inputs)
+    print(&quot;embeddings :&quot;)
+    # Shapes are the thing to notice: [batch, tokens] grows a new axis of size D.
+    print(&quot;token ids shape:     &quot;, tuple(inputs.shape))
+    print(&quot;token embeddings:    &quot;, tuple(token_embeddings.shape))
+    print(&quot;position embeddings: &quot;, tuple(pos_embeddings.shape), &quot; &lt;- one vector per position, shared by all rows&quot;)
+    print(&quot;input embeddings:    &quot;, tuple(input_embeddings.shape), &quot; &lt;- token + position&quot;)
+    print(&quot;---------------------&quot;)
+
+
+def main() -&gt; None:
+    vocab = load_vocab()
+    show_vocab_tail(vocab)
+    demo_v1(vocab)
+    demo_v2(vocab)
+    demo_bpe()
+    demo_sampling()
+    demo_dataloader()
+    demo_embeddings()
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre></div><div class="pane" data-lang="go"><div class="file">go-version/cmd/main.go</div><pre><code class="language-go">// Demo runner for the educational tokenizers and data sampling.
+//
+// Run from go-version/:
+//
+//	go run ./cmd
+//
+// Tip: read main() first, then jump into tokenization/ following each demo.
+//
+// Pipeline mirrors python-version/main.py:
+//
+//	raw text -&gt; SplitText -&gt; BuildVocab -&gt; SimpleTokenizerV1/V2 -&gt; tiktoken (GPT-2 BPE)
+//	-&gt; sliding-window dataset
+package main
+
+import (
+	&quot;fmt&quot;
+	&quot;os&quot;
+	&quot;sort&quot;
+	&quot;strings&quot;
+
+	&quot;github.com/pkoukk/tiktoken-go&quot;
+	tiktoken_loader &quot;github.com/pkoukk/tiktoken-go-loader&quot;
+
+	&quot;llm-from-scratch/tokenization&quot;
+)
+
+// Run from go-version/, like python-version/main.py resolves paths from its own dir.
+const dataPath = &quot;../assets/the-verdict.txt&quot;
+
+const v1Text = `&quot;It&#x27;s the last he painted, you know,&quot; Mrs. Gisburn said with pardonable pride.`
+
+var v2Text = &quot;Hello, do you like tea? &quot; + tokenization.EndOfText + &quot; In the sunlit terraces of the palace.&quot;
+
+func check(err error) {
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func formatIDs(ids []int) string {
+	parts := make([]string, len(ids))
+	for i, id := range ids {
+		parts[i] = fmt.Sprint(id)
+	}
+	return &quot;[&quot; + strings.Join(parts, &quot;, &quot;) + &quot;]&quot;
+}
+
+func loadText() string {
+	raw, err := os.ReadFile(dataPath)
+	check(err)
+	return string(raw)
+}
+
+func loadVocab() map[string]int {
+	return tokenization.BuildVocab(tokenization.SplitText(loadText()))
+}
+
+// showVocabTail prints the last count vocab entries (the highest IDs).
+func showVocabTail(vocab map[string]int, count int) {
+	type entry struct {
+		token string
+		id    int
+	}
+	entries := make([]entry, 0, len(vocab))
+	for t, id := range vocab {
+		entries = append(entries, entry{t, id})
+	}
+	sort.Slice(entries, func(i, j int) bool { return entries[i].id &lt; entries[j].id })
+	for _, e := range entries[len(entries)-count:] {
+		fmt.Printf(&quot;(&#x27;%s&#x27;, %d)\n&quot;, e.token, e.id)
+	}
+}
+
+// demoV1: V1 works only on words it has seen in the corpus.
+func demoV1(vocab map[string]int) {
+	t := tokenization.NewSimpleTokenizerV1(vocab)
+	fmt.Println(&quot;version 1 tokenizer :&quot;)
+	ids, err := t.Encode(v1Text)
+	check(err)
+	fmt.Println(formatIDs(ids))
+	decoded, err := t.Decode(ids)
+	check(err)
+	fmt.Println(decoded)
+	fmt.Println(&quot;-------------------------&quot;)
+}
+
+// demoV2: V2 maps unknown words to &lt;|unk|&gt; and handles &lt;|endoftext|&gt;.
+func demoV2(vocab map[string]int) {
+	t := tokenization.NewSimpleTokenizerV2(vocab)
+	fmt.Println(&quot;version 2 tokenizer :&quot;)
+	ids, err := t.Encode(v2Text)
+	check(err)
+	fmt.Println(formatIDs(ids))
+	decoded, err := t.Decode(ids)
+	check(err)
+	fmt.Println(decoded)
+	fmt.Println(&quot;---------------------&quot;)
+}
+
+func newBPE() *tiktoken.Tiktoken {
+	// Offline loader: embeds the BPE files instead of downloading them.
+	tiktoken.SetBpeLoader(tiktoken_loader.NewOfflineLoader())
+	enc, err := tiktoken.GetEncoding(&quot;r50k_base&quot;) // same vocab as GPT-2
+	check(err)
+	return enc
+}
+
+// demoBPE: byte pair encoding, GPT-2 vocabulary (~50k tokens). No &lt;|unk|&gt; needed.
+func demoBPE() {
+	enc := newBPE()
+	fmt.Println(&quot;bpe tokenizer :&quot;)
+	ids := enc.Encode(v2Text, []string{tokenization.EndOfText}, nil)
+	fmt.Println(formatIDs(ids))
+	fmt.Println(enc.Decode(ids))
+	fmt.Println(&quot;---------------------&quot;)
+}
+
+// demoSampling: next-word prediction pairs, target is the input shifted by one.
+func demoSampling() {
+	enc := newBPE()
+	text := loadText()
+	// Drop the first 50 tokens: gives a slightly more interesting passage.
+	sample := enc.Encode(text, nil, nil)[50:]
+
+	const contextSize = 4
+	fmt.Println(&quot;data sampling :&quot;)
+	fmt.Println(&quot;x:&quot;, formatIDs(sample[:contextSize]))
+	fmt.Println(&quot;y:     &quot;, formatIDs(sample[1:contextSize+1]))
+	for i := 1; i &lt;= contextSize; i++ {
+		fmt.Println(enc.Decode(sample[:i]), &quot;----&gt;&quot;, enc.Decode([]int{sample[i]}))
+	}
+
+	// The same idea, packaged: every window of the whole text, in batches.
+	ds := tokenization.NewGPTDataset(enc.Encode(text, nil, nil), 4, 4)
+	in, tg := ds.Get(0)
+	fmt.Println(&quot;windows:&quot;, ds.Len(), &quot;first pair:&quot;, formatIDs(in), formatIDs(tg))
+	inputs, targets := ds.Batches(8)
+	fmt.Println(&quot;first batch inputs:&quot;)
+	for _, row := range inputs[0] {
+		fmt.Println(&quot; &quot;, formatIDs(row))
+	}
+	fmt.Println(&quot;first batch targets:&quot;)
+	for _, row := range targets[0] {
+		fmt.Println(&quot; &quot;, formatIDs(row))
+	}
+	fmt.Println(&quot;---------------------&quot;)
+}
+
+// demoDataLoader: batches of windows. stride &lt; maxLength overlaps windows.
+func demoDataLoader() {
+	enc := newBPE()
+	ids := enc.Encode(loadText(), nil, nil)
+	fmt.Println(&quot;data loader :&quot;)
+	b := tokenization.NewDataLoader(tokenization.NewGPTDataset(ids, 4, 1), 1, false, true, 123).Epoch()
+	fmt.Println(formatIDs(b[0].Inputs[0]), formatIDs(b[0].Targets[0])) // first window
+	fmt.Println(formatIDs(b[1].Inputs[0]), formatIDs(b[1].Targets[0])) // second: shifted by one
+	batches := tokenization.NewDataLoader(tokenization.NewGPTDataset(ids, 4, 4), 8, false, true, 123).Epoch()
+	fmt.Printf(&quot;inputs shape: (%d, %d)\n&quot;, len(batches[0].Inputs), len(batches[0].Inputs[0]))
+	fmt.Println(&quot;---------------------&quot;)
+}
+
+// demoEmbeddings: token IDs -&gt; vectors, then add position vectors.
+func demoEmbeddings() {
+	enc := newBPE()
+	const maxLength, outputDim = 4, 256
+	ds := tokenization.NewGPTDataset(enc.Encode(loadText(), nil, nil), maxLength, maxLength)
+	inputs := tokenization.NewDataLoader(ds, 8, false, true, 123).Epoch()[0].Inputs
+
+	emb := tokenization.NewInputEmbedding(50257, maxLength, outputDim, 123)
+	tokenEmb := make([][][]float32, len(inputs))
+	for i, row := range inputs {
+		tokenEmb[i] = emb.Token.Forward(row)
+	}
+	input := emb.Forward(inputs)
+	fmt.Println(&quot;embeddings :&quot;)
+	// Shapes are the thing to notice: [batch, tokens] grows a new axis of size D.
+	fmt.Printf(&quot;token ids shape:      (%d, %d)\n&quot;, len(inputs), len(inputs[0]))
+	fmt.Printf(&quot;token embeddings:     (%d, %d, %d)\n&quot;, len(tokenEmb), len(tokenEmb[0]), len(tokenEmb[0][0]))
+	fmt.Printf(&quot;position embeddings:  (%d, %d)  &lt;- one vector per position, shared by all rows\n&quot;, len(emb.Pos.Weight), len(emb.Pos.Weight[0]))
+	fmt.Printf(&quot;input embeddings:     (%d, %d, %d)  &lt;- token + position\n&quot;, len(input), len(input[0]), len(input[0][0]))
+	fmt.Println(&quot;---------------------&quot;)
+}
+
+func main() {
+	vocab := loadVocab()
+	showVocabTail(vocab, 5)
+	demoV1(vocab)
+	demoV2(vocab)
+	demoBPE()
+	demoSampling()
+	demoDataLoader()
+	demoEmbeddings()
+}
+</code></pre></div><div class="pane" data-lang="rust"><div class="file">rust-version/src/main.rs</div><pre><code class="language-rust">//! Demo runner for the educational tokenizers and data sampling.
+//!
+//! Run from anywhere: `cargo run --manifest-path rust-version/Cargo.toml`
+//!
+//! Tip: read `main()` first, then jump into `tokenization/` following each demo.
+//!
+//! Pipeline mirrors python-version/main.py:
+//!   raw text -&gt; split_text -&gt; build_vocab -&gt; SimpleTokenizerV1/V2 -&gt; tiktoken (GPT-2 BPE)
+//!   -&gt; sliding-window dataset
+
+use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
+
+use llm_from_scratch::tokenization::{
+    DataLoader, END_OF_TEXT, GptDataset, InputEmbedding, SimpleTokenizerV1, SimpleTokenizerV2,
+    build_vocab, split_text,
+};
+use tiktoken_rs::CoreBPE;
+
+const V1_TEXT: &amp;str =
+    r#&quot;&quot;It&#x27;s the last he painted, you know,&quot; Mrs. Gisburn said with pardonable pride.&quot;#;
+
+fn v2_text() -&gt; String {
+    format!(&quot;Hello, do you like tea? {END_OF_TEXT} In the sunlit terraces of the palace.&quot;)
+}
+
+/// Resolved from the crate dir at compile time, so the cwd does not matter.
+fn load_text() -&gt; String {
+    let path = Path::new(env!(&quot;CARGO_MANIFEST_DIR&quot;)).join(&quot;../assets/the-verdict.txt&quot;);
+    fs::read_to_string(path).expect(&quot;read the-verdict.txt&quot;)
+}
+
+fn load_vocab() -&gt; HashMap&lt;String, usize&gt; {
+    build_vocab(&amp;split_text(&amp;load_text()))
+}
+
+/// Print the last `count` vocabulary entries (the highest IDs).
+fn show_vocab_tail(vocab: &amp;HashMap&lt;String, usize&gt;, count: usize) {
+    let mut entries: Vec&lt;_&gt; = vocab.iter().collect();
+    entries.sort_by_key(|(_, id)| **id);
+    for (token, id) in &amp;entries[entries.len() - count..] {
+        println!(&quot;(&#x27;{token}&#x27;, {id})&quot;);
+    }
+}
+
+/// V1 works only on words it has seen in the corpus.
+fn demo_v1(vocab: &amp;HashMap&lt;String, usize&gt;) {
+    let tokenizer = SimpleTokenizerV1::new(vocab.clone());
+    println!(&quot;version 1 tokenizer :&quot;);
+    let ids = tokenizer.encode(V1_TEXT).unwrap();
+    println!(&quot;{ids:?}&quot;);
+    println!(&quot;{}&quot;, tokenizer.decode(&amp;ids).unwrap());
+    println!(&quot;-------------------------&quot;);
+}
+
+/// V2 maps unknown words to &lt;|unk|&gt; and handles the &lt;|endoftext|&gt; separator.
+fn demo_v2(vocab: &amp;HashMap&lt;String, usize&gt;) {
+    let tokenizer = SimpleTokenizerV2::new(vocab.clone());
+    println!(&quot;version 2 tokenizer :&quot;);
+    let ids = tokenizer.encode(&amp;v2_text()).unwrap();
+    println!(&quot;{ids:?}&quot;);
+    println!(&quot;{}&quot;, tokenizer.decode(&amp;ids).unwrap());
+    println!(&quot;---------------------&quot;);
+}
+
+/// GPT-2 vocabulary (~50k tokens); tiktoken calls it r50k_base.
+fn bpe() -&gt; CoreBPE {
+    tiktoken_rs::r50k_base().expect(&quot;load r50k_base&quot;)
+}
+
+/// Byte pair encoding: sub-word pieces, so no &lt;|unk|&gt; is ever needed.
+fn demo_bpe() {
+    let tokenizer = bpe();
+    println!(&quot;bpe tokenizer :&quot;);
+    let ids = tokenizer.encode_with_special_tokens(&amp;v2_text());
+    println!(&quot;{ids:?}&quot;);
+    println!(&quot;{}&quot;, tokenizer.decode(&amp;ids).unwrap());
+    println!(&quot;---------------------&quot;);
+}
+
+/// Next-word prediction pairs: the target is the input shifted by one.
+fn demo_sampling() {
+    let tokenizer = bpe();
+    let text = load_text();
+    let all_ids = tokenizer.encode_ordinary(&amp;text);
+    // Drop the first 50 tokens: gives a slightly more interesting passage.
+    let sample = &amp;all_ids[50..];
+
+    let context_size = 4;
+    println!(&quot;data sampling :&quot;);
+    println!(&quot;x: {:?}&quot;, &amp;sample[..context_size]);
+    println!(&quot;y:      {:?}&quot;, &amp;sample[1..=context_size]);
+    for i in 1..=context_size {
+        let context = tokenizer.decode(&amp;sample[..i]).unwrap();
+        let desired = tokenizer.decode(&amp;sample[i..=i]).unwrap();
+        println!(&quot;{context} ----&gt; {desired}&quot;);
+    }
+
+    // The same idea, packaged: every window of the whole text, in batches.
+    let dataset = GptDataset::new(&amp;all_ids, 4, 4);
+    println!(
+        &quot;windows: {}, first pair: {:?}&quot;,
+        dataset.len(),
+        dataset.get(0)
+    );
+    let (inputs, targets) = dataset.batches(8).next().unwrap();
+    println!(&quot;first batch inputs:&quot;);
+    for row in inputs {
+        println!(&quot;  {row:?}&quot;);
+    }
+    println!(&quot;first batch targets:&quot;);
+    for row in targets {
+        println!(&quot;  {row:?}&quot;);
+    }
+    println!(&quot;---------------------&quot;);
+}
+
+/// Batches of windows. stride &lt; max_length overlaps windows.
+fn demo_dataloader() {
+    let ids = bpe().encode_ordinary(&amp;load_text());
+    println!(&quot;data loader :&quot;);
+    let overlapping = GptDataset::new(&amp;ids, 4, 1);
+    let b = DataLoader::new(&amp;overlapping, 1, false, true, 123).epoch();
+    println!(&quot;{:?} {:?}&quot;, b[0].inputs[0], b[0].targets[0]); // first window
+    println!(&quot;{:?} {:?}&quot;, b[1].inputs[0], b[1].targets[0]); // second: shifted by one
+    let dataset = GptDataset::new(&amp;ids, 4, 4);
+    let batches = DataLoader::new(&amp;dataset, 8, false, true, 123).epoch();
+    println!(
+        &quot;inputs shape: ({}, {})&quot;,
+        batches[0].inputs.len(),
+        batches[0].inputs[0].len()
+    );
+    println!(&quot;---------------------&quot;);
+}
+
+/// Token IDs -&gt; vectors, then add position vectors.
+fn demo_embeddings() {
+    let tokenizer = bpe();
+    let (max_length, output_dim) = (4, 256);
+    let ids = tokenizer.encode_ordinary(&amp;load_text());
+    let dataset = GptDataset::new(&amp;ids, max_length, max_length);
+    let inputs = DataLoader::new(&amp;dataset, 8, false, true, 123)
+        .epoch()
+        .remove(0)
+        .inputs;
+
+    let emb = InputEmbedding::new(50257, max_length, output_dim, 123);
+    let token_embeddings: Vec&lt;_&gt; = inputs.iter().map(|row| emb.token.forward(row)).collect();
+    let input_embeddings = emb.forward(&amp;inputs);
+    println!(&quot;embeddings :&quot;);
+    // Shapes are the thing to notice: [batch, tokens] grows a new axis of size D.
+    println!(
+        &quot;token ids shape:      ({}, {})&quot;,
+        inputs.len(),
+        inputs[0].len()
+    );
+    println!(
+        &quot;token embeddings:     ({}, {}, {})&quot;,
+        token_embeddings.len(),
+        token_embeddings[0].len(),
+        token_embeddings[0][0].len()
+    );
+    println!(
+        &quot;position embeddings:  ({}, {})  &lt;- one vector per position, shared by all rows&quot;,
+        emb.pos.weight.len(),
+        emb.pos.weight[0].len()
+    );
+    println!(
+        &quot;input embeddings:     ({}, {}, {})&quot;,
+        input_embeddings.len(),
+        input_embeddings[0].len(),
+        input_embeddings[0][0].len()
+    );
+    println!(&quot;---------------------&quot;);
+}
+
+fn main() {
+    let vocab = load_vocab();
+    show_vocab_tail(&amp;vocab, 5);
+    demo_v1(&amp;vocab);
+    demo_v2(&amp;vocab);
+    demo_bpe();
+    demo_sampling();
+    demo_dataloader();
+    demo_embeddings();
+}
+</code></pre></div></div>
+<h2>Exercise</h2>
+<p>Encode a made-up word like <code>Zorblax</code>. How many tokens?</p>
+
+<div class="pager"><a href="03-simple.html">&larr; 3. Encode & decode</a><a href="04-sampling.html">4. Data sampling &rarr;</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="site.js"></script>
+</body></html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Build an LLM from scratch</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+</head><body><div class="layout">
+<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
+<h4>Start</h4>
+<a class="on" href="index.html">Overview</a>
+<h4>Tutorial</h4>
+<a href="01-split.html">1. Split text</a>
+<a href="02-vocab.html">2. Vocabulary</a>
+<a href="03-simple.html">3. Encode & decode</a>
+<a href="bpe.html">Bonus: BPE</a>
+<a href="04-sampling.html">4. Data sampling</a>
+<a href="05-embeddings.html">5. Embeddings</a>
+<h4>Reference</h4>
+<a href="reference.html">Reference</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
+<main><h1>Build an LLM from scratch</h1>
+
+<p class="lede">A learning repo and living reference. One idea per step, written three times: Python, Go and Rust, with the same layout and the same output.</p>
+<div class="aim"><b>Aim.</b> Understand how text becomes the numbers a GPT-style model trains on, by reading small programs instead of a framework. Follows <i>Build a Large Language Model (From Scratch)</i> by Sebastian Raschka, chapter 2.</div>
+<h2>The pipeline</h2>
+<pre class="out">raw text
+  -&gt; split into tokens        (step 1)
+  -&gt; token -&gt; ID             (step 2)
+  -&gt; encode / decode          (step 3)
+  -&gt; windows of (input, target)  (step 4)
+  -&gt; vectors + positions      (step 5)   &lt;- what the model finally reads</pre>
+<h2>How to read this site</h2>
+<ul>
+<li>Go through the steps in order. Each uses the one before it.</li>
+<li>Every code block has Python / Go / Rust tabs. Your choice is remembered.</li>
+<li>Each step has an <b>Aim</b>, the <b>code</b>, <b>sample output</b>, and <b>exercises</b>.</li>
+<li>The <a href="reference.html">Reference</a> page is a lookup table of every function in all three languages.</li>
+</ul>
+<h2>Run it</h2>
+<table><tr><th>Language</th><th>Command</th></tr>
+<tr><td>Python</td><td><code>python-version/.venv/bin/python python-version/main.py</code></td></tr>
+<tr><td>Go</td><td><code>cd go-version &amp;&amp; go run ./cmd</code></td></tr>
+<tr><td>Rust</td><td><code>cd rust-version &amp;&amp; cargo run</code></td></tr></table>
+<p>All three print the same token IDs. Embedding numbers differ (each language draws its own random weights) but shapes match.</p>
+
+<div class="pager"><span></span><a href="01-split.html">1. Split text &rarr;</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="site.js"></script>
+</body></html>
