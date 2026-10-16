@@ -1,4 +1,13 @@
 //! Step 2 - build a vocabulary: a mapping from each token to a unique integer ID.
+//!
+//! ```text
+//! {"!": 0, "\"": 1, ..., "<|endoftext|>": 1159, "<|unk|>": 1160}
+//! ```
+//!
+//! Models only understand numbers, so this table is the bridge between text and IDs.
+//!
+//! Tip: a `HashMap` has random iteration order. Collecting into a sorted
+//! `BTreeSet` before numbering is what makes IDs the same on every run.
 
 use std::collections::{BTreeSet, HashMap};
 

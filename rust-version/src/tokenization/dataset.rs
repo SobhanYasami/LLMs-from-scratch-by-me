@@ -5,6 +5,9 @@
 //! window 0: input [10 11 12 13]  target [11 12 13 14]
 //! ```
 //!
+//! Why shifted by one? The model's job is: given the tokens so far, guess the
+//! next one. Every position in a window is a free training example.
+//!
 //! The target is the input shifted by one position. `stride` is how far the
 //! window moves each step; `stride == max_length` means no overlap.
 
@@ -19,11 +22,15 @@ impl GptDataset {
     pub fn new(token_ids: &[u32], max_length: usize, stride: usize) -> Self {
         let mut input_ids = Vec::new();
         let mut target_ids = Vec::new();
+        // Stop at len - max_length: the target reaches one token past the input.
         for i in (0..token_ids.len().saturating_sub(max_length)).step_by(stride) {
             input_ids.push(token_ids[i..i + max_length].to_vec());
             target_ids.push(token_ids[i + 1..i + max_length + 1].to_vec());
         }
-        Self { input_ids, target_ids }
+        Self {
+            input_ids,
+            target_ids,
+        }
     }
 
     pub fn len(&self) -> usize {

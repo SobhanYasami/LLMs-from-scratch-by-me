@@ -1,6 +1,9 @@
 //! Step 1 - split raw text into tokens (and join them back).
 //!
-//! A token is a word or a punctuation mark. The pattern keeps its delimiters,
+//! A token is a word or a punctuation mark.
+//!
+//! Tip: start reading here, then vocab -> simple -> dataset -> dataloader ->
+//! embedding. Each file uses the one before it. The pattern keeps its delimiters,
 //! so punctuation becomes its own token. Rust's `regex` has no capturing split,
 //! so `split_text` walks the matches by hand (Go does the same).
 
@@ -45,5 +48,7 @@ pub fn split_text(text: &str) -> Vec<String> {
 ///
 /// Not a perfect inverse: the original spacing is lost.
 pub fn detokenize(tokens: &[String]) -> String {
-    DETOKENIZE_RE.replace_all(&tokens.join(" "), "$1").into_owned()
+    DETOKENIZE_RE
+        .replace_all(&tokens.join(" "), "$1")
+        .into_owned()
 }

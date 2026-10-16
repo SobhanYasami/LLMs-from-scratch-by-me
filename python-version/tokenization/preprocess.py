@@ -11,6 +11,9 @@ Without the parentheses in ``SPLIT_PATTERN`` they would be dropped.
 
 import re
 
+# Tip: start reading here, then vocab -> simple -> dataset -> embedding.
+# Each file uses the one before it.
+
 # Captures: , . ? _ ! " ( ) ' , the double dash "--", and any whitespace.
 SPLIT_PATTERN = r'([,.?_!"()\']|--|\s)'
 

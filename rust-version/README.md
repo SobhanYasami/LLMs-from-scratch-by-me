@@ -16,7 +16,10 @@ rust-version/
         ├── preprocess.rs    # step 1: split_text, detokenize
         ├── vocab.rs         # step 2: build_vocab
         ├── simple.rs        # step 3: SimpleTokenizerV1 and V2
-        └── dataset.rs       # step 4: GptDataset (sliding window)
+        ├── dataset.rs       # step 4: GptDataset (sliding window)
+        ├── dataloader.rs    # step 4: DataLoader (batch, shuffle, drop last)
+        ├── embedding.rs     # step 5: Embedding, InputEmbedding
+        └── rng.rs           # seeded splitmix64 RNG (no `rand` dependency)
 ```
 
 ## Running it
@@ -34,4 +37,5 @@ cargo test        # runs the split_text doctest
 - Errors are `Result<_, String>` instead of exceptions.
 - V2 wraps V1 (composition) instead of subclassing.
 - BPE uses `tiktoken-rs`; `r50k_base` is the GPT-2 vocabulary.
+- Embedding weights come from a small built-in seeded RNG, so numbers differ from torch; shapes match. Tensors are nested `Vec`s.
 - No tensors: the dataset holds `Vec<u32>` windows and `batches` replaces the DataLoader.

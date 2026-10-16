@@ -2,15 +2,18 @@ package tokenization
 
 import "fmt"
 
-// Step 3 - simple tokenizers that combine splitting with the vocabulary.
+// Step 3 - simple tokenizers: split text, then look each token up in the vocab.
 //
-// Both types expose Encode (text -> IDs) and Decode (IDs -> text).
-// V1 fails on tokens outside its vocabulary; V2 replaces them with <|unk|>.
+//	encode: "Hello, world" -> ["Hello", ",", "world"] -> [1131, 5, 987]
+//	decode: [1131, 5, 987] -> ["Hello", ",", "world"] -> "Hello, world"
+//
+// Tip: compare the two types. V1 fails on a word it never saw; V2 swaps it for
+// <|unk|> and keeps going. That one difference is why real models use BPE.
 
 // SimpleTokenizerV1 maps known tokens to IDs and fails on unknown tokens.
 type SimpleTokenizerV1 struct {
-	strToInt map[string]int
-	intToStr map[int]string
+	strToInt map[string]int // token -> ID, used by Encode
+	intToStr map[int]string // ID -> token, used by Decode (the vocab, inverted)
 }
 
 func NewSimpleTokenizerV1(vocab map[string]int) *SimpleTokenizerV1 {
@@ -21,32 +24,39 @@ func NewSimpleTokenizerV1(vocab map[string]int) *SimpleTokenizerV1 {
 	return &SimpleTokenizerV1{strToInt: vocab, intToStr: intToStr}
 }
 
-func (t *SimpleTokenizerV1) Encode(text string) ([]int, error) {
-	tokens := SplitText(text)
-	ids := make([]int, 0, len(tokens))
-	for _, s := range tokens {
-		id, ok := t.strToInt[s]
+// encode is shared by V1 and V2. The only difference is what happens to a
+// token that is not in the vocab: error (V1) or <|unk|> (V2).
+func (t *SimpleTokenizerV1) encode(text string, unknownToUnk bool) ([]int, error) {
+	var ids []int
+	for _, token := range SplitText(text) {
+		id, ok := t.strToInt[token]
+		if !ok && unknownToUnk {
+			id, ok = t.strToInt[Unknown]
+		}
 		if !ok {
-			return nil, fmt.Errorf("token not in vocab: %q", s)
+			return nil, fmt.Errorf("token not in vocab: %q", token)
 		}
 		ids = append(ids, id)
 	}
 	return ids, nil
 }
 
+func (t *SimpleTokenizerV1) Encode(text string) ([]int, error) { return t.encode(text, false) }
+
 func (t *SimpleTokenizerV1) Decode(ids []int) (string, error) {
-	parts := make([]string, 0, len(ids))
-	for _, i := range ids {
-		s, ok := t.intToStr[i]
+	tokens := make([]string, 0, len(ids))
+	for _, id := range ids {
+		token, ok := t.intToStr[id]
 		if !ok {
-			return "", fmt.Errorf("id not in vocab: %d", i)
+			return "", fmt.Errorf("id not in vocab: %d", id)
 		}
-		parts = append(parts, s)
+		tokens = append(tokens, token)
 	}
-	return Detokenize(parts), nil
+	return Detokenize(tokens), nil
 }
 
-// SimpleTokenizerV2 replaces unknown tokens with <|unk|> before encoding.
+// SimpleTokenizerV2 is V1, except unknown tokens become <|unk|>.
+// It embeds V1, so Decode is inherited unchanged.
 type SimpleTokenizerV2 struct {
 	SimpleTokenizerV1
 }
@@ -55,18 +65,4 @@ func NewSimpleTokenizerV2(vocab map[string]int) *SimpleTokenizerV2 {
 	return &SimpleTokenizerV2{SimpleTokenizerV1: *NewSimpleTokenizerV1(vocab)}
 }
 
-func (t *SimpleTokenizerV2) Encode(text string) ([]int, error) {
-	tokens := SplitText(text)
-	ids := make([]int, 0, len(tokens))
-	for _, s := range tokens {
-		if _, ok := t.strToInt[s]; !ok {
-			s = Unknown
-		}
-		id, ok := t.strToInt[s]
-		if !ok {
-			return nil, fmt.Errorf("token not in vocab: %q", s)
-		}
-		ids = append(ids, id)
-	}
-	return ids, nil
-}
+func (t *SimpleTokenizerV2) Encode(text string) ([]int, error) { return t.encode(text, true) }

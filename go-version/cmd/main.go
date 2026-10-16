@@ -4,6 +4,8 @@
 //
 //	go run ./cmd
 //
+// Tip: read main() first, then jump into tokenization/ following each demo.
+//
 // Pipeline mirrors python-version/main.py:
 //
 //	raw text -> SplitText -> BuildVocab -> SimpleTokenizerV1/V2 -> tiktoken (GPT-2 BPE)
@@ -145,6 +147,41 @@ func demoSampling() {
 	fmt.Println("---------------------")
 }
 
+// demoDataLoader: batches of windows. stride < maxLength overlaps windows.
+func demoDataLoader() {
+	enc := newBPE()
+	ids := enc.Encode(loadText(), nil, nil)
+	fmt.Println("data loader :")
+	b := tokenization.NewDataLoader(tokenization.NewGPTDataset(ids, 4, 1), 1, false, true, 123).Epoch()
+	fmt.Println(formatIDs(b[0].Inputs[0]), formatIDs(b[0].Targets[0])) // first window
+	fmt.Println(formatIDs(b[1].Inputs[0]), formatIDs(b[1].Targets[0])) // second: shifted by one
+	batches := tokenization.NewDataLoader(tokenization.NewGPTDataset(ids, 4, 4), 8, false, true, 123).Epoch()
+	fmt.Printf("inputs shape: (%d, %d)\n", len(batches[0].Inputs), len(batches[0].Inputs[0]))
+	fmt.Println("---------------------")
+}
+
+// demoEmbeddings: token IDs -> vectors, then add position vectors.
+func demoEmbeddings() {
+	enc := newBPE()
+	const maxLength, outputDim = 4, 256
+	ds := tokenization.NewGPTDataset(enc.Encode(loadText(), nil, nil), maxLength, maxLength)
+	inputs := tokenization.NewDataLoader(ds, 8, false, true, 123).Epoch()[0].Inputs
+
+	emb := tokenization.NewInputEmbedding(50257, maxLength, outputDim, 123)
+	tokenEmb := make([][][]float32, len(inputs))
+	for i, row := range inputs {
+		tokenEmb[i] = emb.Token.Forward(row)
+	}
+	input := emb.Forward(inputs)
+	fmt.Println("embeddings :")
+	// Shapes are the thing to notice: [batch, tokens] grows a new axis of size D.
+	fmt.Printf("token ids shape:      (%d, %d)\n", len(inputs), len(inputs[0]))
+	fmt.Printf("token embeddings:     (%d, %d, %d)\n", len(tokenEmb), len(tokenEmb[0]), len(tokenEmb[0][0]))
+	fmt.Printf("position embeddings:  (%d, %d)  <- one vector per position, shared by all rows\n", len(emb.Pos.Weight), len(emb.Pos.Weight[0]))
+	fmt.Printf("input embeddings:     (%d, %d, %d)  <- token + position\n", len(input), len(input[0]), len(input[0][0]))
+	fmt.Println("---------------------")
+}
+
 func main() {
 	vocab := loadVocab()
 	showVocabTail(vocab, 5)
@@ -152,4 +189,6 @@ func main() {
 	demoV2(vocab)
 	demoBPE()
 	demoSampling()
+	demoDataLoader()
+	demoEmbeddings()
 }

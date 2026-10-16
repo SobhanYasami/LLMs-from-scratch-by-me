@@ -76,3 +76,5 @@ Thumbs.db
 # ---- Tooling / local state ----
 .claude/settings.local.json
 graphify-out/
+
+Build-a-LLM.pdf

@@ -2,6 +2,8 @@
 //!
 //! Run from anywhere: `cargo run --manifest-path rust-version/Cargo.toml`
 //!
+//! Tip: read `main()` first, then jump into `tokenization/` following each demo.
+//!
 //! Pipeline mirrors python-version/main.py:
 //!   raw text -> split_text -> build_vocab -> SimpleTokenizerV1/V2 -> tiktoken (GPT-2 BPE)
 //!   -> sliding-window dataset
@@ -11,11 +13,13 @@ use std::fs;
 use std::path::Path;
 
 use llm_from_scratch::tokenization::{
-    END_OF_TEXT, GptDataset, SimpleTokenizerV1, SimpleTokenizerV2, build_vocab, split_text,
+    DataLoader, END_OF_TEXT, GptDataset, InputEmbedding, SimpleTokenizerV1, SimpleTokenizerV2,
+    build_vocab, split_text,
 };
 use tiktoken_rs::CoreBPE;
 
-const V1_TEXT: &str = r#""It's the last he painted, you know," Mrs. Gisburn said with pardonable pride."#;
+const V1_TEXT: &str =
+    r#""It's the last he painted, you know," Mrs. Gisburn said with pardonable pride."#;
 
 fn v2_text() -> String {
     format!("Hello, do you like tea? {END_OF_TEXT} In the sunlit terraces of the palace.")
@@ -95,7 +99,11 @@ fn demo_sampling() {
 
     // The same idea, packaged: every window of the whole text, in batches.
     let dataset = GptDataset::new(&all_ids, 4, 4);
-    println!("windows: {}, first pair: {:?}", dataset.len(), dataset.get(0));
+    println!(
+        "windows: {}, first pair: {:?}",
+        dataset.len(),
+        dataset.get(0)
+    );
     let (inputs, targets) = dataset.batches(8).next().unwrap();
     println!("first batch inputs:");
     for row in inputs {
@@ -108,6 +116,65 @@ fn demo_sampling() {
     println!("---------------------");
 }
 
+/// Batches of windows. stride < max_length overlaps windows.
+fn demo_dataloader() {
+    let ids = bpe().encode_ordinary(&load_text());
+    println!("data loader :");
+    let overlapping = GptDataset::new(&ids, 4, 1);
+    let b = DataLoader::new(&overlapping, 1, false, true, 123).epoch();
+    println!("{:?} {:?}", b[0].inputs[0], b[0].targets[0]); // first window
+    println!("{:?} {:?}", b[1].inputs[0], b[1].targets[0]); // second: shifted by one
+    let dataset = GptDataset::new(&ids, 4, 4);
+    let batches = DataLoader::new(&dataset, 8, false, true, 123).epoch();
+    println!(
+        "inputs shape: ({}, {})",
+        batches[0].inputs.len(),
+        batches[0].inputs[0].len()
+    );
+    println!("---------------------");
+}
+
+/// Token IDs -> vectors, then add position vectors.
+fn demo_embeddings() {
+    let tokenizer = bpe();
+    let (max_length, output_dim) = (4, 256);
+    let ids = tokenizer.encode_ordinary(&load_text());
+    let dataset = GptDataset::new(&ids, max_length, max_length);
+    let inputs = DataLoader::new(&dataset, 8, false, true, 123)
+        .epoch()
+        .remove(0)
+        .inputs;
+
+    let emb = InputEmbedding::new(50257, max_length, output_dim, 123);
+    let token_embeddings: Vec<_> = inputs.iter().map(|row| emb.token.forward(row)).collect();
+    let input_embeddings = emb.forward(&inputs);
+    println!("embeddings :");
+    // Shapes are the thing to notice: [batch, tokens] grows a new axis of size D.
+    println!(
+        "token ids shape:      ({}, {})",
+        inputs.len(),
+        inputs[0].len()
+    );
+    println!(
+        "token embeddings:     ({}, {}, {})",
+        token_embeddings.len(),
+        token_embeddings[0].len(),
+        token_embeddings[0][0].len()
+    );
+    println!(
+        "position embeddings:  ({}, {})  <- one vector per position, shared by all rows",
+        emb.pos.weight.len(),
+        emb.pos.weight[0].len()
+    );
+    println!(
+        "input embeddings:     ({}, {}, {})",
+        input_embeddings.len(),
+        input_embeddings[0].len(),
+        input_embeddings[0][0].len()
+    );
+    println!("---------------------");
+}
+
 fn main() {
     let vocab = load_vocab();
     show_vocab_tail(&vocab, 5);
@@ -115,4 +182,6 @@ fn main() {
     demo_v2(&vocab);
     demo_bpe();
     demo_sampling();
+    demo_dataloader();
+    demo_embeddings();
 }

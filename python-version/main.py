@@ -8,16 +8,19 @@ Pipeline:
     raw text -> split_text -> build_vocab -> SimpleTokenizerV1/V2 -> tiktoken (GPT-2 BPE)
     -> sliding-window dataset
 
+Tip: read ``main()`` first, then jump into ``tokenization/`` following each demo.
 See python-version/README.md for a walkthrough of each step.
 """
 
 from pathlib import Path
 
 import tiktoken
+import torch
 
 from tokenization import (
     END_OF_TEXT,
     GPTDatasetV1,
+    InputEmbedding,
     SimpleTokenizerV1,
     SimpleTokenizerV2,
     build_vocab,
@@ -109,6 +112,44 @@ def demo_sampling() -> None:
     print("---------------------")
 
 
+def demo_dataloader() -> None:
+    """Batches of windows. stride < max_length overlaps windows; stride == max_length does not."""
+    tokenizer = tiktoken.get_encoding("gpt2")
+    text = load_text()
+    print("data loader :")
+    loader = create_dataloader_v1(text, tokenizer, batch_size=1, max_length=4, stride=1, shuffle=False)
+    it = iter(loader)
+    print(next(it))  # first window
+    print(next(it))  # second window: shifted by one token
+    loader = create_dataloader_v1(text, tokenizer, batch_size=8, max_length=4, stride=4, shuffle=False)
+    inputs, targets = next(iter(loader))
+    print("inputs shape:", tuple(inputs.shape))
+    print("---------------------")
+
+
+def demo_embeddings() -> None:
+    """Token IDs -> vectors, then add position vectors."""
+    torch.manual_seed(123)  # embedding weights start random; fix them for repeatable output
+    tokenizer = tiktoken.get_encoding("gpt2")
+    max_length, output_dim = 4, 256
+    loader = create_dataloader_v1(
+        load_text(), tokenizer, batch_size=8, max_length=max_length, stride=max_length, shuffle=False
+    )
+    inputs, _ = next(iter(loader))
+
+    embedding = InputEmbedding(tokenizer.n_vocab, max_length, output_dim)
+    token_embeddings = embedding.token_embedding(inputs)
+    pos_embeddings = embedding.pos_embedding(torch.arange(max_length))
+    input_embeddings = embedding(inputs)
+    print("embeddings :")
+    # Shapes are the thing to notice: [batch, tokens] grows a new axis of size D.
+    print("token ids shape:     ", tuple(inputs.shape))
+    print("token embeddings:    ", tuple(token_embeddings.shape))
+    print("position embeddings: ", tuple(pos_embeddings.shape), " <- one vector per position, shared by all rows")
+    print("input embeddings:    ", tuple(input_embeddings.shape), " <- token + position")
+    print("---------------------")
+
+
 def main() -> None:
     vocab = load_vocab()
     show_vocab_tail(vocab)
@@ -116,6 +157,8 @@ def main() -> None:
     demo_v2(vocab)
     demo_bpe()
     demo_sampling()
+    demo_dataloader()
+    demo_embeddings()
 
 
 if __name__ == "__main__":

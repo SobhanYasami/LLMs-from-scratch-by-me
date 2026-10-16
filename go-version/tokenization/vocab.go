@@ -3,6 +3,13 @@ package tokenization
 import "sort"
 
 // Step 2 - build a vocabulary: a mapping from each token to a unique integer ID.
+//
+//	{"!": 0, "\"": 1, ..., "<|endoftext|>": 1159, "<|unk|>": 1160}
+//
+// Models only understand numbers, so this table is the bridge between text and IDs.
+//
+// Tip: a Go map has random iteration order. Sorting before numbering is what
+// makes the IDs the same on every run.
 
 // SpecialTokens are appended after the regular tokens so word IDs stay stable.
 var SpecialTokens = []string{EndOfText, Unknown}

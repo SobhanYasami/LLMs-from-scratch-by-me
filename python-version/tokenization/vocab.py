@@ -4,6 +4,9 @@
 
 Computers work with numbers, so every token must get an ID before a model
 can use it. The vocabulary is the lookup table between the two worlds.
+
+Tip: a Python ``set`` has no fixed order. Sorting before numbering is what makes
+the IDs the same on every run.
 """
 
 from .preprocess import END_OF_TEXT, UNK_TOKEN

@@ -12,7 +12,9 @@ go-version/
     ├── preprocess.go        # step 1: SplitText, Detokenize
     ├── vocab.go             # step 2: BuildVocab
     ├── simple.go            # step 3: SimpleTokenizerV1 and V2
-    └── dataset.go           # step 4: GPTDataset (sliding window)
+    ├── dataset.go           # step 4: GPTDataset (sliding window)
+    ├── dataloader.go        # step 4: DataLoader (batch, shuffle, drop last)
+    └── embedding.go         # step 5: Embedding, InputEmbedding
 ```
 
 ## Running it
@@ -29,4 +31,5 @@ go run ./cmd
 - Python raises `KeyError`; Go `Encode`/`Decode` return `error`.
 - V2 embeds V1 (struct embedding) instead of subclassing.
 - BPE uses `tiktoken-go` with the offline loader. Go has no `gpt2` name; `r50k_base` is the same vocabulary.
+- Embedding weights are random normal from `math/rand`, so numbers differ from torch; shapes match. Tensors are nested slices.
 - No tensors: the dataset holds `[]int` slices and `Batches` replaces the DataLoader.

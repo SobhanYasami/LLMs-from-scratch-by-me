@@ -6,6 +6,8 @@ Given a long list of token IDs, cut it into overlapping windows:
     window 0: input [10, 11, 12, 13]  target [11, 12, 13, 14]
     window 1: input [12, 13, 14, 15]  target [13, 14, 15, 16]   (if it fits)
 
+Why shifted by one? The model's job is: given the tokens so far, guess the
+next one, so every position in a window is a free training example.
 The target is the input shifted by one position. ``stride`` is how far the
 window moves each step; ``stride == max_length`` means no overlap.
 """
@@ -21,6 +23,7 @@ class GPTDatasetV1(Dataset):
         self.input_ids = []
         self.target_ids = []
         token_ids = tokenizer.encode(txt)
+        # Stop at len - max_length: the target reaches one token past the input.
         for i in range(0, len(token_ids) - max_length, stride):
             input_chunk = token_ids[i : i + max_length]
             target_chunk = token_ids[i + 1 : i + max_length + 1]
@@ -35,6 +38,10 @@ class GPTDatasetV1(Dataset):
 
 
 def create_dataloader_v1(txt, tokenizer, batch_size=4, max_length=256, stride=128, shuffle=True, drop_last=True):
-    """Wrap ``GPTDatasetV1`` in a batching ``DataLoader``."""
+    """Wrap ``GPTDatasetV1`` in a batching ``DataLoader``.
+
+    Why batch? The GPU processes many windows at once. Why shuffle? Random order
+    smooths training. Why ``drop_last``? A short final batch can upset training.
+    """
     dataset = GPTDatasetV1(txt, tokenizer, max_length, stride)
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last)

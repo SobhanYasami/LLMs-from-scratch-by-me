@@ -5,8 +5,15 @@
 //   - vocab.go:      map each unique token to an integer ID.
 //   - simple.go:     SimpleTokenizerV1 and SimpleTokenizerV2.
 //   - dataset.go:    sliding-window (input, target) pairs for next-token prediction.
+//   - dataloader.go: batching and shuffling of those pairs.
+//   - embedding.go:  token + positional embeddings.
 //
 // Step 1 - split raw text into tokens. A token is a word or a punctuation mark.
+//
+//	"Hello, world!" -> ["Hello", ",", "world", "!"]
+//
+// Tip: start reading here, then vocab.go -> simple.go -> dataset.go ->
+// dataloader.go -> embedding.go. Each file uses the one before it.
 package tokenization
 
 import (
@@ -20,6 +27,8 @@ const (
 	Unknown   = "<|unk|>"
 )
 
+// Tip: the regex lists the delimiters. Keeping them (instead of dropping them)
+// is what turns punctuation into tokens of its own.
 // splitRe mirrors the Python pattern: captured delimiters are kept in the output.
 var splitRe = regexp.MustCompile(`([,.?_!"()']|--|\s)`)
 

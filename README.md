@@ -17,6 +17,7 @@ Every version has a README, a demo runner, and a `tokenization` module with one 
 1. `preprocess`: split text into tokens
 2. `vocab`: token -> ID
 3. `simple`: SimpleTokenizerV1 / V2
-4. `dataset`: sliding-window (input, target) pairs
+4. `dataset`: sliding-window (input, target) pairs, batching (DataLoader)
+5. `embedding`: token + positional embeddings
 
 New chapters (embeddings, attention, ...) get a new sibling module in each language, in the same order as the book. `python-version/README.md` holds the concept walkthrough; the others note language differences only.

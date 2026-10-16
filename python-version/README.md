@@ -37,7 +37,8 @@ python-version/
     ├── preprocess.py        # step 1: split text into tokens, and join back
     ├── vocab.py             # step 2: token -> integer ID mapping
     ├── simple.py            # step 3: SimpleTokenizerV1 and V2
-    └── dataset.py           # step 4: sliding-window (input, target) pairs
+    ├── dataset.py           # step 4: sliding-window pairs + DataLoader helper
+    └── embedding.py         # step 5: token + positional embeddings
 ```
 
 The data used throughout is `../assets/the-verdict.txt`, a short story by Edith Wharton.
@@ -151,7 +152,7 @@ tokenizer.decode(ids)
 
 The decoded text keeps `<|unk|>` and `<|endoftext|>` as literal strings, so you can see where substitution happened.
 
-## Step 4 (BPE): Byte pair encoding (`main.py`, `demo_bpe`)
+## Bonus: Byte pair encoding (`main.py`, `demo_bpe`)
 
 `tiktoken` is OpenAI's tokenizer library. The `gpt2` encoding is the same BPE vocabulary used by GPT-2, with about 50,000 tokens:
 
@@ -168,9 +169,15 @@ Compared with the simple tokenizers:
 
 Run the demo to compare the IDs: `Hello` is `15496` in GPT-2's vocabulary, not in the corpus-based one.
 
-## Step 5: Data sampling (`tokenization/dataset.py`)
+## Step 4: Data sampling (`tokenization/dataset.py`)
 
 A model learns next-token prediction. Each training example is a window of token IDs (`input`) and the same window shifted by one (`target`). `stride` is how far the window moves; `stride == max_length` means no overlap. `GPTDatasetV1` builds all windows, `create_dataloader_v1` batches them.
+
+## Step 5: Embeddings (`tokenization/embedding.py`)
+
+An ID is only an integer. `nn.Embedding(vocab_size, D)` is a lookup table with one trainable vector per ID, so a batch `[8, 4]` of IDs becomes `[8, 4, D]`. A second table of `context_length` rows holds position vectors, because attention cannot see word order on its own. `InputEmbedding` adds the two: `token + position` -> `[8, 4, D]`. Weights start random (`torch.manual_seed` makes them repeatable) and are learned during training.
+
+With `stride < max_length` windows overlap (more samples, more overfitting risk); `stride == max_length` gives no overlap. `shuffle` and `drop_last` on the loader matter for training.
 
 ## Concepts checklist
 
