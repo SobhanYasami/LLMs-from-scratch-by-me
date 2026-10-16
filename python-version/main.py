@@ -1,4 +1,4 @@
-"""Demo runner for the educational tokenizers.
+"""Demo runner for the educational tokenizers and data sampling.
 
 Run from anywhere:
 
@@ -6,20 +6,22 @@ Run from anywhere:
 
 Pipeline:
     raw text -> split_text -> build_vocab -> SimpleTokenizerV1/V2 -> tiktoken (GPT-2 BPE)
+    -> sliding-window dataset
 
 See python-version/README.md for a walkthrough of each step.
 """
 
-from importlib.metadata import version
 from pathlib import Path
 
 import tiktoken
 
 from tokenization import (
     END_OF_TEXT,
+    GPTDatasetV1,
     SimpleTokenizerV1,
     SimpleTokenizerV2,
     build_vocab,
+    create_dataloader_v1,
     split_text,
 )
 
@@ -29,16 +31,14 @@ DATA_PATH = Path(__file__).resolve().parent.parent / "assets" / "the-verdict.txt
 V1_TEXT = '"It\'s the last he painted, you know," Mrs. Gisburn said with pardonable pride.'
 V2_TEXT = f"Hello, do you like tea? {END_OF_TEXT} In the sunlit terraces of the palace."
 
-def load_textflie():
-    with open(DATA_PATH, "r", encoding="utf-8") as f:
-        raw_text = f.read()
-    return raw_text
+
+def load_text() -> str:
+    return DATA_PATH.read_text(encoding="utf-8")
 
 
 def load_vocab() -> dict[str, int]:
     """Read the corpus, tokenize it, and build the vocabulary."""
-    raw_text = DATA_PATH.read_text(encoding="utf-8")
-    return build_vocab(split_text(raw_text))
+    return build_vocab(split_text(load_text()))
 
 
 def show_vocab_tail(vocab: dict[str, int], count: int = 5) -> None:
@@ -73,47 +73,49 @@ def demo_bpe() -> None:
     Unlike the simple tokenizers above, BPE learns sub-word pieces, so it never
     needs an <|unk|> token: any string can be broken into known pieces.
     """
-    raw_text = load_textflie()
     tokenizer = tiktoken.get_encoding("gpt2")
-    integers = tokenizer.encode(V2_TEXT, allowed_special={END_OF_TEXT})
-    enc_text = tokenizer.encode(raw_text)
-    
-    """we remove the first 50 tokens from the dataset for demonstration
-    purposes as it results in a slightly more interesting text passage in the next
-    steps"""
-    enc_sample = enc_text[50:]
-    
-    """One of the easiest and most intuitive ways to create the input-target pairs for
-    the next-word prediction task is to create two variables, x and y, where x
-    contains the input tokens and y contains the targets, which are the inputs
-    shifted by 1:"""
-    context_size = 4 #A
+    print("bpe tokenizer :")
+    ids = tokenizer.encode(V2_TEXT, allowed_special={END_OF_TEXT})
+    print(ids)
+    print(tokenizer.decode(ids))
+    print("---------------------")
+
+
+def demo_sampling() -> None:
+    """Next-word prediction pairs: the target is the input shifted by one."""
+    tokenizer = tiktoken.get_encoding("gpt2")
+    # Drop the first 50 tokens: gives a slightly more interesting passage.
+    enc_sample = tokenizer.encode(load_text())[50:]
+
+    context_size = 4
     x = enc_sample[:context_size]
-    y = enc_sample[1:context_size+1]
+    y = enc_sample[1 : context_size + 1]
+    print("data sampling :")
     print(f"x: {x}")
     print(f"y:      {y}")
-    
-    """Processing the inputs along with the targets, which are the inputs shifted by
-    one position, we can then create the next-word predictio"""
-    for i in range(1, context_size+1):
-        context = enc_sample[:i]
-        desired = enc_sample[i]
-        print(context, "---->", desired)
-        
-    """For illustration purposes, let's repeat the previous code but convert the token
-    IDs into text:"""
-    for i in range(1, context_size+1):
+
+    for i in range(1, context_size + 1):
         context = enc_sample[:i]
         desired = enc_sample[i]
         print(tokenizer.decode(context), "---->", tokenizer.decode([desired]))
-    
+
+    # The same idea, packaged: every window of the whole text, in batches.
+    dataset = GPTDatasetV1(load_text(), tokenizer, max_length=4, stride=4)
+    print(f"windows: {len(dataset)}, first pair: {dataset[0]}")
+    loader = create_dataloader_v1(load_text(), tokenizer, batch_size=8, max_length=4, stride=4, shuffle=False)
+    inputs, targets = next(iter(loader))
+    print("inputs:\n", inputs)
+    print("targets:\n", targets)
+    print("---------------------")
+
 
 def main() -> None:
     vocab = load_vocab()
-    # show_vocab_tail(vocab)
-    # demo_v1(vocab)
-    # demo_v2(vocab)
+    show_vocab_tail(vocab)
+    demo_v1(vocab)
+    demo_v2(vocab)
     demo_bpe()
+    demo_sampling()
 
 
 if __name__ == "__main__":

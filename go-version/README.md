@@ -1,0 +1,32 @@
+# Go version: tokenizers from scratch
+
+Same pipeline and output as `../python-version`; read that README for the concepts.
+
+## Layout
+
+```
+go-version/
+├── cmd/main.go              # demo runner (same demos as python main.py)
+├── README.md
+└── tokenization/
+    ├── preprocess.go        # step 1: SplitText, Detokenize
+    ├── vocab.go             # step 2: BuildVocab
+    ├── simple.go            # step 3: SimpleTokenizerV1 and V2
+    └── dataset.go           # step 4: GPTDataset (sliding window)
+```
+
+## Running it
+
+From `go-version/`:
+
+```bash
+go run ./cmd
+```
+
+## Python <-> Go notes
+
+- `re.split` with a capturing group has no Go equivalent; `splitKeep` in `preprocess.go` walks the matches by hand.
+- Python raises `KeyError`; Go `Encode`/`Decode` return `error`.
+- V2 embeds V1 (struct embedding) instead of subclassing.
+- BPE uses `tiktoken-go` with the offline loader. Go has no `gpt2` name; `r50k_base` is the same vocabulary.
+- No tensors: the dataset holds `[]int` slices and `Batches` replaces the DataLoader.

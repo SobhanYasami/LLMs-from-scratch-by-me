@@ -2,7 +2,7 @@
 
 This is the Python implementation of the tokenizer chapter from *Build a Large Language Model (From Scratch)*. It starts from plain regular expressions and ends with a real byte pair encoding (BPE) tokenizer from `tiktoken`, so you can see what each layer adds.
 
-The Go version in `../go-version` reproduces the same behavior. Compare the two if you want to see how the ideas translate across languages.
+The Go (`../go-version`) and Rust (`../rust-version`) versions reproduce the same behavior. Compare the two if you want to see how the ideas translate across languages.
 
 ## Why tokenization?
 
@@ -30,13 +30,14 @@ Every step has a tradeoff. The rest of this document walks through them in order
 
 ```
 python-version/
-├── main.py                  # demo runner: runs every tokenizer on sample text
+├── main.py                  # demo runner: tokenizers, BPE, data sampling
 ├── README.md                # this file
 └── tokenization/
     ├── __init__.py          # public API of the package
     ├── preprocess.py        # step 1: split text into tokens, and join back
     ├── vocab.py             # step 2: token -> integer ID mapping
-    └── simple.py            # step 3: SimpleTokenizerV1 and V2
+    ├── simple.py            # step 3: SimpleTokenizerV1 and V2
+    └── dataset.py           # step 4: sliding-window (input, target) pairs
 ```
 
 The data used throughout is `../assets/the-verdict.txt`, a short story by Edith Wharton.
@@ -150,7 +151,7 @@ tokenizer.decode(ids)
 
 The decoded text keeps `<|unk|>` and `<|endoftext|>` as literal strings, so you can see where substitution happened.
 
-## Step 4: Byte pair encoding (`main.py`, `demo_bpe`)
+## Step 4 (BPE): Byte pair encoding (`main.py`, `demo_bpe`)
 
 `tiktoken` is OpenAI's tokenizer library. The `gpt2` encoding is the same BPE vocabulary used by GPT-2, with about 50,000 tokens:
 
@@ -166,6 +167,10 @@ Compared with the simple tokenizers:
 - **`allowed_special`.** By default `tiktoken` refuses to encode special-token strings found in the input, to prevent accidental injection. Passing `allowed_special` opts in explicitly.
 
 Run the demo to compare the IDs: `Hello` is `15496` in GPT-2's vocabulary, not in the corpus-based one.
+
+## Step 5: Data sampling (`tokenization/dataset.py`)
+
+A model learns next-token prediction. Each training example is a window of token IDs (`input`) and the same window shifted by one (`target`). `stride` is how far the window moves; `stride == max_length` means no overlap. `GPTDatasetV1` builds all windows, `create_dataloader_v1` batches them.
 
 ## Concepts checklist
 
