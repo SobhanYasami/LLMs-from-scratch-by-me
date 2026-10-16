@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>1.3 and 1.5: Pretraining, finetuning and data</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+</head><body><div class="layout">
+<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
+<h4>Start</h4>
+<a href="index.html">Overview</a>
+<h4>Chapter 1: Understanding LLMs</h4>
+<a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a class="on" href="ch01-stages.html">1.3, 1.5 Training stages & data</a>
+<a href="ch01-transformer.html">1.4 Transformers & tasks</a>
+<a href="ch01-gpt.html">1.6-1.7 GPT & the roadmap</a>
+<h4>Chapter 2: Working with text data</h4>
+<a href="ch02-overview.html">2.1 Overview & embeddings</a>
+<a href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a href="ch02-7-embeddings.html">2.7-2.8 Embeddings & positions</a>
+<h4>Reference</h4>
+<a href="reference.html">Reference</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
+<main><h1>1.3 and 1.5: Pretraining, finetuning and data</h1>
+
+<div class="aim"><b>Aim.</b> Learn the two-stage recipe (pretrain, then finetune) and why training data scale matters.</div>
+<h2>Two stages</h2>
+<div class="flow">
+<div><b>Raw text</b>unlabelled, billions of words</div><span>&rarr;</span>
+<div class="hot"><b>Pretraining</b>next-word prediction</div><span>&rarr;</span>
+<div><b>Base / foundation model</b>completes text</div><span>&rarr;</span>
+<div class="hot"><b>Finetuning</b>small labelled dataset</div><span>&rarr;</span>
+<div><b>Assistant or classifier</b></div>
+</div>
+<ul>
+<li><b>Pretraining</b> gives broad language knowledge. The result is a <i>base</i> or <i>foundation</i> model (GPT-3 is the classic example). It completes half-written sentences and can learn a new task from a few examples.</li>
+<li><b>Finetuning</b> adapts it with labelled data. Two common kinds: <b>instruction finetuning</b> (instruction and answer pairs) and <b>classification finetuning</b> (texts and class labels, like spam / not spam).</li>
+</ul>
+<h2>Why so much data? (1.5)</h2>
+<p>GPT-3 was pretrained on a mix of web crawl, books and Wikipedia, roughly 300 billion tokens sampled from the pool below. A <b>token</b> is the unit of text a model reads, roughly a word or punctuation mark. Chapter 2 is all about producing tokens.</p>
+<table><tr><th>Dataset</th><th>What</th><th>Tokens</th><th>Share of training</th></tr>
+<tr><td>CommonCrawl (filtered)</td><td>web crawl</td><td>410 B</td><td>60%</td></tr>
+<tr><td>WebText2</td><td>web crawl</td><td>19 B</td><td>22%</td></tr>
+<tr><td>Books1</td><td>book corpus</td><td>12 B</td><td>8%</td></tr>
+<tr><td>Books2</td><td>book corpus</td><td>55 B</td><td>8%</td></tr>
+<tr><td>Wikipedia</td><td>high-quality text</td><td>3 B</td><td>3%</td></tr></table>
+<p>Pretraining is very expensive (GPT-3's estimated cloud cost was about $4.6 million). So this book trains a small model on a small text for learning, and shows how to load openly published weights instead of paying for pretraining.</p>
+<h2>Check yourself</h2>
+<details class="qa"><summary>Why is pretraining data called "raw"?</summary>It carries no labels, just ordinary text.</details>
+<details class="qa"><summary>Name the two popular kinds of finetuning.</summary>Instruction finetuning and classification finetuning.</details>
+<details class="qa"><summary>Why can open pretrained weights save you money?</summary>You skip the expensive pretraining stage and only finetune.</details>
+
+<div class="pager"><a href="ch01-what-is-llm.html">&larr; 1.1-1.2 What is an LLM?</a><a href="ch01-transformer.html">1.4 Transformers & tasks &rarr;</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="site.js"></script>
+</body></html>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bonus: Byte pair encoding</title>
+<title>2.5: Byte pair encoding</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
@@ -9,24 +9,32 @@
 <nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
 <h4>Start</h4>
 <a href="index.html">Overview</a>
-<h4>Tutorial</h4>
-<a href="01-split.html">1. Split text</a>
-<a href="02-vocab.html">2. Vocabulary</a>
-<a href="03-simple.html">3. Encode & decode</a>
-<a class="on" href="bpe.html">Bonus: BPE</a>
-<a href="04-sampling.html">4. Data sampling</a>
-<a href="05-embeddings.html">5. Embeddings</a>
+<h4>Chapter 1: Understanding LLMs</h4>
+<a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a href="ch01-stages.html">1.3, 1.5 Training stages & data</a>
+<a href="ch01-transformer.html">1.4 Transformers & tasks</a>
+<a href="ch01-gpt.html">1.6-1.7 GPT & the roadmap</a>
+<h4>Chapter 2: Working with text data</h4>
+<a href="ch02-overview.html">2.1 Overview & embeddings</a>
+<a href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class="on" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a href="ch02-7-embeddings.html">2.7-2.8 Embeddings & positions</a>
 <h4>Reference</h4>
 <a href="reference.html">Reference</a>
 <h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
-<main><h1>Bonus: Byte pair encoding</h1>
+<main><h1>2.5: Byte pair encoding</h1>
 
-<div class="aim"><b>Aim.</b> Replace the word-level tokenizer with the one real GPT models use: sub-word pieces, so no <code>&lt;|unk|&gt;</code> is ever needed.</div>
-<p>We do not implement BPE training here. We call <b>tiktoken</b> (OpenAI) with the GPT-2 vocabulary, about 50,257 tokens. An unknown word is broken into smaller known pieces, down to single bytes if needed.</p>
+<div class="aim"><b>Aim.</b> Replace the word-level tokenizer with the one GPT-2, GPT-3 and the original ChatGPT use: sub-word pieces, so no <code>&lt;|unk|&gt;</code> is ever needed.</div>
+<p>We do not implement BPE training here. We call <b>tiktoken</b> (OpenAI, written in Rust) with the GPT-2 vocabulary of <b>50,257</b> tokens. <code>&lt;|endoftext|&gt;</code> gets the last ID, <b>50256</b>.</p>
 <pre class="out">[15496, 11, 466, 345, 588, 8887, 30, 220, 50256, 554, 262, 4252, 18250, 8812, 2114, 286, 262, 20562, 13]
 Hello, do you like tea? &lt;|endoftext|&gt; In the sunlit terraces of the palace.</pre>
+<h2>How BPE avoids unknown words</h2>
+<p>Training starts with every single character as a token, then repeatedly <b>merges the most frequent neighbouring pairs</b> into new tokens (<code>d</code> + <code>e</code> becomes <code>de</code>, then maybe <code>def</code>, and so on) up to a size limit. At encode time, an unfamiliar word is split into the largest known pieces, down to single characters or bytes if needed. Any string can be encoded.</p>
 <div class="tip">tiktoken refuses special-token text by default, to prevent injection. Python passes <code>allowed_special</code> to opt in. Go and Rust use <code>r50k_base</code>, the same vocabulary as GPT-2 under its tiktoken name.</div>
-<h2>Demo runners (BPE demo is <code>demo_bpe</code> / <code>demoBPE</code> / <code>demo_bpe</code>)</h2>
+<h2>Code (the BPE demo is <code>demo_bpe</code> / <code>demoBPE</code> in each runner)</h2>
 <div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button></div><div class="pane" data-lang="python"><div class="file">python-version/main.py</div><pre><code class="language-python">&quot;&quot;&quot;Demo runner for the educational tokenizers and data sampling.
 
 Run from anywhere:
@@ -574,10 +582,13 @@ fn main() {
     demo_embeddings();
 }
 </code></pre></div></div>
-<h2>Exercise</h2>
-<p>Encode a made-up word like <code>Zorblax</code>. How many tokens?</p>
+<h2>Exercises</h2>
+<ol>
+<li>Book exercise 2.1: encode the made-up text <code>"Akwirw ier"</code>, print each ID, decode each ID on its own, then decode the whole list. Does it round-trip?</li>
+<li>Encode <code>Zorblax</code>. How many tokens?</li>
+</ol>
 
-<div class="pager"><a href="03-simple.html">&larr; 3. Encode & decode</a><a href="04-sampling.html">4. Data sampling &rarr;</a></div>
+<div class="pager"><a href="ch02-4-special-tokens.html">&larr; 2.4 Special tokens</a><a href="ch02-6-sampling.html">2.6 Sliding window &rarr;</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>

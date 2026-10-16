@@ -9,42 +9,49 @@
 <nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
 <h4>Start</h4>
 <a class="on" href="index.html">Overview</a>
-<h4>Tutorial</h4>
-<a href="01-split.html">1. Split text</a>
-<a href="02-vocab.html">2. Vocabulary</a>
-<a href="03-simple.html">3. Encode & decode</a>
-<a href="bpe.html">Bonus: BPE</a>
-<a href="04-sampling.html">4. Data sampling</a>
-<a href="05-embeddings.html">5. Embeddings</a>
+<h4>Chapter 1: Understanding LLMs</h4>
+<a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a href="ch01-stages.html">1.3, 1.5 Training stages & data</a>
+<a href="ch01-transformer.html">1.4 Transformers & tasks</a>
+<a href="ch01-gpt.html">1.6-1.7 GPT & the roadmap</a>
+<h4>Chapter 2: Working with text data</h4>
+<a href="ch02-overview.html">2.1 Overview & embeddings</a>
+<a href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a href="ch02-7-embeddings.html">2.7-2.8 Embeddings & positions</a>
 <h4>Reference</h4>
 <a href="reference.html">Reference</a>
 <h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
 <main><h1>Build an LLM from scratch</h1>
 
-<p class="lede">A learning repo and living reference. One idea per step, written three times: Python, Go and Rust, with the same layout and the same output.</p>
-<div class="aim"><b>Aim.</b> Understand how text becomes the numbers a GPT-style model trains on, by reading small programs instead of a framework. Follows <i>Build a Large Language Model (From Scratch)</i> by Sebastian Raschka, chapter 2.</div>
-<h2>The pipeline</h2>
-<pre class="out">raw text
-  -&gt; split into tokens        (step 1)
-  -&gt; token -&gt; ID             (step 2)
-  -&gt; encode / decode          (step 3)
-  -&gt; windows of (input, target)  (step 4)
-  -&gt; vectors + positions      (step 5)   &lt;- what the model finally reads</pre>
+<p class="lede">A tutorial and reference for the first two chapters of <i>Build a Large Language Model (From Scratch)</i>. Chapter 1 builds the mental model. Chapter 2 turns it into code, written three times: Python, Go and Rust, with the same layout and the same output.</p>
+<div class="aim"><b>Aim.</b> Understand what a GPT-style model is, and how text becomes the numbers it trains on, by reading small programs instead of a framework.</div>
+<h2>The map</h2>
+<div class="flow">
+<div><b>Chapter 1</b>What an LLM is, how it is trained, what a GPT looks like. No code.</div><span>&rarr;</span>
+<div class="hot"><b>Chapter 2</b>Text &rarr; tokens &rarr; IDs &rarr; training pairs &rarr; vectors. All the code on this site.</div><span>&rarr;</span>
+<div><b>Chapter 3+</b>Attention, the GPT model, training. Not covered yet.</div>
+</div>
 <h2>How to read this site</h2>
 <ul>
-<li>Go through the steps in order. Each uses the one before it.</li>
+<li>Read in order. Page titles carry the book's section numbers (1.1, 2.2, ...) so you can follow along with the PDF.</li>
 <li>Every code block has Python / Go / Rust tabs. Your choice is remembered.</li>
-<li>Each step has an <b>Aim</b>, the <b>code</b>, <b>sample output</b>, and <b>exercises</b>.</li>
+<li>Each page has an <b>Aim</b>. Chapter 1 pages end with <b>check yourself</b> questions. Chapter 2 pages end with exercises.</li>
 <li>The <a href="reference.html">Reference</a> page is a lookup table of every function in all three languages.</li>
 </ul>
-<h2>Run it</h2>
+<h2>Run the code</h2>
 <table><tr><th>Language</th><th>Command</th></tr>
 <tr><td>Python</td><td><code>python-version/.venv/bin/python python-version/main.py</code></td></tr>
 <tr><td>Go</td><td><code>cd go-version &amp;&amp; go run ./cmd</code></td></tr>
 <tr><td>Rust</td><td><code>cd rust-version &amp;&amp; cargo run</code></td></tr></table>
-<p>All three print the same token IDs. Embedding numbers differ (each language draws its own random weights) but shapes match.</p>
+<p>All three print the same token IDs. Embedding values differ (each language draws its own random weights) but shapes match.</p>
+<h2>Sources</h2>
+<p>Text follows the book and Raschka's companion repo, <a href="https://github.com/rasbt/LLMs-from-scratch">rasbt/LLMs-from-scratch</a>, in my own words. The code here is a separate re-implementation for learning in three languages. Buy the book for the full story.</p>
 
-<div class="pager"><span></span><a href="01-split.html">1. Split text &rarr;</a></div>
+<div class="pager"><span></span><a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM? &rarr;</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>

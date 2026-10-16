@@ -34,3 +34,21 @@ th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;verti
 th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
 .pager{display:flex;justify-content:space-between;margin-top:3em;font:15px system-ui}
 @media(max-width:800px){.layout{grid-template-columns:1fr}nav.side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}}
+/* diagrams */
+.nest{display:flex;justify-content:center;margin:1.4em 0;font:14px system-ui}
+.nest>div{border:2px solid var(--line);border-radius:14px;padding:30px 18px 18px;background:var(--card);position:relative;width:100%}
+.nest>div>div{border:2px solid var(--line);border-radius:12px;padding:30px 18px 18px;position:relative;background:var(--code)}
+.nest>div>div>div{border:2px solid var(--line);border-radius:10px;padding:30px 18px 18px;position:relative;background:var(--card)}
+.nest>div>div>div>div{border:2px solid var(--accent);background:var(--accent-soft);border-radius:8px;padding:12px;text-align:center;font-weight:700;color:var(--accent)}
+.nest i{position:absolute;top:7px;left:12px;font-style:normal;font-weight:700;color:var(--muted);font-size:12px;letter-spacing:.04em}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:1.4em 0;font:14px system-ui}
+.flow>div{flex:1 1 130px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 12px;text-align:center}
+.flow>div b{display:block;color:var(--accent);margin-bottom:2px}
+.flow>span{align-self:center;color:var(--muted);font-size:20px}
+.flow>div.hot{border-color:var(--accent);background:var(--accent-soft)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1.2em 0;font:15px system-ui}
+.cmp>div{border:1px solid var(--line);border-radius:10px;padding:12px 16px;background:var(--card)}
+.cmp h3{margin:0 0 6px;font-size:15px;color:var(--accent)}
+details.qa{border:1px solid var(--line);border-radius:8px;padding:8px 14px;margin:.5em 0;background:var(--card);font:15px/1.5 system-ui}
+details.qa summary{cursor:pointer;font-weight:600}
+@media(max-width:600px){.cmp{grid-template-columns:1fr}}

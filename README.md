@@ -24,7 +24,7 @@ New chapters (embeddings, attention, ...) get a new sibling module in each langu
 
 ## Docs site
 
-Tutorial and reference live in `docs/` (GitHub Pages). Code on the site is read from the source files, so regenerate after changing code:
+Tutorial and reference live in `docs/` (GitHub Pages): chapter 1 (concepts) and chapter 2 (code in three languages), following the book's section numbers. Code on the site is read from the source files, so regenerate after changing code:
 
 ```bash
 python3 docs/build.py

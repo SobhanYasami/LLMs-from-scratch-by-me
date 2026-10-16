@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Step 3: Simple tokenizers</title>
+<title>2.4: Adding special context tokens</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
@@ -9,23 +9,43 @@
 <nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
 <h4>Start</h4>
 <a href="index.html">Overview</a>
-<h4>Tutorial</h4>
-<a href="01-split.html">1. Split text</a>
-<a href="02-vocab.html">2. Vocabulary</a>
-<a class="on" href="03-simple.html">3. Encode & decode</a>
-<a href="bpe.html">Bonus: BPE</a>
-<a href="04-sampling.html">4. Data sampling</a>
-<a href="05-embeddings.html">5. Embeddings</a>
+<h4>Chapter 1: Understanding LLMs</h4>
+<a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a href="ch01-stages.html">1.3, 1.5 Training stages & data</a>
+<a href="ch01-transformer.html">1.4 Transformers & tasks</a>
+<a href="ch01-gpt.html">1.6-1.7 GPT & the roadmap</a>
+<h4>Chapter 2: Working with text data</h4>
+<a href="ch02-overview.html">2.1 Overview & embeddings</a>
+<a href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a class="on" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a href="ch02-7-embeddings.html">2.7-2.8 Embeddings & positions</a>
 <h4>Reference</h4>
 <a href="reference.html">Reference</a>
 <h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
-<main><h1>Step 3: Simple tokenizers</h1>
+<main><h1>2.4: Adding special context tokens</h1>
 
-<div class="aim"><b>Aim.</b> Combine split + vocabulary into <code>encode</code> (text to IDs) and <code>decode</code> (IDs to text), and see why a closed vocabulary breaks.</div>
-<table><tr><th>Type</th><th>Unseen word</th></tr>
-<tr><td>V1</td><td>error (<code>KeyError</code> in Python, <code>error</code> in Go, <code>Err</code> in Rust)</td></tr>
-<tr><td>V2</td><td>replaced by <code>&lt;|unk|&gt;</code>, information is lost</td></tr></table>
-<h2>Code</h2>
+<div class="aim"><b>Aim.</b> Handle unknown words and document boundaries by adding two special tokens to the vocabulary.</div>
+<table><tr><th>Token</th><th>Role</th><th>ID in our vocab</th></tr>
+<tr><td><code>&lt;|unk|&gt;</code></td><td>stands for any word not in the vocabulary</td><td>1160</td></tr>
+<tr><td><code>&lt;|endoftext|&gt;</code></td><td>separates unrelated texts when concatenated for training, so the model does not treat two books as one story</td><td>1159</td></tr></table>
+<p>They are appended <b>last</b> so existing word IDs do not shift. The vocabulary grows from 1,159 to <b>1,161</b>.</p>
+<h2>SimpleTokenizerV2</h2>
+<p>Same as V1, but before lookup any token not in the vocabulary is replaced by <code>&lt;|unk|&gt;</code>, so encoding never fails.</p>
+<pre class="out">text    = "Hello, do you like tea? &lt;|endoftext|&gt; In the sunlit terraces of the palace."
+ids     = [1160, 5, 362, 1155, 642, 1000, 10, 1159, 57, 1013, 981, 1009, 738, 1013, 1160, 7]
+decoded = "&lt;|unk|&gt;, do you like tea? &lt;|endoftext|&gt; In the sunlit terraces of the &lt;|unk|&gt;."</pre>
+<p><i>Hello</i> and <i>palace</i> were never in the story, so both became <code>&lt;|unk|&gt;</code> (ID 1160) and their meaning is lost. The <code>&lt;|endoftext|&gt;</code> separator became 1159.</p>
+<h2>Other special tokens you will meet</h2>
+<ul>
+<li><code>[BOS]</code> beginning of sequence.</li>
+<li><code>[EOS]</code> end of sequence, like <code>&lt;|endoftext|&gt;</code>.</li>
+<li><code>[PAD]</code> pads shorter texts in a batch to equal length.</li>
+</ul>
+<div class="tip">GPT uses only <code>&lt;|endoftext|&gt;</code>, for separating <em>and</em> padding (padded positions are masked out later, so which token pads does not matter). GPT also has no <code>&lt;|unk|&gt;</code>: byte pair encoding on the next page replaces it.</div>
+<h2>Code (same file as 2.3, now look at V2)</h2>
 <div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/simple.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 3 - Simple tokenizers that combine splitting with the vocabulary.
 
 Both classes expose the same two methods:
@@ -220,14 +240,9 @@ impl SimpleTokenizerV2 {
     }
 }
 </code></pre></div></div>
-<h2>Sample output</h2>
-<pre class="out">version 2 tokenizer :
-[1160, 5, 362, 1155, 642, 1000, 10, 1159, 57, 1013, 981, 1009, 738, 1013, 1160, 7]
-&lt;|unk|&gt;, do you like tea? &lt;|endoftext|&gt; In the sunlit terraces of the &lt;|unk|&gt;.</pre>
-<p><i>Hello</i> and <i>palace</i> never appeared in the corpus, so they became <code>&lt;|unk|&gt;</code>. Byte pair encoding (next pages) removes this limit.</p>
 <div class="tip">V2 reuses V1: subclassing in Python, struct embedding in Go, wrapping in Rust. In Go and Rust both types share one private <code>encode</code> that takes an "unknown to unk" flag.</div>
 
-<div class="pager"><a href="02-vocab.html">&larr; 2. Vocabulary</a><a href="bpe.html">Bonus: BPE &rarr;</a></div>
+<div class="pager"><a href="ch02-3-token-ids.html">&larr; 2.3 Token IDs</a><a href="ch02-5-bpe.html">2.5 Byte pair encoding &rarr;</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>

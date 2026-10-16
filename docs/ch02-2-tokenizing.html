@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Step 1: Split text into tokens</title>
+<title>2.2: Tokenizing text</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
@@ -9,22 +9,36 @@
 <nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
 <h4>Start</h4>
 <a href="index.html">Overview</a>
-<h4>Tutorial</h4>
-<a class="on" href="01-split.html">1. Split text</a>
-<a href="02-vocab.html">2. Vocabulary</a>
-<a href="03-simple.html">3. Encode & decode</a>
-<a href="bpe.html">Bonus: BPE</a>
-<a href="04-sampling.html">4. Data sampling</a>
-<a href="05-embeddings.html">5. Embeddings</a>
+<h4>Chapter 1: Understanding LLMs</h4>
+<a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a href="ch01-stages.html">1.3, 1.5 Training stages & data</a>
+<a href="ch01-transformer.html">1.4 Transformers & tasks</a>
+<a href="ch01-gpt.html">1.6-1.7 GPT & the roadmap</a>
+<h4>Chapter 2: Working with text data</h4>
+<a href="ch02-overview.html">2.1 Overview & embeddings</a>
+<a class="on" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a href="ch02-7-embeddings.html">2.7-2.8 Embeddings & positions</a>
 <h4>Reference</h4>
 <a href="reference.html">Reference</a>
 <h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
-<main><h1>Step 1: Split text into tokens</h1>
+<main><h1>2.2: Tokenizing text</h1>
 
 <div class="aim"><b>Aim.</b> A model cannot read text, only numbers. Before numbering anything, cut the text into pieces called <i>tokens</i>.</div>
 <p>A token here is a word or a punctuation mark. A regular expression finds the delimiters (punctuation, <code>--</code>, whitespace), and we <em>keep</em> the delimiters so punctuation becomes its own token. Whitespace pieces are then dropped.</p>
 <pre class="out">"Hello, world!"  -&gt;  ['Hello', ',', 'world', '!']</pre>
+<h2>How the book gets there</h2>
+<ol>
+<li>Split on whitespace only: <code>re.split(r'(\s)', text)</code> leaves punctuation glued to words (<code>'Hello,'</code>).</li>
+<li>Also split on <code>,</code> and <code>.</code>: now punctuation is separate, but empty strings and spaces remain.</li>
+<li>Filter with <code>item.strip()</code> to drop whitespace pieces.</li>
+<li>Add <code>? " ( ) _ !</code> and <code>--</code>. Result on the whole story: <b>4,649 tokens</b>.</li>
+</ol>
 <div class="tip">In Python, <code>re.split</code> keeps delimiters only when the pattern is in parentheses (a capture group). Go and Rust have no such feature, so they walk the matches by hand. Same result, more visible mechanism.</div>
+<div class="tip">We do not lowercase: capitalisation helps a model tell names from common nouns and learn sentence structure. We drop whitespace for brevity; for code (where indentation matters) you would keep it.</div>
 <h2>Code</h2>
 <div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/preprocess.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 1 - Split raw text into tokens (and join them back).
 
@@ -199,7 +213,7 @@ pub fn detokenize(tokens: &amp;[String]) -&gt; String {
 <h2>Exercises</h2>
 <ol><li>Feed a sentence with <code>--</code>. One token or two?</li><li>Remove the parentheses from the Python pattern. What happens to punctuation?</li></ol>
 
-<div class="pager"><a href="index.html">&larr; Overview</a><a href="02-vocab.html">2. Vocabulary &rarr;</a></div>
+<div class="pager"><a href="ch02-overview.html">&larr; 2.1 Overview & embeddings</a><a href="ch02-3-token-ids.html">2.3 Token IDs &rarr;</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
