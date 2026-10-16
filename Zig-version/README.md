@@ -10,6 +10,8 @@ Zig-version/
 ├── README.md
 └── src/
     ├── main.zig                 # demo runner (same demos as python main.py)
+    ├── ch03.zig                 # chapter 3 demos (attention)
+    ├── attention/               # chapter 3: matrix, simple, self_attention, causal, multihead
     └── tokenization/
         ├── root.zig             # public API of the module
         ├── preprocess.zig       # step 1 (book 2.2): splitText, detokenize
@@ -28,10 +30,14 @@ From `Zig-version/`:
 
 ```bash
 zig build run     # the demo
-zig build test    # unit tests in src/tokenization/
+zig build test    # unit tests in src/
 ```
 
 Written against a Zig 0.15/0.16-dev toolchain (the `std.ArrayList` unmanaged API and `std.fs.File.stdout().writer(...)`). Zig's standard library changes between releases, so a different version may need small edits.
+
+## Chapter 3: attention
+
+`zig build run -- ch03` runs the attention demos (`zig build run` runs every chapter). `src/attention/` has `matrix`, `simple`, `self_attention`, `causal` and `multihead`; the demo is `src/ch03.zig`. Output is identical to Python's.
 
 ## Python <-> Zig notes
 

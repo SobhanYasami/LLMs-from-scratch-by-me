@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Extra: the chapter 3 demo and its expected output</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+</head><body><div class="layout">
+<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
+<h4>Start</h4>
+<a class="" href="index.html">Overview</a>
+<a class="" href="roadmap.html">Roadmap</a>
+<h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a class="" href="ch01-stages.html">1.3, 1.5 Training stages &amp; data</a>
+<a class="" href="ch01-transformer.html">1.4 Transformers &amp; tasks</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT &amp; the roadmap</a>
+<h4><a class="h4link" href="chapter-2.html">Chapter 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 Overview &amp; embeddings</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a class="" href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
+<a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
+<a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
+<a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
+<h4><a class="h4link" href="chapter-3.html">Chapter 3</a></h4>
+<a class="" href="ch03-1-long-sequences.html">3.1-3.2 Why attention</a>
+<a class="" href="ch03-3-simple-attention.html">3.3 Simple attention</a>
+<a class="" href="ch03-4-self-attention.html">3.4 Trainable weights</a>
+<a class="" href="ch03-5-causal.html">3.5 Causal attention</a>
+<a class="" href="ch03-6-multihead.html">3.6 Multi-head</a>
+<a class="extra" href="scaling-sqrt-dk.html">Why scale by sqrt(d_k)</a>
+<a class="extra on" href="ch03-demo-output.html">Chapter 3 demo output</a>
+<h4><a class="h4link" href="chapter-4.html">Chapter 4</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-5.html">Chapter 5</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-6.html">Chapter 6</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-7.html">Chapter 7</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-A.html">Appendices</a> <em>planned</em></h4>
+<h4>Reference</h4>
+<a class="" href="reference.html">Code reference</a>
+<a class="" href="contributing.html">Contributing</a>
+<a class="" href="glossary.html">Glossary</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
+<main><h1>Extra: the chapter 3 demo and its expected output</h1>
+<p class="meta">code in Python, Go, Rust, C, Zig · extra</p>
+<div class="aim"><b>Aim.</b> Run all of chapter 3 in one go, and check your output against the expected numbers, in any of the five languages.</div>
+<h2>Run it</h2>
+<table><tr><th>Language</th><th>Command</th></tr>
+<tr><td>Python</td><td><code>python-version/.venv/bin/python python-version/main.py ch03</code></td></tr>
+<tr><td>Go</td><td><code>cd go-version &amp;&amp; go run ./cmd ch03</code></td></tr>
+<tr><td>Rust</td><td><code>cd rust-version &amp;&amp; cargo run -- ch03</code></td></tr>
+<tr><td>C</td><td><code>cd C-version &amp;&amp; make run ARGS=ch03</code></td></tr>
+<tr><td>Zig</td><td><code>cd Zig-version &amp;&amp; zig build run -- ch03</code></td></tr></table>
+<p>All five print the same text, character for character. Without an argument each program runs every chapter.</p>
+<h2>What to compare with the book</h2>
+<ul>
+<li><b>3.3 and 3.4</b> match the book exactly: scores, weights, <code>query_2 = [0.4306, 1.4551]</code>, <code>context_2 = [0.3061, 0.8210]</code>, and the six context vectors of <code>SelfAttention_v1</code>. The 3.4 weights are the book's <code>torch.manual_seed(123)</code> matrices, written out in the code so no language needs torch.</li>
+<li><b>3.5 weights</b> follow from the same matrices. The book's causal example uses its v2 weights, so those rows differ.</li>
+<li><b>Dropout and 3.6</b> use the seeded generator shared by all languages, so they differ from the book's torch output but agree with each other.</li>
+</ul>
+<h2>Expected output (excerpt)</h2>
+<pre class="out">== 3.3.1 simple attention for one query (x2, 'journey') ==
+scores    : [0.9544, 1.4950, 1.4754, 0.8434, 0.7070, 1.0865]
+weights   : [0.1385, 0.2379, 0.2333, 0.1240, 0.1082, 0.1581]
+context z2: [0.4419, 0.6515, 0.5683]
+...
+== 3.4 self-attention with trainable weights (d_in=3, d_out=2) ==
+query_2: [0.4306, 1.4551]
+keys shape: (6, 2), values shape: (6, 2)
+scores_2 (q2 . keys): [1.2705, 1.8524, 1.8111, 1.0795, 0.5577, 1.5440]
+weights_2 (scaled): [0.1500, 0.2264, 0.2199, 0.1311, 0.0906, 0.1820]
+context_2: [0.3061, 0.8210]
+...
+== 3.6 multi-head attention (d_in=3, d_out=2, heads=2) ==
+input shape: (2, 6, 3)  output shape: (2, 6, 2)</pre>
+<h2>The runner code</h2>
+<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button><button data-lang="c">C</button><button data-lang="zig">Zig</button></div><div class="pane" data-lang="python"><div class="file">python-version/ch03.py</div><pre><code class="language-python">&quot;&quot;&quot;Chapter 3 demos: attention, one idea at a time (book 3.3 to 3.6).
+
+Run:  python-version/.venv/bin/python python-version/main.py ch03
+
+Tip: read the demos top to bottom; each builds on the one before. The numbers
+in 3.3 and 3.4 match the book exactly (3.4 uses the book&#x27;s seed-123 weights,
+hard-coded so every language shares them).
+&quot;&quot;&quot;
+
+import math
+
+import torch
+
+from attention import CausalAttention, MultiHeadAttention, Rng, SelfAttention, dropout, simple_attention
+
+# &quot;Your journey starts with one step.&quot; as 3-dimensional embeddings (book 3.3.1).
+INPUTS = torch.tensor(
+    [
+        [0.43, 0.15, 0.89],  # Your
+        [0.55, 0.87, 0.66],  # journey
+        [0.57, 0.85, 0.64],  # starts
+        [0.22, 0.58, 0.33],  # with
+        [0.77, 0.25, 0.10],  # one
+        [0.05, 0.80, 0.55],  # step
+    ]
+)
+
+# The book&#x27;s torch.manual_seed(123) weights (d_in=3, d_out=2), written out so no language needs torch.
+W_QUERY = [[0.29611194, 0.51656228], [0.25167072, 0.68855679], [0.07397246, 0.86652195]]
+W_KEY = [[0.13657987, 0.10247904], [0.18405646, 0.72644675], [0.31525391, 0.68710667]]
+W_VALUE = [[0.07563531, 0.19663817], [0.31641197, 0.40174013], [0.11856830, 0.82739538]]
+
+
+def fmt_row(values) -&gt; str:
+    return &quot;[&quot; + &quot;, &quot;.join(f&quot;{v:.4f}&quot; for v in values) + &quot;]&quot;
+
+
+def show(label: str, t: torch.Tensor) -&gt; None:
+    t = t.detach()
+    if t.dim() == 1:
+        print(f&quot;{label}: {fmt_row(t.tolist())}&quot;)
+    else:
+        print(f&quot;{label}:&quot;)
+        for row in t.tolist():
+            print(&quot;  &quot; + fmt_row(row))
+
+
+def demo_simple_attention() -&gt; None:
+    &quot;&quot;&quot;3.3: one query by hand, then all tokens at once.&quot;&quot;&quot;
+    print(&quot;== 3.3.1 simple attention for one query (x2, &#x27;journey&#x27;) ==&quot;)
+    query = INPUTS[1]
+    scores_2 = INPUTS @ query  # dot product of every token with the query
+    weights_2 = torch.softmax(scores_2, dim=0)
+    context_2 = weights_2 @ INPUTS
+    show(&quot;scores    &quot;, scores_2)
+    show(&quot;weights   &quot;, weights_2)
+    show(&quot;context z2&quot;, context_2)
+
+    print(&quot;== 3.3.2 all tokens at once ==&quot;)
+    scores, weights, context = simple_attention(INPUTS)
+    show(&quot;scores (T x T)&quot;, scores)
+    show(&quot;weights (rows sum to 1)&quot;, weights)
+    show(&quot;row sums&quot;, weights.sum(dim=1))
+    show(&quot;context vectors (T x d)&quot;, context)
+
+
+def demo_self_attention() -&gt; None:
+    &quot;&quot;&quot;3.4: query/key/value with trainable (here: fixed) weights.&quot;&quot;&quot;
+    print(&quot;== 3.4 self-attention with trainable weights (d_in=3, d_out=2) ==&quot;)
+    wq, wk, wv = (torch.tensor(w) for w in (W_QUERY, W_KEY, W_VALUE))
+    sa = SelfAttention(wq, wk, wv)
+    x2 = INPUTS[1]
+    query_2, keys, values = x2 @ wq, INPUTS @ wk, INPUTS @ wv
+    show(&quot;query_2&quot;, query_2)
+    print(f&quot;keys shape: {tuple(keys.shape)}, values shape: {tuple(values.shape)}&quot;)
+    scores_2 = query_2 @ keys.T
+    show(&quot;scores_2 (q2 . keys)&quot;, scores_2)
+    weights_2 = torch.softmax(scores_2 / math.sqrt(keys.shape[-1]), dim=-1)
+    show(&quot;weights_2 (scaled)&quot;, weights_2)
+    show(&quot;context_2&quot;, weights_2 @ values)
+    show(&quot;all context vectors (T x d_out)&quot;, sa(INPUTS))
+
+
+def demo_causal_attention() -&gt; None:
+    &quot;&quot;&quot;3.5: mask the future, then dropout.&quot;&quot;&quot;
+    print(&quot;== 3.5 causal attention ==&quot;)
+    wq, wk, wv = (torch.tensor(w) for w in (W_QUERY, W_KEY, W_VALUE))
+    ca = CausalAttention(wq, wk, wv, context_length=6)
+    show(&quot;causal weights (upper triangle is 0)&quot;, ca.attention_weights(INPUTS))
+    show(&quot;causal context vectors&quot;, ca(INPUTS))
+    dropped = dropout(torch.ones(6, 6), 0.5, Rng(123))
+    show(&quot;dropout 0.5 on ones(6, 6), seed 123 (kept values are doubled)&quot;, dropped)
+
+
+def demo_multihead() -&gt; None:
+    &quot;&quot;&quot;3.6: split the work across heads.&quot;&quot;&quot;
+    print(&quot;== 3.6 multi-head attention (d_in=3, d_out=2, heads=2) ==&quot;)
+    mha = MultiHeadAttention.random(d_in=3, d_out=2, num_heads=2, context_length=6, rng=Rng(123))
+    batch = torch.stack((INPUTS, INPUTS), dim=0)  # two copies = a batch of 2
+    out = mha(batch)
+    print(f&quot;input shape: {tuple(batch.shape)}  output shape: {tuple(out.shape)}&quot;)
+    show(&quot;output[0]&quot;, out[0])
+
+
+def run() -&gt; None:
+    demo_simple_attention()
+    demo_self_attention()
+    demo_causal_attention()
+    demo_multihead()
+</code></pre></div><div class="pane" data-lang="go"><div class="file">go-version/cmd/ch03.go</div><pre><code class="language-go">package main
+
+// Chapter 3 demos: attention, one idea at a time (book 3.3 to 3.6).
+//
+// Run from go-version/:  go run ./cmd ch03
+//
+// Tip: read the demos top to bottom; each builds on the one before. The numbers
+// in 3.3 and 3.4 match the book exactly (3.4 uses the book&#x27;s seed-123 weights,
+// hard-coded so every language shares them).
+
+import (
+	&quot;fmt&quot;
+	&quot;math&quot;
+	&quot;strings&quot;
+
+	&quot;llm-from-scratch/attention&quot;
+)
+
+// &quot;Your journey starts with one step.&quot; as 3-dimensional embeddings (book 3.3.1).
+var inputs = attention.FromRows([][]float32{
+	{0.43, 0.15, 0.89}, // Your
+	{0.55, 0.87, 0.66}, // journey
+	{0.57, 0.85, 0.64}, // starts
+	{0.22, 0.58, 0.33}, // with
+	{0.77, 0.25, 0.10}, // one
+	{0.05, 0.80, 0.55}, // step
+})
+
+// The book&#x27;s torch.manual_seed(123) weights (d_in=3, d_out=2), written out so no language needs torch.
+var (
+	wQuery = attention.FromRows([][]float32{{0.29611194, 0.51656228}, {0.25167072, 0.68855679}, {0.07397246, 0.86652195}})
+	wKey   = attention.FromRows([][]float32{{0.13657987, 0.10247904}, {0.18405646, 0.72644675}, {0.31525391, 0.68710667}})
+	wValue = attention.FromRows([][]float32{{0.07563531, 0.19663817}, {0.31641197, 0.40174013}, {0.11856830, 0.82739538}})
+)
+
+func fmtRow(values []float32) string {
+	parts := make([]string, len(values))
+	for i, v := range values {
+		if math.IsInf(float64(v), -1) {
+			parts[i] = &quot;-inf&quot;
+		} else {
+			parts[i] = fmt.Sprintf(&quot;%.4f&quot;, v)
+		}
+	}
+	return &quot;[&quot; + strings.Join(parts, &quot;, &quot;) + &quot;]&quot;
+}
+
+func showVec(label string, v []float32) { fmt.Printf(&quot;%s: %s\n&quot;, label, fmtRow(v)) }
+
+func showMatrix(label string, m attention.Matrix) {
+	fmt.Printf(&quot;%s:\n&quot;, label)
+	for i := 0; i &lt; m.Rows; i++ {
+		fmt.Println(&quot;  &quot; + fmtRow(m.Row(i)))
+	}
+}
+
+// demoSimpleAttention: 3.3, one query by hand, then all tokens at once.
+func demoSimpleAttention() {
+	fmt.Println(&quot;== 3.3.1 simple attention for one query (x2, &#x27;journey&#x27;) ==&quot;)
+	query := attention.FromRows([][]float32{inputs.Row(1)})
+	scores2 := attention.MatMul(query, attention.Transpose(inputs)) // dot product of every token with the query
+	weights2 := attention.SoftmaxRows(scores2)
+	context2 := attention.MatMul(weights2, inputs)
+	showVec(&quot;scores    &quot;, scores2.Row(0))
+	showVec(&quot;weights   &quot;, weights2.Row(0))
+	showVec(&quot;context z2&quot;, context2.Row(0))
+
+	fmt.Println(&quot;== 3.3.2 all tokens at once ==&quot;)
+	scores, weights, context := attention.SimpleAttention(inputs)
+	showMatrix(&quot;scores (T x T)&quot;, scores)
+	showMatrix(&quot;weights (rows sum to 1)&quot;, weights)
+	sums := make([]float32, weights.Rows)
+	for i := range sums {
+		for _, w := range weights.Row(i) {
+			sums[i] += w
+		}
+	}
+	showVec(&quot;row sums&quot;, sums)
+	showMatrix(&quot;context vectors (T x d)&quot;, context)
+}
+
+// demoSelfAttention: 3.4, query/key/value with trainable (here: fixed) weights.
+func demoSelfAttention() {
+	fmt.Println(&quot;== 3.4 self-attention with trainable weights (d_in=3, d_out=2) ==&quot;)
+	sa := &amp;attention.SelfAttention{WQuery: wQuery, WKey: wKey, WValue: wValue}
+	x2 := attention.FromRows([][]float32{inputs.Row(1)})
+	query2 := attention.MatMul(x2, wQuery)
+	keys, values := attention.MatMul(inputs, wKey), attention.MatMul(inputs, wValue)
+	showVec(&quot;query_2&quot;, query2.Row(0))
+	fmt.Printf(&quot;keys shape: (%d, %d), values shape: (%d, %d)\n&quot;, keys.Rows, keys.Cols, values.Rows, values.Cols)
+	scores2 := attention.MatMul(query2, attention.Transpose(keys))
+	showVec(&quot;scores_2 (q2 . keys)&quot;, scores2.Row(0))
+	scaled := attention.Scale(scores2, 1/float32(math.Sqrt(float64(keys.Cols))))
+	weights2 := attention.SoftmaxRows(scaled)
+	showVec(&quot;weights_2 (scaled)&quot;, weights2.Row(0))
+	showVec(&quot;context_2&quot;, attention.MatMul(weights2, values).Row(0))
+	showMatrix(&quot;all context vectors (T x d_out)&quot;, sa.Forward(inputs))
+}
+
+// demoCausalAttention: 3.5, mask the future, then dropout.
+func demoCausalAttention() {
+	fmt.Println(&quot;== 3.5 causal attention ==&quot;)
+	ca := attention.NewCausalAttention(wQuery, wKey, wValue, 0, nil)
+	showMatrix(&quot;causal weights (upper triangle is 0)&quot;, ca.CausalWeights(inputs, false))
+	showMatrix(&quot;causal context vectors&quot;, ca.CausalForward(inputs, false))
+	ones := attention.NewMatrix(6, 6)
+	for i := range ones.Data {
+		ones.Data[i] = 1
+	}
+	dropped := attention.Dropout(ones, 0.5, attention.NewRng(123))
+	showMatrix(&quot;dropout 0.5 on ones(6, 6), seed 123 (kept values are doubled)&quot;, dropped)
+}
+
+// demoMultiHead: 3.6, split the work across heads.
+func demoMultiHead() {
+	fmt.Println(&quot;== 3.6 multi-head attention (d_in=3, d_out=2, heads=2) ==&quot;)
+	mha := attention.NewRandomMultiHead(3, 2, 2, attention.NewRng(123))
+	// A batch is just the same computation repeated per example; two copies = a batch of 2.
+	out := mha.Forward(inputs)
+	fmt.Printf(&quot;input shape: (2, %d, %d)  output shape: (2, %d, %d)\n&quot;, inputs.Rows, inputs.Cols, out.Rows, out.Cols)
+	showMatrix(&quot;output[0]&quot;, out)
+}
+
+func runChapter3() {
+	demoSimpleAttention()
+	demoSelfAttention()
+	demoCausalAttention()
+	demoMultiHead()
+}
+</code></pre></div><div class="pane" data-lang="rust"><div class="file">rust-version/src/ch03.rs</div><pre><code class="language-rust">//! Chapter 3 demos: attention, one idea at a time (book 3.3 to 3.6).
+//!
+//! Run from rust-version/:  `cargo run -- ch03`
+//!
+//! Tip: read the demos top to bottom; each builds on the one before. The numbers
+//! in 3.3 and 3.4 match the book exactly (3.4 uses the book&#x27;s seed-123 weights,
+//! hard-coded so every language shares them).
+
+#![allow(clippy::excessive_precision)] // the book weights are written out in full
+
+use llm_from_scratch::attention::{
+    CausalAttention, Matrix, MultiHeadAttention, SelfAttention, simple_attention,
+};
+use llm_from_scratch::tokenization::rng::Rng;
+
+/// &quot;Your journey starts with one step.&quot; as 3-dimensional embeddings (book 3.3.1).
+fn inputs() -&gt; Matrix {
+    Matrix::from_rows(&amp;[
+        &amp;[0.43, 0.15, 0.89], // Your
+        &amp;[0.55, 0.87, 0.66], // journey
+        &amp;[0.57, 0.85, 0.64], // starts
+        &amp;[0.22, 0.58, 0.33], // with
+        &amp;[0.77, 0.25, 0.10], // one
+        &amp;[0.05, 0.80, 0.55], // step
+    ])
+}
+
+/// The book&#x27;s torch.manual_seed(123) weights (d_in=3, d_out=2), written out so no language needs torch.
+fn book_weights() -&gt; (Matrix, Matrix, Matrix) {
+    (
+        Matrix::from_rows(&amp;[
+            &amp;[0.29611194, 0.51656228],
+            &amp;[0.25167072, 0.68855679],
+            &amp;[0.07397246, 0.86652195],
+        ]),
+        Matrix::from_rows(&amp;[
+            &amp;[0.13657987, 0.10247904],
+            &amp;[0.18405646, 0.72644675],
+            &amp;[0.31525391, 0.68710667],
+        ]),
+        Matrix::from_rows(&amp;[
+            &amp;[0.07563531, 0.19663817],
+            &amp;[0.31641197, 0.40174013],
+            &amp;[0.11856830, 0.82739538],
+        ]),
+    )
+}
+
+fn fmt_row(values: &amp;[f32]) -&gt; String {
+    let parts: Vec&lt;String&gt; = values.iter().map(|v| format!(&quot;{v:.4}&quot;)).collect();
+    format!(&quot;[{}]&quot;, parts.join(&quot;, &quot;))
+}
+
+fn show_vec(label: &amp;str, v: &amp;[f32]) {
+    println!(&quot;{label}: {}&quot;, fmt_row(v));
+}
+
+fn show_matrix(label: &amp;str, m: &amp;Matrix) {
+    println!(&quot;{label}:&quot;);
+    for i in 0..m.rows {
+        println!(&quot;  {}&quot;, fmt_row(m.row(i)));
+    }
+}
+
+/// 3.3: one query by hand, then all tokens at once.
+fn demo_simple_attention() {
+    let inputs = inputs();
+    println!(&quot;== 3.3.1 simple attention for one query (x2, &#x27;journey&#x27;) ==&quot;);
+    let query = Matrix::from_rows(&amp;[inputs.row(1)]);
+    let scores_2 = query.matmul(&amp;inputs.transpose()); // dot product of every token with the query
+    let weights_2 = scores_2.softmax_rows();
+    let context_2 = weights_2.matmul(&amp;inputs);
+    show_vec(&quot;scores    &quot;, scores_2.row(0));
+    show_vec(&quot;weights   &quot;, weights_2.row(0));
+    show_vec(&quot;context z2&quot;, context_2.row(0));
+
+    println!(&quot;== 3.3.2 all tokens at once ==&quot;);
+    let (scores, weights, context) = simple_attention(&amp;inputs);
+    show_matrix(&quot;scores (T x T)&quot;, &amp;scores);
+    show_matrix(&quot;weights (rows sum to 1)&quot;, &amp;weights);
+    let sums: Vec&lt;f32&gt; = (0..weights.rows)
+        .map(|i| weights.row(i).iter().sum())
+        .collect();
+    show_vec(&quot;row sums&quot;, &amp;sums);
+    show_matrix(&quot;context vectors (T x d)&quot;, &amp;context);
+}
+
+/// 3.4: query/key/value with trainable (here: fixed) weights.
+fn demo_self_attention() {
+    let inputs = inputs();
+    println!(&quot;== 3.4 self-attention with trainable weights (d_in=3, d_out=2) ==&quot;);
+    let (wq, wk, wv) = book_weights();
+    let x2 = Matrix::from_rows(&amp;[inputs.row(1)]);
+    let query_2 = x2.matmul(&amp;wq);
+    let keys = inputs.matmul(&amp;wk);
+    let values = inputs.matmul(&amp;wv);
+    show_vec(&quot;query_2&quot;, query_2.row(0));
+    println!(
+        &quot;keys shape: ({}, {}), values shape: ({}, {})&quot;,
+        keys.rows, keys.cols, values.rows, values.cols
+    );
+    let scores_2 = query_2.matmul(&amp;keys.transpose());
+    show_vec(&quot;scores_2 (q2 . keys)&quot;, scores_2.row(0));
+    let weights_2 = scores_2
+        .scale(1.0 / (keys.cols as f64).sqrt() as f32)
+        .softmax_rows();
+    show_vec(&quot;weights_2 (scaled)&quot;, weights_2.row(0));
+    show_vec(&quot;context_2&quot;, weights_2.matmul(&amp;values).row(0));
+    let sa = SelfAttention {
+        w_query: wq,
+        w_key: wk,
+        w_value: wv,
+    };
+    show_matrix(&quot;all context vectors (T x d_out)&quot;, &amp;sa.forward(&amp;inputs));
+}
+
+/// 3.5: mask the future, then dropout.
+fn demo_causal_attention() {
+    let inputs = inputs();
+    println!(&quot;== 3.5 causal attention ==&quot;);
+    let (wq, wk, wv) = book_weights();
+    let ca = CausalAttention::new(wq, wk, wv, 0.0);
+    show_matrix(
+        &quot;causal weights (upper triangle is 0)&quot;,
+        &amp;ca.attention_weights(&amp;inputs, None),
+    );
+    show_matrix(&quot;causal context vectors&quot;, &amp;ca.forward(&amp;inputs, None));
+    let mut ones = Matrix::new(6, 6);
+    ones.data.fill(1.0);
+    let dropped = ones.dropout(0.5, &amp;mut Rng::new(123));
+    show_matrix(
+        &quot;dropout 0.5 on ones(6, 6), seed 123 (kept values are doubled)&quot;,
+        &amp;dropped,
+    );
+}
+
+/// 3.6: split the work across heads.
+fn demo_multihead() {
+    let inputs = inputs();
+    println!(&quot;== 3.6 multi-head attention (d_in=3, d_out=2, heads=2) ==&quot;);
+    let mha = MultiHeadAttention::random(3, 2, 2, &amp;mut Rng::new(123));
+    // A batch is just the same computation repeated per example; two copies = a batch of 2.
+    let out = mha.forward(&amp;inputs);
+    println!(
+        &quot;input shape: (2, {}, {})  output shape: (2, {}, {})&quot;,
+        inputs.rows, inputs.cols, out.rows, out.cols
+    );
+    show_matrix(&quot;output[0]&quot;, &amp;out);
+}
+
+pub fn run() {
+    demo_simple_attention();
+    demo_self_attention();
+    demo_causal_attention();
+    demo_multihead();
+}
+</code></pre></div><div class="pane" data-lang="c"><div class="file">C-version/ch03.c</div><pre><code class="language-c">/* Chapter 3 demos: attention, one idea at a time (book 3.3 to 3.6).
+ *
+ * Run from C-version/:  make run ARGS=ch03   (or ./build/main ch03)
+ *
+ * Tip: read the demos top to bottom; each builds on the one before. The numbers
+ * in 3.3 and 3.4 match the book exactly (3.4 uses the book&#x27;s seed-123 weights,
+ * hard-coded so every language shares them).
+ */
+#include &quot;ch03.h&quot;
+
+#include &lt;math.h&gt;
+#include &lt;stdio.h&gt;
+
+#include &quot;attention/causal.h&quot;
+#include &quot;attention/matrix.h&quot;
+#include &quot;attention/multihead.h&quot;
+#include &quot;attention/self_attention.h&quot;
+#include &quot;attention/simple.h&quot;
+
+/* &quot;Your journey starts with one step.&quot; as 3-dimensional embeddings (book 3.3.1). */
+static const float INPUTS[6][3] = {
+    {0.43f, 0.15f, 0.89f}, /* Your */
+    {0.55f, 0.87f, 0.66f}, /* journey */
+    {0.57f, 0.85f, 0.64f}, /* starts */
+    {0.22f, 0.58f, 0.33f}, /* with */
+    {0.77f, 0.25f, 0.10f}, /* one */
+    {0.05f, 0.80f, 0.55f}, /* step */
+};
+
+/* The book&#x27;s torch.manual_seed(123) weights (d_in=3, d_out=2), written out so no language needs torch. */
+static const float W_QUERY[3][2] = {{0.29611194f, 0.51656228f}, {0.25167072f, 0.68855679f}, {0.07397246f, 0.86652195f}};
+static const float W_KEY[3][2] = {{0.13657987f, 0.10247904f}, {0.18405646f, 0.72644675f}, {0.31525391f, 0.68710667f}};
+static const float W_VALUE[3][2] = {{0.07563531f, 0.19663817f}, {0.31641197f, 0.40174013f}, {0.11856830f, 0.82739538f}};
+
+static void print_row(const float *values, size_t n) {
+    printf(&quot;[&quot;);
+    for (size_t i = 0; i &lt; n; i++) printf(i ? &quot;, %.4f&quot; : &quot;%.4f&quot;, values[i]);
+    printf(&quot;]&quot;);
+}
+
+static void show_vec(const char *label, const float *values, size_t n) {
+    printf(&quot;%s: &quot;, label);
+    print_row(values, n);
+    printf(&quot;\n&quot;);
+}
+
+static void show_matrix(const char *label, Matrix m) {
+    printf(&quot;%s:\n&quot;, label);
+    for (size_t i = 0; i &lt; m.rows; i++) {
+        printf(&quot;  &quot;);
+        print_row(matrix_row(m, i), m.cols);
+        printf(&quot;\n&quot;);
+    }
+}
+
+/* 3.3: one query by hand, then all tokens at once. */
+static void demo_simple_attention(void) {
+    Arena a = arena_new(1 &lt;&lt; 20);
+    Matrix inputs = matrix_from(&amp;a, 6, 3, &amp;INPUTS[0][0]);
+    printf(&quot;== 3.3.1 simple attention for one query (x2, &#x27;journey&#x27;) ==\n&quot;);
+    Matrix query = matrix_from(&amp;a, 1, 3, INPUTS[1]);
+    Matrix scores_2 = matmul(&amp;a, query, transpose(&amp;a, inputs)); /* dot product of every token with the query */
+    Matrix weights_2 = softmax_rows(&amp;a, scores_2);
+    Matrix context_2 = matmul(&amp;a, weights_2, inputs);
+    show_vec(&quot;scores    &quot;, scores_2.data, 6);
+    show_vec(&quot;weights   &quot;, weights_2.data, 6);
+    show_vec(&quot;context z2&quot;, context_2.data, 3);
+
+    printf(&quot;== 3.3.2 all tokens at once ==\n&quot;);
+    SimpleAttentionResult r = simple_attention(&amp;a, inputs);
+    show_matrix(&quot;scores (T x T)&quot;, r.scores);
+    show_matrix(&quot;weights (rows sum to 1)&quot;, r.weights);
+    float sums[6] = {0};
+    for (size_t i = 0; i &lt; 6; i++)
+        for (size_t j = 0; j &lt; 6; j++) sums[i] += matrix_at(r.weights, i, j);
+    show_vec(&quot;row sums&quot;, sums, 6);
+    show_matrix(&quot;context vectors (T x d)&quot;, r.context);
+    arena_free(&amp;a);
+}
+
+/* 3.4: query/key/value with trainable (here: fixed) weights. */
+static void demo_self_attention(void) {
+    Arena a = arena_new(1 &lt;&lt; 20);
+    Matrix inputs = matrix_from(&amp;a, 6, 3, &amp;INPUTS[0][0]);
+    printf(&quot;== 3.4 self-attention with trainable weights (d_in=3, d_out=2) ==\n&quot;);
+    SelfAttention sa = {matrix_from(&amp;a, 3, 2, &amp;W_QUERY[0][0]), matrix_from(&amp;a, 3, 2, &amp;W_KEY[0][0]),
+                        matrix_from(&amp;a, 3, 2, &amp;W_VALUE[0][0])};
+    Matrix x2 = matrix_from(&amp;a, 1, 3, INPUTS[1]);
+    Matrix query_2 = matmul(&amp;a, x2, sa.w_query);
+    Matrix keys = matmul(&amp;a, inputs, sa.w_key), values = matmul(&amp;a, inputs, sa.w_value);
+    show_vec(&quot;query_2&quot;, query_2.data, 2);
+    printf(&quot;keys shape: (%zu, %zu), values shape: (%zu, %zu)\n&quot;, keys.rows, keys.cols, values.rows, values.cols);
+    Matrix scores_2 = matmul(&amp;a, query_2, transpose(&amp;a, keys));
+    show_vec(&quot;scores_2 (q2 . keys)&quot;, scores_2.data, 6);
+    Matrix weights_2 = softmax_rows(&amp;a, scale_by_sqrt(&amp;a, scores_2, keys.cols));
+    show_vec(&quot;weights_2 (scaled)&quot;, weights_2.data, 6);
+    show_vec(&quot;context_2&quot;, matmul(&amp;a, weights_2, values).data, 2);
+    show_matrix(&quot;all context vectors (T x d_out)&quot;, self_attention_forward(&amp;a, &amp;sa, inputs));
+    arena_free(&amp;a);
+}
+
+/* 3.5: mask the future, then dropout. */
+static void demo_causal_attention(void) {
+    Arena a = arena_new(1 &lt;&lt; 20);
+    Matrix inputs = matrix_from(&amp;a, 6, 3, &amp;INPUTS[0][0]);
+    printf(&quot;== 3.5 causal attention ==\n&quot;);
+    CausalAttention ca = {{matrix_from(&amp;a, 3, 2, &amp;W_QUERY[0][0]), matrix_from(&amp;a, 3, 2, &amp;W_KEY[0][0]),
+                           matrix_from(&amp;a, 3, 2, &amp;W_VALUE[0][0])},
+                          0.0f};
+    show_matrix(&quot;causal weights (upper triangle is 0)&quot;, causal_weights(&amp;a, &amp;ca, inputs, NULL));
+    show_matrix(&quot;causal context vectors&quot;, causal_forward(&amp;a, &amp;ca, inputs, NULL));
+    Matrix ones = matrix_new(&amp;a, 6, 6);
+    for (size_t i = 0; i &lt; 36; i++) ones.data[i] = 1.0f;
+    Rng rng = rng_new(123);
+    show_matrix(&quot;dropout 0.5 on ones(6, 6), seed 123 (kept values are doubled)&quot;, dropout(&amp;a, ones, 0.5f, &amp;rng));
+    arena_free(&amp;a);
+}
+
+/* 3.6: split the work across heads. */
+static void demo_multihead(void) {
+    Arena a = arena_new(1 &lt;&lt; 20);
+    Matrix inputs = matrix_from(&amp;a, 6, 3, &amp;INPUTS[0][0]);
+    printf(&quot;== 3.6 multi-head attention (d_in=3, d_out=2, heads=2) ==\n&quot;);
+    Rng rng = rng_new(123);
+    MultiHeadAttention mha = multihead_random(&amp;a, 3, 2, 2, &amp;rng);
+    /* A batch is just the same computation repeated per example; two copies = a batch of 2. */
+    Matrix out = multihead_forward(&amp;a, &amp;mha, inputs);
+    printf(&quot;input shape: (2, %zu, %zu)  output shape: (2, %zu, %zu)\n&quot;, inputs.rows, inputs.cols, out.rows, out.cols);
+    show_matrix(&quot;output[0]&quot;, out);
+    arena_free(&amp;a);
+}
+
+void run_chapter3(void) {
+    demo_simple_attention();
+    demo_self_attention();
+    demo_causal_attention();
+    demo_multihead();
+}
+</code></pre></div><div class="pane" data-lang="zig"><div class="file">Zig-version/src/ch03.zig</div><pre><code class="language-zig">//! Chapter 3 demos: attention, one idea at a time (book 3.3 to 3.6).
+//!
+//! Run from Zig-version/:  `zig build run -- ch03`
+//!
+//! Tip: read the demos top to bottom; each builds on the one before. The numbers
+//! in 3.3 and 3.4 match the book exactly (3.4 uses the book&#x27;s seed-123 weights,
+//! hard-coded so every language shares them).
+
+const std = @import(&quot;std&quot;);
+const att = @import(&quot;attention/root.zig&quot;);
+const Rng = @import(&quot;tokenization/rng.zig&quot;).Rng;
+
+const Matrix = att.Matrix;
+const Out = *std.Io.Writer;
+
+/// &quot;Your journey starts with one step.&quot; as 3-dimensional embeddings (book 3.3.1).
+const inputs_data = [_]f32{
+    0.43, 0.15, 0.89, // Your
+    0.55, 0.87, 0.66, // journey
+    0.57, 0.85, 0.64, // starts
+    0.22, 0.58, 0.33, // with
+    0.77, 0.25, 0.10, // one
+    0.05, 0.80, 0.55, // step
+};
+
+// The book&#x27;s torch.manual_seed(123) weights (d_in=3, d_out=2), written out so no language needs torch.
+const w_query_data = [_]f32{ 0.29611194, 0.51656228, 0.25167072, 0.68855679, 0.07397246, 0.86652195 };
+const w_key_data = [_]f32{ 0.13657987, 0.10247904, 0.18405646, 0.72644675, 0.31525391, 0.68710667 };
+const w_value_data = [_]f32{ 0.07563531, 0.19663817, 0.31641197, 0.40174013, 0.11856830, 0.82739538 };
+
+fn printRow(out: Out, values: []const f32) !void {
+    try out.writeAll(&quot;[&quot;);
+    for (values, 0..) |v, i| {
+        if (i &gt; 0) try out.writeAll(&quot;, &quot;);
+        try out.print(&quot;{d:.4}&quot;, .{v});
+    }
+    try out.writeAll(&quot;]&quot;);
+}
+
+fn showVec(out: Out, label: []const u8, values: []const f32) !void {
+    try out.print(&quot;{s}: &quot;, .{label});
+    try printRow(out, values);
+    try out.writeAll(&quot;\n&quot;);
+}
+
+fn showMatrix(out: Out, label: []const u8, m: Matrix) !void {
+    try out.print(&quot;{s}:\n&quot;, .{label});
+    for (0..m.rows) |i| {
+        try out.writeAll(&quot;  &quot;);
+        try printRow(out, m.row(i));
+        try out.writeAll(&quot;\n&quot;);
+    }
+}
+
+/// 3.3: one query by hand, then all tokens at once.
+fn demoSimpleAttention(gpa: std.mem.Allocator, out: Out) !void {
+    const inputs = try Matrix.fromSlice(gpa, 6, 3, &amp;inputs_data);
+    try out.writeAll(&quot;== 3.3.1 simple attention for one query (x2, &#x27;journey&#x27;) ==\n&quot;);
+    const query = try Matrix.fromSlice(gpa, 1, 3, inputs.row(1));
+    const scores_2 = try query.matmul(gpa, try inputs.transpose(gpa)); // dot product of every token with the query
+    const weights_2 = try scores_2.softmaxRows(gpa);
+    const context_2 = try weights_2.matmul(gpa, inputs);
+    try showVec(out, &quot;scores    &quot;, scores_2.row(0));
+    try showVec(out, &quot;weights   &quot;, weights_2.row(0));
+    try showVec(out, &quot;context z2&quot;, context_2.row(0));
+
+    try out.writeAll(&quot;== 3.3.2 all tokens at once ==\n&quot;);
+    const r = try att.simpleAttention(gpa, inputs);
+    try showMatrix(out, &quot;scores (T x T)&quot;, r.scores);
+    try showMatrix(out, &quot;weights (rows sum to 1)&quot;, r.weights);
+    var sums: [6]f32 = undefined;
+    for (0..6) |i| {
+        var total: f32 = 0;
+        for (r.weights.row(i)) |w| total += w;
+        sums[i] = total;
+    }
+    try showVec(out, &quot;row sums&quot;, &amp;sums);
+    try showMatrix(out, &quot;context vectors (T x d)&quot;, r.context);
+}
+
+/// 3.4: query/key/value with trainable (here: fixed) weights.
+fn demoSelfAttention(gpa: std.mem.Allocator, out: Out) !void {
+    const inputs = try Matrix.fromSlice(gpa, 6, 3, &amp;inputs_data);
+    try out.writeAll(&quot;== 3.4 self-attention with trainable weights (d_in=3, d_out=2) ==\n&quot;);
+    const sa = att.SelfAttention{
+        .w_query = try Matrix.fromSlice(gpa, 3, 2, &amp;w_query_data),
+        .w_key = try Matrix.fromSlice(gpa, 3, 2, &amp;w_key_data),
+        .w_value = try Matrix.fromSlice(gpa, 3, 2, &amp;w_value_data),
+    };
+    const x2 = try Matrix.fromSlice(gpa, 1, 3, inputs.row(1));
+    const query_2 = try x2.matmul(gpa, sa.w_query);
+    const keys = try inputs.matmul(gpa, sa.w_key);
+    const values = try inputs.matmul(gpa, sa.w_value);
+    try showVec(out, &quot;query_2&quot;, query_2.row(0));
+    try out.print(&quot;keys shape: ({d}, {d}), values shape: ({d}, {d})\n&quot;, .{ keys.rows, keys.cols, values.rows, values.cols });
+    const scores_2 = try query_2.matmul(gpa, try keys.transpose(gpa));
+    try showVec(out, &quot;scores_2 (q2 . keys)&quot;, scores_2.row(0));
+    const weights_2 = try (try att.self_attention.scaleBySqrt(gpa, scores_2, keys.cols)).softmaxRows(gpa);
+    try showVec(out, &quot;weights_2 (scaled)&quot;, weights_2.row(0));
+    try showVec(out, &quot;context_2&quot;, (try weights_2.matmul(gpa, values)).row(0));
+    try showMatrix(out, &quot;all context vectors (T x d_out)&quot;, try sa.forward(gpa, inputs));
+}
+
+/// 3.5: mask the future, then dropout.
+fn demoCausalAttention(gpa: std.mem.Allocator, out: Out) !void {
+    const inputs = try Matrix.fromSlice(gpa, 6, 3, &amp;inputs_data);
+    try out.writeAll(&quot;== 3.5 causal attention ==\n&quot;);
+    const ca = att.CausalAttention{ .base = .{
+        .w_query = try Matrix.fromSlice(gpa, 3, 2, &amp;w_query_data),
+        .w_key = try Matrix.fromSlice(gpa, 3, 2, &amp;w_key_data),
+        .w_value = try Matrix.fromSlice(gpa, 3, 2, &amp;w_value_data),
+    } };
+    try showMatrix(out, &quot;causal weights (upper triangle is 0)&quot;, try ca.attentionWeights(gpa, inputs, null));
+    try showMatrix(out, &quot;causal context vectors&quot;, try ca.forward(gpa, inputs, null));
+    const ones = try Matrix.init(gpa, 6, 6);
+    @memset(ones.data, 1);
+    var rng = Rng.init(123);
+    try showMatrix(out, &quot;dropout 0.5 on ones(6, 6), seed 123 (kept values are doubled)&quot;, try ones.dropout(gpa, 0.5, &amp;rng));
+}
+
+/// 3.6: split the work across heads.
+fn demoMultihead(gpa: std.mem.Allocator, out: Out) !void {
+    const inputs = try Matrix.fromSlice(gpa, 6, 3, &amp;inputs_data);
+    try out.writeAll(&quot;== 3.6 multi-head attention (d_in=3, d_out=2, heads=2) ==\n&quot;);
+    var rng = Rng.init(123);
+    const mha = try att.MultiHeadAttention.random(gpa, 3, 2, 2, &amp;rng);
+    // A batch is just the same computation repeated per example; two copies = a batch of 2.
+    const result = try mha.forward(gpa, inputs);
+    try out.print(&quot;input shape: (2, {d}, {d})  output shape: (2, {d}, {d})\n&quot;, .{ inputs.rows, inputs.cols, result.rows, result.cols });
+    try showMatrix(out, &quot;output[0]&quot;, result);
+}
+
+pub fn run(gpa: std.mem.Allocator, out: Out) !void {
+    try demoSimpleAttention(gpa, out);
+    try demoSelfAttention(gpa, out);
+    try demoCausalAttention(gpa, out);
+    try demoMultihead(gpa, out);
+}
+</code></pre></div></div>
+
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/ch03-demo-output.html">Edit this page on GitHub</a></p>
+<div class="pager"><a href="scaling-sqrt-dk.html">&larr; Why scale by sqrt(d_k)</a><a href="chapter-4.html">Chapter 4 &rarr;</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script src="site.js"></script>
+</body></html>

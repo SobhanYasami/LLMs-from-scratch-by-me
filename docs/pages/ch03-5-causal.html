@@ -1,0 +1,45 @@
+---
+title: 3.5: Hiding future words with causal attention
+nav: 3.5 Causal attention
+chapter: 3
+section: 3.5
+order: 40
+code: attn_causal
+---
+<div class="aim"><b>Aim.</b> Stop tokens from seeing the future, so the model can learn next-token prediction, and add dropout against overfitting.</div>
+<p>A GPT is trained to predict the next token, so when it processes token i it must only use tokens 0 to i. If it could peek at token i+1 it would simply copy the answer. <b>Causal</b> (or <i>masked</i>) attention enforces this: attention weights above the diagonal are removed.</p>
+<h2>Two ways to mask</h2>
+<div class="cmp">
+<div><h3>Mask after softmax</h3>Zero everything above the diagonal, then divide each row by its new sum so it adds to 1 again. Correct, but needs an extra step.</div>
+<div><h3>Mask before softmax (used)</h3>Overwrite the future scores with <code>-inf</code>, then softmax. <code>exp(-inf) = 0</code>, and the row still sums to 1. One step, same result.</div>
+</div>
+<pre class="out">scores                      after the -inf mask
+[ s00  s01  s02 ]           [ s00  -inf  -inf ]
+[ s10  s11  s12 ]   ----&gt;   [ s10  s11   -inf ]
+[ s20  s21  s22 ]           [ s20  s21   s22  ]</pre>
+<p>Check with real numbers. For "journey" the unmasked weights were 0.1500 for "Your" and 0.2264 for itself. Keep just those two and renormalise: 0.1500 / (0.1500 + 0.2264) = 0.3985. The masked attention row indeed shows <b>0.3986</b>. Masking before or after gives the same answer (up to rounding).</p>
+<pre class="out">causal weights (upper triangle is 0):
+  [1.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]
+  [0.3986, 0.6014, 0.0000, 0.0000, 0.0000, 0.0000]
+  [0.2526, 0.3791, 0.3683, 0.0000, 0.0000, 0.0000]
+  ...
+  [0.1557, 0.2092, 0.2048, 0.1419, 0.1089, 0.1794]</pre>
+<p>The first token can only attend to itself (weight 1.0). The last token sees everything, so its row has no zeros.</p>
+<h2>Dropout</h2>
+<p><b>Dropout</b> randomly sets some values to zero during training, so the model cannot lean on any single connection. We apply it to the attention weights, after softmax. Two details:</p>
+<ul>
+<li>The surviving values are scaled up by <code>1 / (1 - p)</code>. With p = 0.5, kept values double. This keeps the average unchanged, so nothing needs rescaling at inference, when dropout is switched off.</li>
+<li>It is <b>training only</b>. The book uses 50% here for illustration; real GPT training uses 0.1 to 0.2.</li>
+</ul>
+<pre class="out">dropout 0.5 on a 6 x 6 matrix of ones (our seeded generator):
+  [2, 2, 2, 2, 2, 2]
+  [2, 0, 2, 0, 2, 2]
+  [0, 0, 2, 0, 0, 0]
+  ...</pre>
+<div class="tip">The exact pattern depends on the random generator. The book's torch output differs from ours; ours comes from a few lines of splitmix64 so all five languages agree.</div>
+<h2>Batches</h2>
+<p>The book's <code>CausalAttention</code> also handles a <b>batch</b> of sequences (shape [batch, tokens, d_in]), because the data loader of chapter 2 produces batches. Our Go, Rust, C and Zig versions process one sequence at a time and the demo loops over a batch; the math per sequence is identical. The mask is stored as a <i>buffer</i> in torch (<code>register_buffer</code>): saved with the model and moved to the GPU with it, but not a learned parameter.</p>
+<h2>Code</h2>
+{{code}}
+<h2>Exercise</h2>
+<p>Print the causal weights with and without the <code>-inf</code> trick (the "mask after" way). Confirm they match to 4 decimals. Then change the dropout rate to 0.2 and count how many of the 36 positions survive.</p>

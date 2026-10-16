@@ -179,6 +179,10 @@ An ID is only an integer. `nn.Embedding(vocab_size, D)` is a lookup table with o
 
 With `stride < max_length` windows overlap (more samples, more overfitting risk); `stride == max_length` gives no overlap. `shuffle` and `drop_last` on the loader matter for training.
 
+## Chapter 3: attention (`attention/`, `ch03.py`)
+
+`python-version/.venv/bin/python python-version/main.py ch03` runs the attention demos. Modules: `simple` (3.3), `self_attention` (3.4), `causal` (3.5, with the seeded `rng` for dropout), `multihead` (3.6). Concepts and walkthroughs are on the docs site. The numbers in 3.3 and 3.4 match the book.
+
 ## Concepts checklist
 
 - [ ] Why a model needs integers, not text

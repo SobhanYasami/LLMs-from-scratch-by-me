@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3.3: A simple self-attention mechanism</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+</head><body><div class="layout">
+<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
+<h4>Start</h4>
+<a class="" href="index.html">Overview</a>
+<a class="" href="roadmap.html">Roadmap</a>
+<h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a class="" href="ch01-stages.html">1.3, 1.5 Training stages &amp; data</a>
+<a class="" href="ch01-transformer.html">1.4 Transformers &amp; tasks</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT &amp; the roadmap</a>
+<h4><a class="h4link" href="chapter-2.html">Chapter 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 Overview &amp; embeddings</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a class="" href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
+<a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
+<a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
+<a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
+<h4><a class="h4link" href="chapter-3.html">Chapter 3</a></h4>
+<a class="" href="ch03-1-long-sequences.html">3.1-3.2 Why attention</a>
+<a class=" on" href="ch03-3-simple-attention.html">3.3 Simple attention</a>
+<a class="" href="ch03-4-self-attention.html">3.4 Trainable weights</a>
+<a class="" href="ch03-5-causal.html">3.5 Causal attention</a>
+<a class="" href="ch03-6-multihead.html">3.6 Multi-head</a>
+<a class="extra" href="scaling-sqrt-dk.html">Why scale by sqrt(d_k)</a>
+<a class="extra" href="ch03-demo-output.html">Chapter 3 demo output</a>
+<h4><a class="h4link" href="chapter-4.html">Chapter 4</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-5.html">Chapter 5</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-6.html">Chapter 6</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-7.html">Chapter 7</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-A.html">Appendices</a> <em>planned</em></h4>
+<h4>Reference</h4>
+<a class="" href="reference.html">Code reference</a>
+<a class="" href="contributing.html">Contributing</a>
+<a class="" href="glossary.html">Glossary</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
+<main><h1>3.3: A simple self-attention mechanism</h1>
+<p class="meta">Book section 3.3 · code in Python, Go, Rust, C, Zig</p>
+<div class="aim"><b>Aim.</b> See, with no trainable weights, how every token gets a <i>context vector</i> that blends in the other tokens.</div>
+<p>Take the sentence <i>"Your journey starts with one step."</i> already embedded as six 3-dimensional vectors (chapter 2 made these). Row 1 is "Your", row 2 is "journey", and so on. For each token we want a <b>context vector</b>: its own embedding, enriched with information from all the other tokens.</p>
+<pre class="out">x1 Your     [0.43, 0.15, 0.89]
+x2 journey  [0.55, 0.87, 0.66]
+x3 starts   [0.57, 0.85, 0.64]
+x4 with     [0.22, 0.58, 0.33]
+x5 one      [0.77, 0.25, 0.10]
+x6 step     [0.05, 0.80, 0.55]</pre>
+<h2>Three steps, for one query (x2, "journey")</h2>
+<ol>
+<li><b>Scores.</b> Dot product of the query with every token. A dot product is a similarity measure: the more two vectors point the same way, the bigger it is.
+<pre class="out">scores = [0.9544, 1.4950, 1.4754, 0.8434, 0.7070, 1.0865]</pre></li>
+<li><b>Weights.</b> Normalise the scores so they are positive and sum to 1. Plain division by the sum works, but <b>softmax</b> is standard: it handles extreme values better and has friendlier gradients.
+<pre class="out">divide by sum: [0.1455, 0.2278, 0.2249, 0.1285, 0.1077, 0.1656]
+softmax      : [0.1385, 0.2379, 0.2333, 0.1240, 0.1082, 0.1581]</pre></li>
+<li><b>Context vector.</b> Weighted sum of all token vectors, using those weights.
+<pre class="out">z2 = 0.1385*x1 + 0.2379*x2 + ... + 0.1581*x6 = [0.4419, 0.6515, 0.5683]</pre></li>
+</ol>
+<div class="tip">Softmax in code subtracts the largest score first. The result is identical, but <code>exp</code> can no longer overflow on big numbers.</div>
+<h2>All tokens at once: three matrix operations</h2>
+<p>Stack the loop over all queries and it becomes matrix algebra. With X the 6x3 input matrix:</p>
+<pre class="out">scores  = X x X^T                  (6 x 6)  every token against every token
+weights = softmax(scores, row by row)          each row sums to 1
+context = weights x X                (6 x 3)  one context vector per token</pre>
+<pre class="out">weights (row 2 is the one we computed by hand):
+  [0.2098, 0.2006, 0.1981, 0.1242, 0.1220, 0.1452]
+  [0.1385, 0.2379, 0.2333, 0.1240, 0.1082, 0.1581]   &lt;- journey
+  ...
+context vectors:
+  [0.4421, 0.5931, 0.5790]
+  [0.4419, 0.6515, 0.5683]   &lt;- z2, same as before</pre>
+<p>Row 2 of the matrix result equals the vector we built step by step. That is the whole check. The matrix form is just the loop, done faster.</p>
+<h2>What is missing</h2>
+<p>Nothing here learns. The weights come straight from raw embedding similarity. The next page adds three trainable matrices so the model can <i>learn</i> what to look for.</p>
+<h2>Code</h2>
+<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button><button data-lang="c">C</button><button data-lang="zig">Zig</button></div><div class="pane" data-lang="python"><div class="file">python-version/attention/simple.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 6 (book 3.3) - simplified self-attention, no trainable weights.
+
+For every token, build a *context vector*: an enriched embedding that mixes
+in information from all the other tokens, weighted by how relevant each is.
+
+    scores  = X @ X.T                  how similar is token i to token j?   [T, T]
+    weights = softmax(scores, rows)    turn each row into weights summing to 1
+    context = weights @ X              weighted sum of all token vectors   [T, d]
+
+Tip: a dot product measures similarity. Similar vectors -&gt; big score -&gt; big weight.
+There is nothing to learn here yet; trainable weights arrive in 3.4.
+&quot;&quot;&quot;
+
+import torch
+
+
+def simple_attention(inputs: torch.Tensor):
+    &quot;&quot;&quot;``inputs`` is [T, d]. Returns (scores, weights, context).&quot;&quot;&quot;
+    scores = inputs @ inputs.T
+    weights = torch.softmax(scores, dim=-1)
+    context = weights @ inputs
+    return scores, weights, context
+</code></pre></div><div class="pane" data-lang="go"><div class="file">go-version/attention/matrix.go</div><pre><code class="language-go">// Package attention holds the attention building blocks (book chapter 3).
+//
+// Files, in the order you learn them:
+//   - matrix.go:         the few matrix operations attention needs.
+//   - rng.go:            a seeded random generator shared with the other languages.
+//   - simple.go:         simplified self-attention, no trainable weights (3.3).
+//   - self_attention.go: scaled dot-product attention with W_query/key/value (3.4).
+//   - causal.go:         hide future tokens with a mask, optional dropout (3.5).
+//   - multihead.go:      several heads in parallel plus an output projection (3.6).
+//
+// Tip: there is no tensor library here, so Matrix is a row-major []float32.
+// Everything attention does is these operations: matmul, transpose, softmax.
+package attention
+
+import &quot;math&quot;
+
+// Matrix is a row-major rows x cols matrix of float32.
+type Matrix struct {
+	Rows, Cols int
+	Data       []float32
+}
+
+func NewMatrix(rows, cols int) Matrix {
+	return Matrix{rows, cols, make([]float32, rows*cols)}
+}
+
+// FromRows builds a matrix from a slice of equal-length rows.
+func FromRows(rows [][]float32) Matrix {
+	m := NewMatrix(len(rows), len(rows[0]))
+	for i, r := range rows {
+		copy(m.Data[i*m.Cols:], r)
+	}
+	return m
+}
+
+func (m Matrix) At(i, j int) float32     { return m.Data[i*m.Cols+j] }
+func (m Matrix) Set(i, j int, v float32) { m.Data[i*m.Cols+j] = v }
+func (m Matrix) Row(i int) []float32     { return m.Data[i*m.Cols : (i+1)*m.Cols] }
+
+// MatMul returns a x b ([n,k] x [k,m] -&gt; [n,m]).
+func MatMul(a, b Matrix) Matrix {
+	out := NewMatrix(a.Rows, b.Cols)
+	for i := 0; i &lt; a.Rows; i++ {
+		for j := 0; j &lt; b.Cols; j++ {
+			var sum float32
+			for k := 0; k &lt; a.Cols; k++ {
+				sum += a.At(i, k) * b.At(k, j)
+			}
+			out.Set(i, j, sum)
+		}
+	}
+	return out
+}
+
+func Transpose(m Matrix) Matrix {
+	out := NewMatrix(m.Cols, m.Rows)
+	for i := 0; i &lt; m.Rows; i++ {
+		for j := 0; j &lt; m.Cols; j++ {
+			out.Set(j, i, m.At(i, j))
+		}
+	}
+	return out
+}
+
+// SoftmaxRows turns every row into weights that are positive and sum to 1.
+// Tip: subtracting the row maximum first does not change the result but keeps
+// exp() from overflowing. A -Inf entry becomes exactly 0.
+func SoftmaxRows(m Matrix) Matrix {
+	out := NewMatrix(m.Rows, m.Cols)
+	for i := 0; i &lt; m.Rows; i++ {
+		row := m.Row(i)
+		max := row[0]
+		for _, v := range row {
+			if v &gt; max {
+				max = v
+			}
+		}
+		var sum float32
+		for j, v := range row {
+			e := float32(math.Exp(float64(v - max)))
+			out.Set(i, j, e)
+			sum += e
+		}
+		for j := 0; j &lt; m.Cols; j++ {
+			out.Set(i, j, out.At(i, j)/sum)
+		}
+	}
+	return out
+}
+
+// Scale multiplies every element by s.
+func Scale(m Matrix, s float32) Matrix {
+	out := NewMatrix(m.Rows, m.Cols)
+	for i, v := range m.Data {
+		out.Data[i] = v * s
+	}
+	return out
+}
+
+// MaskFuture sets every element above the diagonal to -Inf (the &quot;future&quot; tokens).
+func MaskFuture(m Matrix) Matrix {
+	out := NewMatrix(m.Rows, m.Cols)
+	copy(out.Data, m.Data)
+	for i := 0; i &lt; m.Rows; i++ {
+		for j := i + 1; j &lt; m.Cols; j++ {
+			out.Set(i, j, float32(math.Inf(-1)))
+		}
+	}
+	return out
+}
+
+// SliceCols returns columns [start, end) as a new matrix.
+func SliceCols(m Matrix, start, end int) Matrix {
+	out := NewMatrix(m.Rows, end-start)
+	for i := 0; i &lt; m.Rows; i++ {
+		copy(out.Row(i), m.Row(i)[start:end])
+	}
+	return out
+}
+</code></pre><div class="file">go-version/attention/simple.go</div><pre><code class="language-go">package attention
+
+// Step 6 (book 3.3) - simplified self-attention, no trainable weights.
+//
+// For every token, build a context vector: an enriched embedding that mixes in
+// information from all the other tokens, weighted by how relevant each is.
+//
+//	scores  = X x X^T                  how similar is token i to token j?   [T, T]
+//	weights = softmax(scores, rows)    turn each row into weights summing to 1
+//	context = weights x X              weighted sum of all token vectors   [T, d]
+//
+// Tip: a dot product measures similarity. Similar vectors -&gt; big score -&gt; big weight.
+// There is nothing to learn here yet; trainable weights arrive in 3.4.
+
+// SimpleAttention takes inputs [T, d] and returns (scores, weights, context).
+func SimpleAttention(inputs Matrix) (scores, weights, context Matrix) {
+	scores = MatMul(inputs, Transpose(inputs))
+	weights = SoftmaxRows(scores)
+	context = MatMul(weights, inputs)
+	return
+}
+</code></pre></div><div class="pane" data-lang="rust"><div class="file">rust-version/src/attention/matrix.rs</div><pre><code class="language-rust">//! The few matrix operations attention needs.
+//!
+//! Tip: there is no tensor library here, so `Matrix` is a row-major `Vec&lt;f32&gt;`.
+//! Everything attention does is these operations: matmul, transpose, softmax.
+
+use crate::tokenization::rng::Rng;
+
+/// A row-major rows x cols matrix of f32.
+#[derive(Clone, Debug)]
+pub struct Matrix {
+    pub rows: usize,
+    pub cols: usize,
+    pub data: Vec&lt;f32&gt;,
+}
+
+impl Matrix {
+    pub fn new(rows: usize, cols: usize) -&gt; Self {
+        Self {
+            rows,
+            cols,
+            data: vec![0.0; rows * cols],
+        }
+    }
+
+    /// Build from rows of equal length.
+    pub fn from_rows(rows: &amp;[&amp;[f32]]) -&gt; Self {
+        let mut m = Self::new(rows.len(), rows[0].len());
+        for (i, r) in rows.iter().enumerate() {
+            m.data[i * m.cols..(i + 1) * m.cols].copy_from_slice(r);
+        }
+        m
+    }
+
+    /// A rows x cols matrix, uniform in [0, 1), like `torch.rand`.
+    pub fn rand(rows: usize, cols: usize, rng: &amp;mut Rng) -&gt; Self {
+        let data = (0..rows * cols).map(|_| rng.next_f64() as f32).collect();
+        Self { rows, cols, data }
+    }
+
+    pub fn at(&amp;self, i: usize, j: usize) -&gt; f32 {
+        self.data[i * self.cols + j]
+    }
+
+    pub fn row(&amp;self, i: usize) -&gt; &amp;[f32] {
+        &amp;self.data[i * self.cols..(i + 1) * self.cols]
+    }
+
+    /// a x b: [n,k] x [k,m] -&gt; [n,m].
+    pub fn matmul(&amp;self, b: &amp;Matrix) -&gt; Matrix {
+        let mut out = Matrix::new(self.rows, b.cols);
+        for i in 0..self.rows {
+            for j in 0..b.cols {
+                let mut sum = 0.0;
+                for k in 0..self.cols {
+                    sum += self.at(i, k) * b.at(k, j);
+                }
+                out.data[i * b.cols + j] = sum;
+            }
+        }
+        out
+    }
+
+    pub fn transpose(&amp;self) -&gt; Matrix {
+        let mut out = Matrix::new(self.cols, self.rows);
+        for i in 0..self.rows {
+            for j in 0..self.cols {
+                out.data[j * self.rows + i] = self.at(i, j);
+            }
+        }
+        out
+    }
+
+    /// Turn every row into weights that are positive and sum to 1.
+    ///
+    /// Tip: subtracting the row maximum first does not change the result but keeps
+    /// `exp` from overflowing. A `-inf` entry becomes exactly 0.
+    pub fn softmax_rows(&amp;self) -&gt; Matrix {
+        let mut out = Matrix::new(self.rows, self.cols);
+        for i in 0..self.rows {
+            let row = self.row(i);
+            let max = row.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+            let mut sum = 0.0;
+            for (j, &amp;v) in row.iter().enumerate() {
+                let e = ((v - max) as f64).exp() as f32;
+                out.data[i * self.cols + j] = e;
+                sum += e;
+            }
+            for j in 0..self.cols {
+                out.data[i * self.cols + j] /= sum;
+            }
+        }
+        out
+    }
+
+    /// Multiply every element by `s`.
+    pub fn scale(&amp;self, s: f32) -&gt; Matrix {
+        Matrix {
+            rows: self.rows,
+            cols: self.cols,
+            data: self.data.iter().map(|v| v * s).collect(),
+        }
+    }
+
+    /// Set every element above the diagonal to `-inf` (the &quot;future&quot; tokens).
+    pub fn mask_future(&amp;self) -&gt; Matrix {
+        let mut out = self.clone();
+        for i in 0..self.rows {
+            for j in i + 1..self.cols {
+                out.data[i * self.cols + j] = f32::NEG_INFINITY;
+            }
+        }
+        out
+    }
+
+    /// Columns `[start, end)` as a new matrix.
+    pub fn slice_cols(&amp;self, start: usize, end: usize) -&gt; Matrix {
+        let mut out = Matrix::new(self.rows, end - start);
+        for i in 0..self.rows {
+            out.data[i * out.cols..(i + 1) * out.cols].copy_from_slice(&amp;self.row(i)[start..end]);
+        }
+        out
+    }
+
+    /// Zero each element with probability `p` and scale the rest by 1/(1-p).
+    /// The scaling keeps the average unchanged, so nothing needs rescaling at
+    /// inference time (when dropout is simply switched off).
+    pub fn dropout(&amp;self, p: f32, rng: &amp;mut Rng) -&gt; Matrix {
+        let data = self
+            .data
+            .iter()
+            .map(|&amp;v| {
+                if rng.next_f64() &gt;= p as f64 {
+                    v / (1.0 - p)
+                } else {
+                    0.0
+                }
+            })
+            .collect();
+        Matrix {
+            rows: self.rows,
+            cols: self.cols,
+            data,
+        }
+    }
+}
+</code></pre><div class="file">rust-version/src/attention/simple.rs</div><pre><code class="language-rust">//! Step 6 (book 3.3) - simplified self-attention, no trainable weights.
+//!
+//! For every token, build a *context vector*: an enriched embedding that mixes
+//! in information from all the other tokens, weighted by how relevant each is.
+//!
+//! ```text
+//! scores  = X x X^T                  how similar is token i to token j?   [T, T]
+//! weights = softmax(scores, rows)    turn each row into weights summing to 1
+//! context = weights x X              weighted sum of all token vectors   [T, d]
+//! ```
+//!
+//! Tip: a dot product measures similarity. Similar vectors -&gt; big score -&gt; big weight.
+//! There is nothing to learn here yet; trainable weights arrive in 3.4.
+
+use super::Matrix;
+
+/// `inputs` is [T, d]. Returns (scores, weights, context).
+pub fn simple_attention(inputs: &amp;Matrix) -&gt; (Matrix, Matrix, Matrix) {
+    let scores = inputs.matmul(&amp;inputs.transpose());
+    let weights = scores.softmax_rows();
+    let context = weights.matmul(inputs);
+    (scores, weights, context)
+}
+</code></pre></div><div class="pane" data-lang="c"><div class="file">C-version/attention/matrix.h</div><pre><code class="language-c">/* The few matrix operations attention needs (book chapter 3).
+ *
+ * Files in attention/, in the order you learn them:
+ *   matrix.[ch]          this file: matmul, transpose, softmax, ...
+ *   simple.[ch]          simplified self-attention, no trainable weights (3.3)
+ *   self_attention.[ch]  scaled dot-product attention with W_query/key/value (3.4)
+ *   causal.[ch]          hide future tokens with a mask, optional dropout (3.5)
+ *   multihead.[ch]       several heads in parallel plus an output projection (3.6)
+ * The seeded random generator is shared with chapter 2: tokenization/rng.h.
+ *
+ * Tip: there is no tensor library, so a Matrix is a row-major float array.
+ * Memory: every operation returns a NEW matrix allocated from an Arena, a
+ * bump allocator. You free the whole arena once; no free() per matrix.
+ */
+#ifndef MATRIX_H
+#define MATRIX_H
+
+#include &lt;stddef.h&gt;
+
+#include &quot;../tokenization/rng.h&quot;
+
+typedef struct {
+    unsigned char *base;
+    size_t used;
+    size_t capacity;
+} Arena;
+
+Arena arena_new(size_t capacity);
+void arena_free(Arena *a);
+
+typedef struct {
+    size_t rows, cols;
+    float *data;
+} Matrix;
+
+Matrix matrix_new(Arena *a, size_t rows, size_t cols);                      /* zero-filled */
+Matrix matrix_from(Arena *a, size_t rows, size_t cols, const float *values); /* copy of values */
+Matrix matrix_rand(Arena *a, size_t rows, size_t cols, Rng *rng);           /* uniform [0, 1) */
+
+static inline float *matrix_row(Matrix m, size_t i) { return m.data + i * m.cols; }
+static inline float matrix_at(Matrix m, size_t i, size_t j) { return m.data[i * m.cols + j]; }
+
+Matrix matmul(Arena *a, Matrix x, Matrix y);       /* [n,k] x [k,m] -&gt; [n,m] */
+Matrix transpose(Arena *a, Matrix m);
+Matrix softmax_rows(Arena *a, Matrix m);           /* each row: positive, sums to 1 */
+Matrix scale(Arena *a, Matrix m, float s);
+Matrix mask_future(Arena *a, Matrix m);            /* above the diagonal -&gt; -inf */
+Matrix slice_cols(Arena *a, Matrix m, size_t start, size_t end); /* columns [start, end) */
+Matrix dropout(Arena *a, Matrix m, float p, Rng *rng);           /* zero w.p. p, scale rest by 1/(1-p) */
+
+#endif
+</code></pre><div class="file">C-version/attention/matrix.c</div><pre><code class="language-c">#include &quot;matrix.h&quot;
+
+#include &lt;math.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#include &quot;../tokenization/util.h&quot;
+
+Arena arena_new(size_t capacity) { return (Arena){xmalloc(capacity), 0, capacity}; }
+void arena_free(Arena *a) {
+    free(a-&gt;base);
+    *a = (Arena){0};
+}
+
+static void *arena_alloc(Arena *a, size_t bytes) {
+    bytes = (bytes + 15) &amp; ~(size_t)15; /* keep every block 16-byte aligned */
+    if (a-&gt;used + bytes &gt; a-&gt;capacity) {
+        fputs(&quot;arena out of memory: raise the capacity passed to arena_new\n&quot;, stderr);
+        exit(1);
+    }
+    void *p = a-&gt;base + a-&gt;used;
+    a-&gt;used += bytes;
+    return p;
+}
+
+Matrix matrix_new(Arena *a, size_t rows, size_t cols) {
+    Matrix m = {rows, cols, arena_alloc(a, rows * cols * sizeof(float))};
+    memset(m.data, 0, rows * cols * sizeof(float));
+    return m;
+}
+
+Matrix matrix_from(Arena *a, size_t rows, size_t cols, const float *values) {
+    Matrix m = matrix_new(a, rows, cols);
+    memcpy(m.data, values, rows * cols * sizeof(float));
+    return m;
+}
+
+Matrix matrix_rand(Arena *a, size_t rows, size_t cols, Rng *rng) {
+    Matrix m = matrix_new(a, rows, cols);
+    for (size_t i = 0; i &lt; rows * cols; i++) m.data[i] = (float)rng_f64(rng);
+    return m;
+}
+
+Matrix matmul(Arena *a, Matrix x, Matrix y) {
+    Matrix out = matrix_new(a, x.rows, y.cols);
+    for (size_t i = 0; i &lt; x.rows; i++)
+        for (size_t j = 0; j &lt; y.cols; j++) {
+            float sum = 0;
+            for (size_t k = 0; k &lt; x.cols; k++) sum += matrix_at(x, i, k) * matrix_at(y, k, j);
+            out.data[i * out.cols + j] = sum;
+        }
+    return out;
+}
+
+Matrix transpose(Arena *a, Matrix m) {
+    Matrix out = matrix_new(a, m.cols, m.rows);
+    for (size_t i = 0; i &lt; m.rows; i++)
+        for (size_t j = 0; j &lt; m.cols; j++) out.data[j * out.cols + i] = matrix_at(m, i, j);
+    return out;
+}
+
+/* Tip: subtracting the row maximum first does not change the result but keeps
+ * exp() from overflowing. A -inf entry becomes exactly 0. */
+Matrix softmax_rows(Arena *a, Matrix m) {
+    Matrix out = matrix_new(a, m.rows, m.cols);
+    for (size_t i = 0; i &lt; m.rows; i++) {
+        const float *row = matrix_row(m, i);
+        float max = row[0], sum = 0;
+        for (size_t j = 1; j &lt; m.cols; j++)
+            if (row[j] &gt; max) max = row[j];
+        for (size_t j = 0; j &lt; m.cols; j++) {
+            float e = (float)exp((double)(row[j] - max));
+            out.data[i * m.cols + j] = e;
+            sum += e;
+        }
+        for (size_t j = 0; j &lt; m.cols; j++) out.data[i * m.cols + j] /= sum;
+    }
+    return out;
+}
+
+Matrix scale(Arena *a, Matrix m, float s) {
+    Matrix out = matrix_new(a, m.rows, m.cols);
+    for (size_t i = 0; i &lt; m.rows * m.cols; i++) out.data[i] = m.data[i] * s;
+    return out;
+}
+
+Matrix mask_future(Arena *a, Matrix m) {
+    Matrix out = matrix_from(a, m.rows, m.cols, m.data);
+    for (size_t i = 0; i &lt; m.rows; i++)
+        for (size_t j = i + 1; j &lt; m.cols; j++) out.data[i * m.cols + j] = -INFINITY;
+    return out;
+}
+
+Matrix slice_cols(Arena *a, Matrix m, size_t start, size_t end) {
+    Matrix out = matrix_new(a, m.rows, end - start);
+    for (size_t i = 0; i &lt; m.rows; i++) memcpy(matrix_row(out, i), matrix_row(m, i) + start, (end - start) * sizeof(float));
+    return out;
+}
+
+Matrix dropout(Arena *a, Matrix m, float p, Rng *rng) {
+    Matrix out = matrix_new(a, m.rows, m.cols);
+    for (size_t i = 0; i &lt; m.rows * m.cols; i++)
+        if (rng_f64(rng) &gt;= (double)p) out.data[i] = m.data[i] / (1.0f - p);
+    return out;
+}
+</code></pre><div class="file">C-version/attention/simple.h</div><pre><code class="language-c">/* Step 6 (book 3.3) - simplified self-attention, no trainable weights.
+ *
+ * For every token, build a context vector: an enriched embedding that mixes in
+ * information from all the other tokens, weighted by how relevant each is.
+ *
+ *   scores  = X x X^T                  how similar is token i to token j?   [T, T]
+ *   weights = softmax(scores, rows)    turn each row into weights summing to 1
+ *   context = weights x X              weighted sum of all token vectors   [T, d]
+ *
+ * Tip: a dot product measures similarity. Similar vectors -&gt; big score -&gt; big weight.
+ * There is nothing to learn here yet; trainable weights arrive in 3.4.
+ */
+#ifndef SIMPLE_ATTENTION_H
+#define SIMPLE_ATTENTION_H
+
+#include &quot;matrix.h&quot;
+
+typedef struct {
+    Matrix scores, weights, context;
+} SimpleAttentionResult;
+
+/* inputs is [T, d]. */
+SimpleAttentionResult simple_attention(Arena *a, Matrix inputs);
+
+#endif
+</code></pre><div class="file">C-version/attention/simple.c</div><pre><code class="language-c">#include &quot;simple.h&quot;
+
+SimpleAttentionResult simple_attention(Arena *a, Matrix inputs) {
+    SimpleAttentionResult r;
+    r.scores = matmul(a, inputs, transpose(a, inputs));
+    r.weights = softmax_rows(a, r.scores);
+    r.context = matmul(a, r.weights, inputs);
+    return r;
+}
+</code></pre></div><div class="pane" data-lang="zig"><div class="file">Zig-version/src/attention/matrix.zig</div><pre><code class="language-zig">//! The few matrix operations attention needs.
+//!
+//! Tip: there is no tensor library, so a `Matrix` is a row-major `[]f32`.
+//! Everything attention does is these operations: matmul, transpose, softmax.
+//! Every operation allocates its result from the allocator you pass in; the
+//! demos use an arena, so nothing needs freeing one by one.
+
+const std = @import(&quot;std&quot;);
+const Rng = @import(&quot;../tokenization/rng.zig&quot;).Rng;
+
+pub const Matrix = struct {
+    rows: usize,
+    cols: usize,
+    data: []f32,
+
+    /// Zero-filled.
+    pub fn init(gpa: std.mem.Allocator, rows: usize, cols: usize) !Matrix {
+        const data = try gpa.alloc(f32, rows * cols);
+        @memset(data, 0);
+        return .{ .rows = rows, .cols = cols, .data = data };
+    }
+
+    /// A copy of `values`, which holds rows * cols numbers.
+    pub fn fromSlice(gpa: std.mem.Allocator, rows: usize, cols: usize, values: []const f32) !Matrix {
+        const m = try init(gpa, rows, cols);
+        @memcpy(m.data, values);
+        return m;
+    }
+
+    /// Uniform in [0, 1), like `torch.rand`.
+    pub fn rand(gpa: std.mem.Allocator, rows: usize, cols: usize, rng: *Rng) !Matrix {
+        const m = try init(gpa, rows, cols);
+        for (m.data) |*v| v.* = @floatCast(rng.nextF64());
+        return m;
+    }
+
+    pub fn at(self: Matrix, i: usize, j: usize) f32 {
+        return self.data[i * self.cols + j];
+    }
+
+    pub fn row(self: Matrix, i: usize) []f32 {
+        return self.data[i * self.cols ..][0..self.cols];
+    }
+
+    /// self x other: [n,k] x [k,m] -&gt; [n,m].
+    pub fn matmul(self: Matrix, gpa: std.mem.Allocator, other: Matrix) !Matrix {
+        const out = try init(gpa, self.rows, other.cols);
+        for (0..self.rows) |i| {
+            for (0..other.cols) |j| {
+                var sum: f32 = 0;
+                for (0..self.cols) |k| sum += self.at(i, k) * other.at(k, j);
+                out.data[i * out.cols + j] = sum;
+            }
+        }
+        return out;
+    }
+
+    pub fn transpose(self: Matrix, gpa: std.mem.Allocator) !Matrix {
+        const out = try init(gpa, self.cols, self.rows);
+        for (0..self.rows) |i| {
+            for (0..self.cols) |j| out.data[j * out.cols + i] = self.at(i, j);
+        }
+        return out;
+    }
+
+    /// Turn every row into weights that are positive and sum to 1.
+    ///
+    /// Tip: subtracting the row maximum first does not change the result but keeps
+    /// `exp` from overflowing. A `-inf` entry becomes exactly 0.
+    pub fn softmaxRows(self: Matrix, gpa: std.mem.Allocator) !Matrix {
+        const out = try init(gpa, self.rows, self.cols);
+        for (0..self.rows) |i| {
+            const r = self.row(i);
+            var max = r[0];
+            for (r[1..]) |v| max = @max(max, v);
+            var sum: f32 = 0;
+            for (r, 0..) |v, j| {
+                const e: f32 = @floatCast(@exp(@as(f64, v - max)));
+                out.data[i * out.cols + j] = e;
+                sum += e;
+            }
+            for (0..self.cols) |j| out.data[i * out.cols + j] /= sum;
+        }
+        return out;
+    }
+
+    /// Multiply every element by `s`.
+    pub fn scale(self: Matrix, gpa: std.mem.Allocator, s: f32) !Matrix {
+        const out = try init(gpa, self.rows, self.cols);
+        for (self.data, out.data) |v, *o| o.* = v * s;
+        return out;
+    }
+
+    /// Set every element above the diagonal to `-inf` (the &quot;future&quot; tokens).
+    pub fn maskFuture(self: Matrix, gpa: std.mem.Allocator) !Matrix {
+        const out = try fromSlice(gpa, self.rows, self.cols, self.data);
+        for (0..self.rows) |i| {
+            for (i + 1..self.cols) |j| out.data[i * out.cols + j] = -std.math.inf(f32);
+        }
+        return out;
+    }
+
+    /// Columns `[start, end)` as a new matrix.
+    pub fn sliceCols(self: Matrix, gpa: std.mem.Allocator, start: usize, end: usize) !Matrix {
+        const out = try init(gpa, self.rows, end - start);
+        for (0..self.rows) |i| @memcpy(out.row(i), self.row(i)[start..end]);
+        return out;
+    }
+
+    /// Zero each element with probability `p` and scale the rest by 1/(1-p).
+    /// The scaling keeps the average unchanged, so nothing needs rescaling at
+    /// inference time (when dropout is simply switched off).
+    pub fn dropout(self: Matrix, gpa: std.mem.Allocator, p: f32, rng: *Rng) !Matrix {
+        const out = try init(gpa, self.rows, self.cols);
+        for (self.data, out.data) |v, *o| {
+            if (rng.nextF64() &gt;= p) o.* = v / (1.0 - p);
+        }
+        return out;
+    }
+};
+
+test &quot;softmax rows sum to 1 and -inf becomes 0&quot; {
+    const gpa = std.testing.allocator;
+    const m = try Matrix.fromSlice(gpa, 1, 3, &amp;.{ 1, 2, -std.math.inf(f32) });
+    defer gpa.free(m.data);
+    const s = try m.softmaxRows(gpa);
+    defer gpa.free(s.data);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), s.data[0] + s.data[1] + s.data[2], 1e-6);
+    try std.testing.expectEqual(@as(f32, 0), s.data[2]);
+}
+
+test &quot;matmul and transpose&quot; {
+    const gpa = std.testing.allocator;
+    const a = try Matrix.fromSlice(gpa, 2, 2, &amp;.{ 1, 2, 3, 4 });
+    defer gpa.free(a.data);
+    const t = try a.transpose(gpa);
+    defer gpa.free(t.data);
+    const p = try a.matmul(gpa, t); // a x a^T
+    defer gpa.free(p.data);
+    try std.testing.expectEqualSlices(f32, &amp;.{ 5, 11, 11, 25 }, p.data);
+}
+</code></pre><div class="file">Zig-version/src/attention/simple.zig</div><pre><code class="language-zig">//! Step 6 (book 3.3) - simplified self-attention, no trainable weights.
+//!
+//! For every token, build a *context vector*: an enriched embedding that mixes
+//! in information from all the other tokens, weighted by how relevant each is.
+//!
+//! ```
+//! scores  = X x X^T                  how similar is token i to token j?   [T, T]
+//! weights = softmax(scores, rows)    turn each row into weights summing to 1
+//! context = weights x X              weighted sum of all token vectors   [T, d]
+//! ```
+//!
+//! Tip: a dot product measures similarity. Similar vectors -&gt; big score -&gt; big weight.
+//! There is nothing to learn here yet; trainable weights arrive in 3.4.
+
+const std = @import(&quot;std&quot;);
+const Matrix = @import(&quot;matrix.zig&quot;).Matrix;
+
+pub const Result = struct { scores: Matrix, weights: Matrix, context: Matrix };
+
+/// `inputs` is [T, d].
+pub fn simpleAttention(gpa: std.mem.Allocator, inputs: Matrix) !Result {
+    const scores = try inputs.matmul(gpa, try inputs.transpose(gpa));
+    const weights = try scores.softmaxRows(gpa);
+    const context = try weights.matmul(gpa, inputs);
+    return .{ .scores = scores, .weights = weights, .context = context };
+}
+</code></pre></div></div>
+<div class="tip">Python uses torch, so there is no matrix file: <code>inputs @ inputs.T</code> is the whole thing. The other four languages show the matrix operations (matmul, transpose, softmax) that torch hides, in a few lines each.</div>
+<h2>Exercises</h2>
+<ol>
+<li>Compute the context vector for "step" (row 6) by hand using the weights above, then check it against the code.</li>
+<li>Replace softmax by division by the row sum. Which tokens gain or lose weight, and why does softmax favour the larger scores?</li>
+<li>Which token has the highest weight for "journey"? Is it "journey" itself?</li>
+</ol>
+<details class="qa"><summary>Answer to 3</summary>"journey" itself (0.2379), narrowly ahead of "starts" (0.2333), because a vector is always most similar to itself and "starts" has a very similar embedding.</details>
+
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/ch03-3-simple-attention.html">Edit this page on GitHub</a></p>
+<div class="pager"><a href="ch03-1-long-sequences.html">&larr; 3.1-3.2 Why attention</a><a href="ch03-4-self-attention.html">3.4 Trainable weights &rarr;</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script src="site.js"></script>
+</body></html>

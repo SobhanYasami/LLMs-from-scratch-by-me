@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Extra: why divide by the square root of d_k</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+</head><body><div class="layout">
+<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
+<h4>Start</h4>
+<a class="" href="index.html">Overview</a>
+<a class="" href="roadmap.html">Roadmap</a>
+<h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a class="" href="ch01-stages.html">1.3, 1.5 Training stages &amp; data</a>
+<a class="" href="ch01-transformer.html">1.4 Transformers &amp; tasks</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT &amp; the roadmap</a>
+<h4><a class="h4link" href="chapter-2.html">Chapter 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 Overview &amp; embeddings</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a class="" href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
+<a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
+<a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
+<a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
+<h4><a class="h4link" href="chapter-3.html">Chapter 3</a></h4>
+<a class="" href="ch03-1-long-sequences.html">3.1-3.2 Why attention</a>
+<a class="" href="ch03-3-simple-attention.html">3.3 Simple attention</a>
+<a class="" href="ch03-4-self-attention.html">3.4 Trainable weights</a>
+<a class="" href="ch03-5-causal.html">3.5 Causal attention</a>
+<a class="" href="ch03-6-multihead.html">3.6 Multi-head</a>
+<a class="extra on" href="scaling-sqrt-dk.html">Why scale by sqrt(d_k)</a>
+<a class="extra" href="ch03-demo-output.html">Chapter 3 demo output</a>
+<h4><a class="h4link" href="chapter-4.html">Chapter 4</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-5.html">Chapter 5</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-6.html">Chapter 6</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-7.html">Chapter 7</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-A.html">Appendices</a> <em>planned</em></h4>
+<h4>Reference</h4>
+<a class="" href="reference.html">Code reference</a>
+<a class="" href="contributing.html">Contributing</a>
+<a class="" href="glossary.html">Glossary</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
+<main><h1>Extra: why divide by the square root of d_k</h1>
+<p class="meta">extra</p>
+<div class="aim"><b>Aim.</b> See with numbers what goes wrong in attention without the <code>1/sqrt(d_k)</code> scaling, and why that particular factor.</div>
+<h2>Dot products grow with dimension</h2>
+<p>A dot product adds up <code>d</code> products. If the entries are roughly random with spread 1, the sum has a spread of about <code>sqrt(d)</code>. Doubling the dimension makes scores wider, so for realistic sizes (64 to 1024 and beyond) the scores are large.</p>
+<h2>Large scores make softmax harsh</h2>
+<p>Softmax exponentiates its inputs. A score gap of 10 means a factor of e<sup>10</sup> (about 22,000) between two weights. With big scores one token takes nearly all of the weight and the others get almost none. In that regime the gradient of softmax is close to zero, so learning crawls.</p>
+<h2>Real numbers</h2>
+<p>One random query against 6 random keys, with and without scaling (a seeded sample; the exact figures vary, the pattern does not):</p>
+<table><tr><th>dimension d</th><th>score spread</th><th>largest weight, no scaling</th><th>largest weight, scaled</th></tr>
+<tr><td>4</td><td>1.5</td><td>0.570</td><td>0.370</td></tr>
+<tr><td>64</td><td>5.8</td><td>0.651</td><td>0.294</td></tr>
+<tr><td>1024</td><td>31.9</td><td>1.000</td><td>0.517</td></tr></table>
+<p>At d = 1024 without scaling the largest weight is 1.000: the other five tokens are effectively ignored. With scaling the weights stay spread out, so every token still contributes and gradients stay healthy.</p>
+<h2>Why exactly sqrt(d)?</h2>
+<p>If scores have spread about <code>sqrt(d)</code>, dividing by <code>sqrt(d)</code> brings the spread back to about 1, whatever the dimension. That is the smallest, simplest fix that makes training behave the same at every model size. The name <b>scaled dot-product attention</b> comes from this step.</p>
+<h2>Try it</h2>
+<ol>
+<li>Use the book's 6-token example with <code>d_out = 2</code>. Compute the weights for "journey" with and without the scaling. How different are they? (They differ little: 2 is a small dimension.)</li>
+<li>Scale up: multiply the scores by 10 before softmax and look at the largest weight. This mimics a much larger dimension.</li>
+</ol>
+
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/scaling-sqrt-dk.html">Edit this page on GitHub</a></p>
+<div class="pager"><a href="ch03-6-multihead.html">&larr; 3.6 Multi-head</a><a href="ch03-demo-output.html">Chapter 3 demo output &rarr;</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script src="site.js"></script>
+</body></html>

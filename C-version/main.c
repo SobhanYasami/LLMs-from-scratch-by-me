@@ -2,7 +2,8 @@
  *
  * Run from C-version/:
  *
- *     make run
+ *     make run              # all chapters
+ *     make run ARGS=ch03    # one chapter
  *
  * Tip: read main() first, then jump into tokenization/ following each demo.
  *
@@ -14,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ch03.h"
 #include "tokenization/bpe.h"
 #include "tokenization/dataloader.h"
 #include "tokenization/dataset.h"
@@ -223,7 +225,7 @@ static void demo_embeddings(const Bpe *bpe, const char *text) {
     free(ids);
 }
 
-int main(void) {
+static void run_chapter2(void) {
     char *text = load_text();
     Vocab vocab = load_vocab(text);
     Bpe bpe;
@@ -241,5 +243,19 @@ int main(void) {
     bpe_free(&bpe);
     vocab_free(&vocab);
     free(text);
+}
+
+/* `./build/main ch03` runs one chapter's demos; with no argument, all of them. */
+int main(int argc, char **argv) {
+    if (argc == 1) {
+        run_chapter2();
+        run_chapter3();
+        return 0;
+    }
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "ch02") == 0) run_chapter2();
+        else if (strcmp(argv[i], "ch03") == 0) run_chapter3();
+        else die("unknown chapter; use ch02 or ch03");
+    }
     return 0;
 }

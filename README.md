@@ -22,6 +22,8 @@ Every version has a README, a demo runner, and a `tokenization` module with one 
 4. `dataset`: sliding-window (input, target) pairs, batching (DataLoader)
 5. `embedding`: token + positional embeddings
 
+Chapter 3 adds a sibling `attention` module with `simple`, `self_attention`, `causal` and `multihead`. Each `main` runs one chapter with an argument (`ch02`, `ch03`) or all of them.
+
 New chapters (embeddings, attention, ...) get a new sibling module in each language, in the same order as the book. `python-version/README.md` holds the concept walkthrough; the others note language differences only.
 
 ## Docs site

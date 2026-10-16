@@ -9,6 +9,8 @@ C-version/
 ├── Makefile
 ├── README.md
 ├── main.c                   # demo runner (same demos as python main.py)
+├── ch03.[ch]                # chapter 3 demos (attention)
+├── attention/               # chapter 3: matrix, simple, self_attention, causal, multihead
 └── tokenization/
     ├── preprocess.[ch]      # step 1 (book 2.2): split_text, detokenize
     ├── vocab.[ch]           # step 2 (2.3): build_vocab
@@ -30,6 +32,10 @@ make run
 ```
 
 Needs a C11 compiler (`cc`/`gcc`/`clang`) and `make`. No other dependencies.
+
+## Chapter 3: attention
+
+`make run ARGS=ch03` runs the attention demos (`make run` runs every chapter). `attention/` has `matrix` (with a small `Arena` allocator so you free once, not per matrix), `simple`, `self_attention`, `causal` and `multihead`; the demo is `ch03.c`. Output is identical to Python's.
 
 ## Python <-> C notes
 

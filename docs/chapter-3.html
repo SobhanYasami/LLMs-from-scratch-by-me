@@ -26,7 +26,14 @@
 <a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
 <a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
 <a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
-<h4><a class="h4link on" href="chapter-3.html">Chapter 3</a> <em>planned</em></h4>
+<h4><a class="h4link on" href="chapter-3.html">Chapter 3</a></h4>
+<a class="" href="ch03-1-long-sequences.html">3.1-3.2 Why attention</a>
+<a class="" href="ch03-3-simple-attention.html">3.3 Simple attention</a>
+<a class="" href="ch03-4-self-attention.html">3.4 Trainable weights</a>
+<a class="" href="ch03-5-causal.html">3.5 Causal attention</a>
+<a class="" href="ch03-6-multihead.html">3.6 Multi-head</a>
+<a class="extra" href="scaling-sqrt-dk.html">Why scale by sqrt(d_k)</a>
+<a class="extra" href="ch03-demo-output.html">Chapter 3 demo output</a>
 <h4><a class="h4link" href="chapter-4.html">Chapter 4</a> <em>planned</em></h4>
 <h4><a class="h4link" href="chapter-5.html">Chapter 5</a> <em>planned</em></h4>
 <h4><a class="h4link" href="chapter-6.html">Chapter 6</a> <em>planned</em></h4>
@@ -41,15 +48,15 @@
 
 
 <p class="lede">Why attention exists, then self-attention, causal masking, dropout and multi-head attention.</p>
-<p><span class="chip planned">planned</span> &nbsp; <a href="https://github.com/rasbt/LLMs-from-scratch/tree/main/ch03">Companion code in Raschka's repo</a></p>
-<p><b>Code:</b> <span class="muted">none yet</span></p>
-<div class="tip">Not written yet. The outline below follows the book. To add it, follow <a href="contributing.html">Contributing</a>; the roadmap and navigation update by themselves.</div>
+<p><span class="chip ready">ready</span> &nbsp; <a href="https://github.com/rasbt/LLMs-from-scratch/tree/main/ch03">Companion code in Raschka's repo</a></p>
+<p><b>Code:</b> <span class="lang">Python</span> <span class="lang">Go</span> <span class="lang">Rust</span> <span class="lang">C</span> <span class="lang">Zig</span></p>
+
 <h2>Sections</h2>
-<table><tr><th>Book</th><th>Section</th><th>Status</th></tr><tr><td>3.1</td><td>The problem with modeling long sequences</td><td><span class="chip planned">planned</span></td></tr><tr><td>3.2</td><td>Capturing data dependencies with attention mechanisms</td><td><span class="chip planned">planned</span></td></tr><tr><td>3.3</td><td>Attending to different parts of the input with self-attention</td><td><span class="chip planned">planned</span></td></tr><tr><td>3.4</td><td>Implementing self-attention with trainable weights</td><td><span class="chip planned">planned</span></td></tr><tr><td>3.5</td><td>Hiding future words with causal attention</td><td><span class="chip planned">planned</span></td></tr><tr><td>3.6</td><td>Extending single-head attention to multi-head attention</td><td><span class="chip planned">planned</span></td></tr></table>
+<table><tr><th>Book</th><th>Section</th><th>Status</th></tr><tr><td>3.1</td><td>The problem with modeling long sequences</td><td><span class="chip ready">ready</span> <a href="ch03-1-long-sequences.html">open</a></td></tr><tr><td>3.2</td><td>Capturing data dependencies with attention mechanisms</td><td><span class="chip ready">ready</span> <a href="ch03-1-long-sequences.html">open</a></td></tr><tr><td>3.3</td><td>Attending to different parts of the input with self-attention</td><td><span class="chip ready">ready</span> <a href="ch03-3-simple-attention.html">open</a></td></tr><tr><td>3.4</td><td>Implementing self-attention with trainable weights</td><td><span class="chip ready">ready</span> <a href="ch03-4-self-attention.html">open</a></td></tr><tr><td>3.5</td><td>Hiding future words with causal attention</td><td><span class="chip ready">ready</span> <a href="ch03-5-causal.html">open</a></td></tr><tr><td>3.6</td><td>Extending single-head attention to multi-head attention</td><td><span class="chip ready">ready</span> <a href="ch03-6-multihead.html">open</a></td></tr></table>
+<h2>Extras</h2><ul><li><a href="scaling-sqrt-dk.html">Why scale by sqrt(d_k)</a></li><li><a href="ch03-demo-output.html">Chapter 3 demo output</a></li></ul>
 
 
-
-<div class="pager"><a href="dataloader-intuition.html">&larr; Data loader intuition</a><a href="chapter-4.html">Chapter 4 &rarr;</a></div>
+<div class="pager"><a href="dataloader-intuition.html">&larr; Data loader intuition</a><a href="ch03-1-long-sequences.html">3.1-3.2 Why attention &rarr;</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>

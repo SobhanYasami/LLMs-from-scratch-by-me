@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3.1-3.2: Why attention exists</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+</head><body><div class="layout">
+<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
+<h4>Start</h4>
+<a class="" href="index.html">Overview</a>
+<a class="" href="roadmap.html">Roadmap</a>
+<h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a class="" href="ch01-stages.html">1.3, 1.5 Training stages &amp; data</a>
+<a class="" href="ch01-transformer.html">1.4 Transformers &amp; tasks</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT &amp; the roadmap</a>
+<h4><a class="h4link" href="chapter-2.html">Chapter 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 Overview &amp; embeddings</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a class="" href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
+<a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
+<a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
+<a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
+<h4><a class="h4link" href="chapter-3.html">Chapter 3</a></h4>
+<a class=" on" href="ch03-1-long-sequences.html">3.1-3.2 Why attention</a>
+<a class="" href="ch03-3-simple-attention.html">3.3 Simple attention</a>
+<a class="" href="ch03-4-self-attention.html">3.4 Trainable weights</a>
+<a class="" href="ch03-5-causal.html">3.5 Causal attention</a>
+<a class="" href="ch03-6-multihead.html">3.6 Multi-head</a>
+<a class="extra" href="scaling-sqrt-dk.html">Why scale by sqrt(d_k)</a>
+<a class="extra" href="ch03-demo-output.html">Chapter 3 demo output</a>
+<h4><a class="h4link" href="chapter-4.html">Chapter 4</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-5.html">Chapter 5</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-6.html">Chapter 6</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-7.html">Chapter 7</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-A.html">Appendices</a> <em>planned</em></h4>
+<h4>Reference</h4>
+<a class="" href="reference.html">Code reference</a>
+<a class="" href="contributing.html">Contributing</a>
+<a class="" href="glossary.html">Glossary</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
+<main><h1>3.1-3.2: Why attention exists</h1>
+<p class="meta">Book section 3.1, 3.2</p>
+<div class="aim"><b>Aim.</b> Understand the problem attention solves, and what the four attention variants of this chapter are.</div>
+<h2>The problem: a single summary is not enough</h2>
+<p>Translating a sentence word by word fails, because word order and grammar differ between languages. Before transformers, the standard fix was an <b>encoder-decoder RNN</b>. An <i>RNN</i> reads text one step at a time, updating a hidden state (its memory) at each step.</p>
+<div class="flow">
+<div><b>Encoder</b>reads the whole input, squeezes it into <i>one</i> final hidden state</div><span>&rarr;</span>
+<div class="hot"><b>One hidden state</b>the only thing the decoder gets</div><span>&rarr;</span>
+<div><b>Decoder</b>writes the translation word by word</div>
+</div>
+<p>The decoder cannot look back at the encoder's earlier states. Everything about a long sentence has to survive in that single vector, so context is lost over long distances.</p>
+<h2>The fix: let the decoder look back, selectively</h2>
+<p>In 2014 Bahdanau attention changed the decoder so that, at each output step, it can pick which input positions to read, giving some positions more <b>attention weight</b> than others. Three years later the transformer showed the RNN itself is not needed: use attention alone, applied by the sequence to <i>itself</i>.</p>
+<div class="aim"><b>Self-attention.</b> Every position in a sequence looks at every position in the same sequence (including itself) to build a better representation of itself.</div>
+<h2>The four variants we build</h2>
+<div class="flow">
+<div><b>3.3</b>Simplified self-attention<br><small>no weights, just the idea</small></div><span>&rarr;</span>
+<div><b>3.4</b>Self-attention<br><small>query, key, value, trainable</small></div><span>&rarr;</span>
+<div><b>3.5</b>Causal attention<br><small>hide future tokens</small></div><span>&rarr;</span>
+<div class="hot"><b>3.6</b>Multi-head attention<br><small>what chapter 4 plugs in</small></div>
+</div>
+<p>Each builds on the previous one. By the end of 3.6 you have the compact, efficient multi-head attention that the GPT model of chapter 4 uses.</p>
+<h2>Check yourself</h2>
+<details class="qa"><summary>What is the bottleneck of an encoder-decoder RNN?</summary>The decoder only sees the encoder's final hidden state, so a long input has to be compressed into one vector.</details>
+<details class="qa"><summary>What does "self" in self-attention mean?</summary>The attention is computed between positions of the same sequence, not between two different sequences.</details>
+<details class="qa"><summary>Which variant is the one GPT uses?</summary>Causal multi-head attention (3.5 and 3.6 combined).</details>
+
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/ch03-1-long-sequences.html">Edit this page on GitHub</a></p>
+<div class="pager"><a href="chapter-3.html">&larr; Chapter 3</a><a href="ch03-3-simple-attention.html">3.3 Simple attention &rarr;</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script src="site.js"></script>
+</body></html>

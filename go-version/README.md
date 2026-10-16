@@ -25,6 +25,10 @@ From `go-version/`:
 go run ./cmd
 ```
 
+## Chapter 3: attention
+
+`go run ./cmd ch03` runs the attention demos (`go run ./cmd` runs every chapter). The `attention/` package has `matrix`, `rng`, `simple`, `self_attention`, `causal` and `multihead`; the demo is `cmd/ch03.go`. Output is identical to Python's.
+
 ## Python <-> Go notes
 
 - `re.split` with a capturing group has no Go equivalent; `splitKeep` in `preprocess.go` walks the matches by hand.

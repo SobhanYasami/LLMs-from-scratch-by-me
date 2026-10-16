@@ -2,7 +2,8 @@
 
 Run from anywhere:
 
-    python-version/.venv/bin/python python-version/main.py
+    python-version/.venv/bin/python python-version/main.py          # all chapters
+    python-version/.venv/bin/python python-version/main.py ch03     # one chapter
 
 Pipeline:
     raw text -> split_text -> build_vocab -> SimpleTokenizerV1/V2 -> tiktoken (GPT-2 BPE)
@@ -12,6 +13,7 @@ Tip: read ``main()`` first, then jump into ``tokenization/`` following each demo
 See python-version/README.md for a walkthrough of each step.
 """
 
+import sys
 from pathlib import Path
 
 import tiktoken
@@ -150,7 +152,7 @@ def demo_embeddings() -> None:
     print("---------------------")
 
 
-def main() -> None:
+def run_chapter2() -> None:
     vocab = load_vocab()
     show_vocab_tail(vocab)
     demo_v1(vocab)
@@ -159,6 +161,20 @@ def main() -> None:
     demo_sampling()
     demo_dataloader()
     demo_embeddings()
+
+
+def main() -> None:
+    """``main.py [ch02|ch03]``: run one chapter's demos, or both when no argument is given."""
+    chapters = sys.argv[1:] or ["ch02", "ch03"]
+    for chapter in chapters:
+        if chapter == "ch02":
+            run_chapter2()
+        elif chapter == "ch03":
+            import ch03
+
+            ch03.run()
+        else:
+            sys.exit(f"unknown chapter {chapter!r}; use ch02 or ch03")
 
 
 if __name__ == "__main__":

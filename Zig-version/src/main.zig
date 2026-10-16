@@ -2,7 +2,8 @@
 //!
 //! Run from Zig-version/:
 //!
-//!     zig build run
+//!     zig build run              # all chapters
+//!     zig build run -- ch03      # one chapter
 //!
 //! Tip: read `main()` first, then jump into `tokenization/` following each demo.
 //!
@@ -12,6 +13,7 @@
 
 const std = @import("std");
 const tk = @import("tokenization/root.zig");
+const ch03 = @import("ch03.zig");
 
 /// Run from Zig-version/, like go-version resolves ../assets.
 const data_path = "../assets/the-verdict.txt";
@@ -170,18 +172,7 @@ fn demoEmbeddings(gpa: std.mem.Allocator, out: Out, bpe: tk.Bpe, text: []const u
     try out.writeAll("---------------------\n");
 }
 
-pub fn main() !void {
-    // Tip: an arena frees everything at once when the program ends, so the
-    // demos below do not need a `defer free` on every allocation.
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const gpa = arena.allocator();
-
-    var buf: [4096]u8 = undefined;
-    var stdout = std.fs.File.stdout().writer(&buf);
-    const out = &stdout.interface;
-    defer out.flush() catch {};
-
+fn runChapter2(gpa: std.mem.Allocator, out: Out) !void {
     const text = try std.fs.cwd().readFileAlloc(data_path, gpa, .limited(1 << 20));
     const tokens = try tk.splitText(gpa, text);
     const vocab = try tk.Vocab.build(gpa, tokens);
@@ -195,4 +186,35 @@ pub fn main() !void {
     try demoSampling(gpa, out, bpe, text);
     try demoDataloader(gpa, out, bpe, text);
     try demoEmbeddings(gpa, out, bpe, text);
+}
+
+/// `zig build run -- ch03` runs one chapter's demos; with no argument, all of them.
+pub fn main() !void {
+    // Tip: an arena frees everything at once when the program ends, so the
+    // demos do not need a `defer free` on every allocation.
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const gpa = arena.allocator();
+
+    var buf: [4096]u8 = undefined;
+    var stdout = std.fs.File.stdout().writer(&buf);
+    const out = &stdout.interface;
+    defer out.flush() catch {};
+
+    const args = try std.process.argsAlloc(gpa);
+    if (args.len == 1) {
+        try runChapter2(gpa, out);
+        try ch03.run(gpa, out);
+        return;
+    }
+    for (args[1..]) |chapter| {
+        if (std.mem.eql(u8, chapter, "ch02")) {
+            try runChapter2(gpa, out);
+        } else if (std.mem.eql(u8, chapter, "ch03")) {
+            try ch03.run(gpa, out);
+        } else {
+            std.debug.print("unknown chapter '{s}'; use ch02 or ch03\n", .{chapter});
+            std.process.exit(1);
+        }
+    }
 }

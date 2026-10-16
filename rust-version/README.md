@@ -31,6 +31,10 @@ cargo run
 cargo test        # runs the split_text doctest
 ```
 
+## Chapter 3: attention
+
+`cargo run -- ch03` runs the attention demos (`cargo run` runs every chapter). `src/attention/` has `matrix`, `simple`, `self_attention`, `causal` and `multihead`; the demo is `src/ch03.rs`. The random generator is shared with chapter 2 (`tokenization::rng`). Output is identical to Python's.
+
 ## Python <-> Rust notes
 
 - The `regex` crate has no capturing split; `split_text` walks `find_iter` matches by hand.

@@ -25,4 +25,17 @@ order: 30
 <tr><td>Zero-shot / few-shot</td><td>Doing a task with no examples, or a few examples in the prompt.</td><td><a href="ch01-transformer.html">1.4</a></td></tr>
 <tr><td>Autoregressive</td><td>Each output is fed back as input for the next prediction.</td><td><a href="ch01-gpt.html">1.6</a></td></tr>
 <tr><td>Emergent behaviour</td><td>A skill that shows up at scale without being trained for explicitly.</td><td><a href="ch01-gpt.html">1.6</a></td></tr>
+<tr><td>Attention</td><td>A way for each position to weigh and mix information from other positions.</td><td><a href="ch03-1-long-sequences.html">3.1</a></td></tr>
+<tr><td>Self-attention</td><td>Attention between positions of the same sequence.</td><td><a href="ch03-1-long-sequences.html">3.2</a></td></tr>
+<tr><td>Context vector</td><td>A token's embedding enriched with information from the other tokens.</td><td><a href="ch03-3-simple-attention.html">3.3</a></td></tr>
+<tr><td>Attention score</td><td>Raw similarity (dot product) between a query and a key.</td><td><a href="ch03-3-simple-attention.html">3.3</a></td></tr>
+<tr><td>Attention weight</td><td>Softmax of the scores: positive, rows sum to 1. Computed fresh for each input.</td><td><a href="ch03-3-simple-attention.html">3.3</a></td></tr>
+<tr><td>Softmax</td><td>Turns a list of numbers into positive weights that sum to 1.</td><td><a href="ch03-3-simple-attention.html">3.3</a></td></tr>
+<tr><td>Query / key / value</td><td>Three projections of each token: what it looks for, what it offers, what it hands over.</td><td><a href="ch03-4-self-attention.html">3.4</a></td></tr>
+<tr><td>Weight parameters</td><td>The learned matrices (W_query, W_key, W_value, ...). Not the same as attention weights.</td><td><a href="ch03-4-self-attention.html">3.4</a></td></tr>
+<tr><td>Scaled dot-product attention</td><td>Self-attention with scores divided by sqrt(d_k).</td><td><a href="scaling-sqrt-dk.html">extra</a></td></tr>
+<tr><td>Causal (masked) attention</td><td>Attention where a token cannot see later tokens.</td><td><a href="ch03-5-causal.html">3.5</a></td></tr>
+<tr><td>Dropout</td><td>Randomly zeroing values during training, scaling the rest, to reduce overfitting.</td><td><a href="ch03-5-causal.html">3.5</a></td></tr>
+<tr><td>Attention head</td><td>One independent query/key/value attention computation.</td><td><a href="ch03-6-multihead.html">3.6</a></td></tr>
+<tr><td>Multi-head attention</td><td>Several heads in parallel, concatenated and mixed by an output projection.</td><td><a href="ch03-6-multihead.html">3.6</a></td></tr>
 </table>

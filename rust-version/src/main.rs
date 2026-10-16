@@ -12,6 +12,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
+mod ch03;
+
 use llm_from_scratch::tokenization::{
     DataLoader, END_OF_TEXT, GptDataset, InputEmbedding, SimpleTokenizerV1, SimpleTokenizerV2,
     build_vocab, split_text,
@@ -175,7 +177,7 @@ fn demo_embeddings() {
     println!("---------------------");
 }
 
-fn main() {
+fn run_chapter2() {
     let vocab = load_vocab();
     show_vocab_tail(&vocab, 5);
     demo_v1(&vocab);
@@ -184,4 +186,22 @@ fn main() {
     demo_sampling();
     demo_dataloader();
     demo_embeddings();
+}
+
+/// `cargo run -- ch03` runs one chapter's demos; with no argument, all of them.
+fn main() {
+    let mut chapters: Vec<String> = std::env::args().skip(1).collect();
+    if chapters.is_empty() {
+        chapters = vec!["ch02".into(), "ch03".into()];
+    }
+    for chapter in &chapters {
+        match chapter.as_str() {
+            "ch02" => run_chapter2(),
+            "ch03" => ch03::run(),
+            other => {
+                eprintln!("unknown chapter {other:?}; use ch02 or ch03");
+                std::process::exit(1);
+            }
+        }
+    }
 }

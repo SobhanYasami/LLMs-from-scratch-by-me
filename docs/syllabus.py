@@ -42,7 +42,7 @@ CHAPTERS = [
              ("2.5", "Byte pair encoding"), ("2.6", "Data sampling with a sliding window"),
              ("2.7", "Creating token embeddings"), ("2.8", "Encoding word positions"),
          ]),
-    dict(num=3, title="Coding attention mechanisms", code=True, langs=[],
+    dict(num=3, title="Coding attention mechanisms", code=True, langs=ALL,
          summary="Why attention exists, then self-attention, causal masking, dropout and multi-head attention.",
          sections=[
              ("3.1", "The problem with modeling long sequences"),
@@ -86,6 +86,27 @@ CHAPTERS = [
 
 # Source files per code key, relative to each language's directory.
 CODE = {
+    "attn_simple": {
+        "python": ["attention/simple.py"], "go": ["attention/matrix.go", "attention/simple.go"],
+        "rust": ["src/attention/matrix.rs", "src/attention/simple.rs"],
+        "c": ["attention/matrix.h", "attention/matrix.c", "attention/simple.h", "attention/simple.c"],
+        "zig": ["src/attention/matrix.zig", "src/attention/simple.zig"]},
+    "attn_self": {
+        "python": ["attention/self_attention.py"], "go": ["attention/self_attention.go"],
+        "rust": ["src/attention/self_attention.rs"],
+        "c": ["attention/self_attention.h", "attention/self_attention.c"], "zig": ["src/attention/self_attention.zig"]},
+    "attn_causal": {
+        "python": ["attention/causal.py", "attention/rng.py"], "go": ["attention/causal.go", "attention/rng.go"],
+        "rust": ["src/attention/causal.rs", "src/tokenization/rng.rs"],
+        "c": ["attention/causal.h", "attention/causal.c", "tokenization/rng.h", "tokenization/rng.c"],
+        "zig": ["src/attention/causal.zig", "src/tokenization/rng.zig"]},
+    "attn_multihead": {
+        "python": ["attention/multihead.py"], "go": ["attention/multihead.go"],
+        "rust": ["src/attention/multihead.rs"],
+        "c": ["attention/multihead.h", "attention/multihead.c"], "zig": ["src/attention/multihead.zig"]},
+    "ch03_demo": {
+        "python": ["ch03.py"], "go": ["cmd/ch03.go"], "rust": ["src/ch03.rs"],
+        "c": ["ch03.c"], "zig": ["src/ch03.zig"]},
     "preprocess": {
         "python": ["tokenization/preprocess.py"], "go": ["tokenization/preprocess.go"],
         "rust": ["src/tokenization/preprocess.rs"],

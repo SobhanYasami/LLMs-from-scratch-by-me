@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3.5: Hiding future words with causal attention</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+</head><body><div class="layout">
+<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
+<h4>Start</h4>
+<a class="" href="index.html">Overview</a>
+<a class="" href="roadmap.html">Roadmap</a>
+<h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a class="" href="ch01-stages.html">1.3, 1.5 Training stages &amp; data</a>
+<a class="" href="ch01-transformer.html">1.4 Transformers &amp; tasks</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT &amp; the roadmap</a>
+<h4><a class="h4link" href="chapter-2.html">Chapter 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 Overview &amp; embeddings</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a class="" href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
+<a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
+<a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
+<a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
+<h4><a class="h4link" href="chapter-3.html">Chapter 3</a></h4>
+<a class="" href="ch03-1-long-sequences.html">3.1-3.2 Why attention</a>
+<a class="" href="ch03-3-simple-attention.html">3.3 Simple attention</a>
+<a class="" href="ch03-4-self-attention.html">3.4 Trainable weights</a>
+<a class=" on" href="ch03-5-causal.html">3.5 Causal attention</a>
+<a class="" href="ch03-6-multihead.html">3.6 Multi-head</a>
+<a class="extra" href="scaling-sqrt-dk.html">Why scale by sqrt(d_k)</a>
+<a class="extra" href="ch03-demo-output.html">Chapter 3 demo output</a>
+<h4><a class="h4link" href="chapter-4.html">Chapter 4</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-5.html">Chapter 5</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-6.html">Chapter 6</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-7.html">Chapter 7</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-A.html">Appendices</a> <em>planned</em></h4>
+<h4>Reference</h4>
+<a class="" href="reference.html">Code reference</a>
+<a class="" href="contributing.html">Contributing</a>
+<a class="" href="glossary.html">Glossary</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
+<main><h1>3.5: Hiding future words with causal attention</h1>
+<p class="meta">Book section 3.5 · code in Python, Go, Rust, C, Zig</p>
+<div class="aim"><b>Aim.</b> Stop tokens from seeing the future, so the model can learn next-token prediction, and add dropout against overfitting.</div>
+<p>A GPT is trained to predict the next token, so when it processes token i it must only use tokens 0 to i. If it could peek at token i+1 it would simply copy the answer. <b>Causal</b> (or <i>masked</i>) attention enforces this: attention weights above the diagonal are removed.</p>
+<h2>Two ways to mask</h2>
+<div class="cmp">
+<div><h3>Mask after softmax</h3>Zero everything above the diagonal, then divide each row by its new sum so it adds to 1 again. Correct, but needs an extra step.</div>
+<div><h3>Mask before softmax (used)</h3>Overwrite the future scores with <code>-inf</code>, then softmax. <code>exp(-inf) = 0</code>, and the row still sums to 1. One step, same result.</div>
+</div>
+<pre class="out">scores                      after the -inf mask
+[ s00  s01  s02 ]           [ s00  -inf  -inf ]
+[ s10  s11  s12 ]   ----&gt;   [ s10  s11   -inf ]
+[ s20  s21  s22 ]           [ s20  s21   s22  ]</pre>
+<p>Check with real numbers. For "journey" the unmasked weights were 0.1500 for "Your" and 0.2264 for itself. Keep just those two and renormalise: 0.1500 / (0.1500 + 0.2264) = 0.3985. The masked attention row indeed shows <b>0.3986</b>. Masking before or after gives the same answer (up to rounding).</p>
+<pre class="out">causal weights (upper triangle is 0):
+  [1.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]
+  [0.3986, 0.6014, 0.0000, 0.0000, 0.0000, 0.0000]
+  [0.2526, 0.3791, 0.3683, 0.0000, 0.0000, 0.0000]
+  ...
+  [0.1557, 0.2092, 0.2048, 0.1419, 0.1089, 0.1794]</pre>
+<p>The first token can only attend to itself (weight 1.0). The last token sees everything, so its row has no zeros.</p>
+<h2>Dropout</h2>
+<p><b>Dropout</b> randomly sets some values to zero during training, so the model cannot lean on any single connection. We apply it to the attention weights, after softmax. Two details:</p>
+<ul>
+<li>The surviving values are scaled up by <code>1 / (1 - p)</code>. With p = 0.5, kept values double. This keeps the average unchanged, so nothing needs rescaling at inference, when dropout is switched off.</li>
+<li>It is <b>training only</b>. The book uses 50% here for illustration; real GPT training uses 0.1 to 0.2.</li>
+</ul>
+<pre class="out">dropout 0.5 on a 6 x 6 matrix of ones (our seeded generator):
+  [2, 2, 2, 2, 2, 2]
+  [2, 0, 2, 0, 2, 2]
+  [0, 0, 2, 0, 0, 0]
+  ...</pre>
+<div class="tip">The exact pattern depends on the random generator. The book's torch output differs from ours; ours comes from a few lines of splitmix64 so all five languages agree.</div>
+<h2>Batches</h2>
+<p>The book's <code>CausalAttention</code> also handles a <b>batch</b> of sequences (shape [batch, tokens, d_in]), because the data loader of chapter 2 produces batches. Our Go, Rust, C and Zig versions process one sequence at a time and the demo loops over a batch; the math per sequence is identical. The mask is stored as a <i>buffer</i> in torch (<code>register_buffer</code>): saved with the model and moved to the GPU with it, but not a learned parameter.</p>
+<h2>Code</h2>
+<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button><button data-lang="c">C</button><button data-lang="zig">Zig</button></div><div class="pane" data-lang="python"><div class="file">python-version/attention/causal.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 8 (book 3.5) - causal attention: hide the future.
+
+A GPT writes text left to right, so token i may only look at tokens 0..i.
+We hide the later tokens with a mask. Set their scores to -inf *before*
+softmax: exp(-inf) = 0, and the remaining weights in each row still sum to 1.
+
+    scores (T x T)                       after the mask
+    [ s00 s01 s02 ]                      [ s00 -inf -inf ]
+    [ s10 s11 s12 ]      --------&gt;       [ s10  s11 -inf ]
+    [ s20 s21 s22 ]                      [ s20  s21  s22 ]
+
+Dropout (training only) randomly zeroes some attention weights so the model
+does not lean on any single connection.
+&quot;&quot;&quot;
+
+import math
+
+import torch
+from torch import nn
+
+from .rng import Rng, dropout
+from .self_attention import SelfAttention
+
+
+class CausalAttention(SelfAttention):
+    def __init__(self, w_query, w_key, w_value, context_length: int, dropout_p: float = 0.0, rng: Rng | None = None):
+        super().__init__(w_query, w_key, w_value)
+        self.dropout_p = dropout_p
+        self.rng = rng
+        # True above the diagonal = &quot;future&quot; positions to hide. A buffer is saved
+        # with the model but is not a learned parameter.
+        self.register_buffer(&quot;mask&quot;, torch.triu(torch.ones(context_length, context_length), diagonal=1).bool())
+
+    def attention_weights(self, x: torch.Tensor, train: bool = False) -&gt; torch.Tensor:
+        &quot;&quot;&quot;``x`` is [T, d_in] or [batch, T, d_in].&quot;&quot;&quot;
+        queries, keys = x @ self.W_query, x @ self.W_key
+        scores = queries @ keys.transpose(-2, -1)
+        t = x.shape[-2]
+        scores = scores.masked_fill(self.mask[:t, :t], -math.inf)
+        weights = torch.softmax(scores / math.sqrt(keys.shape[-1]), dim=-1)
+        if train and self.dropout_p &gt; 0:
+            weights = dropout(weights, self.dropout_p, self.rng)
+        return weights
+
+    def forward(self, x: torch.Tensor, train: bool = False) -&gt; torch.Tensor:
+        return self.attention_weights(x, train) @ (x @ self.W_value)
+</code></pre><div class="file">python-version/attention/rng.py</div><pre><code class="language-python">&quot;&quot;&quot;Tiny seeded random generator (splitmix64), so every language gives the same numbers.
+
+Used for random weights and for dropout masks. Same seed, same numbers, on
+every run and in every language of this repo (Go, Rust, C and Zig have the
+same few lines).
+&quot;&quot;&quot;
+
+import torch
+
+MASK = (1 &lt;&lt; 64) - 1
+
+
+class Rng:
+    def __init__(self, seed: int):
+        self.state = seed &amp; MASK
+
+    def next_u64(self) -&gt; int:
+        self.state = (self.state + 0x9E3779B97F4A7C15) &amp; MASK
+        z = self.state
+        z = ((z ^ (z &gt;&gt; 30)) * 0xBF58476D1CE4E5B9) &amp; MASK
+        z = ((z ^ (z &gt;&gt; 27)) * 0x94D049BB133111EB) &amp; MASK
+        return z ^ (z &gt;&gt; 31)
+
+    def next_f64(self) -&gt; float:
+        &quot;&quot;&quot;Uniform in [0, 1).&quot;&quot;&quot;
+        return (self.next_u64() &gt;&gt; 11) / 9007199254740992.0  # 2**53
+
+    def rand(self, rows: int, cols: int) -&gt; torch.Tensor:
+        &quot;&quot;&quot;A [rows, cols] float32 matrix, uniform in [0, 1), like ``torch.rand``.&quot;&quot;&quot;
+        values = [self.next_f64() for _ in range(rows * cols)]
+        return torch.tensor(values, dtype=torch.float32).reshape(rows, cols)
+
+
+def dropout(x: torch.Tensor, p: float, rng: Rng) -&gt; torch.Tensor:
+    &quot;&quot;&quot;Zero each element with probability ``p`` and scale the rest by 1/(1-p).
+
+    The scaling keeps the average value unchanged, so nothing needs rescaling
+    at inference time (when dropout is simply switched off).
+    &quot;&quot;&quot;
+    keep = [1.0 if rng.next_f64() &gt;= p else 0.0 for _ in range(x.numel())]
+    mask = torch.tensor(keep, dtype=x.dtype).reshape(x.shape)
+    return x * mask / (1.0 - p)
+</code></pre></div><div class="pane" data-lang="go"><div class="file">go-version/attention/causal.go</div><pre><code class="language-go">package attention
+
+// Step 8 (book 3.5) - causal attention: hide the future.
+//
+// A GPT writes text left to right, so token i may only look at tokens 0..i.
+// We hide the later tokens with a mask. Set their scores to -Inf before
+// softmax: exp(-Inf) = 0, and the remaining weights in each row still sum to 1.
+//
+//	scores (T x T)                       after the mask
+//	[ s00 s01 s02 ]                      [ s00 -inf -inf ]
+//	[ s10 s11 s12 ]      --------&gt;       [ s10  s11 -inf ]
+//	[ s20 s21 s22 ]                      [ s20  s21  s22 ]
+//
+// Dropout (training only) randomly zeroes some attention weights so the model
+// does not lean on any single connection.
+
+type CausalAttention struct {
+	SelfAttention
+	DropoutP float32
+	Rng      *Rng
+}
+
+func NewCausalAttention(wq, wk, wv Matrix, dropoutP float32, rng *Rng) *CausalAttention {
+	return &amp;CausalAttention{SelfAttention{wq, wk, wv}, dropoutP, rng}
+}
+
+// CausalWeights takes x [T, d_in]. With train set, dropout is applied.
+func (a *CausalAttention) CausalWeights(x Matrix, train bool) Matrix {
+	queries, keys := MatMul(x, a.WQuery), MatMul(x, a.WKey)
+	scores := MaskFuture(MatMul(queries, Transpose(keys)))
+	weights := SoftmaxRows(scaleBySqrt(scores, keys.Cols))
+	if train &amp;&amp; a.DropoutP &gt; 0 {
+		weights = Dropout(weights, a.DropoutP, a.Rng)
+	}
+	return weights
+}
+
+func (a *CausalAttention) CausalForward(x Matrix, train bool) Matrix {
+	return MatMul(a.CausalWeights(x, train), MatMul(x, a.WValue))
+}
+</code></pre><div class="file">go-version/attention/rng.go</div><pre><code class="language-go">package attention
+
+// Tiny seeded random generator (splitmix64), so every language gives the same
+// numbers. Used for random weights and for dropout masks.
+type Rng struct{ state uint64 }
+
+func NewRng(seed uint64) *Rng { return &amp;Rng{seed} }
+
+func (r *Rng) nextU64() uint64 {
+	r.state += 0x9E3779B97F4A7C15
+	z := r.state
+	z = (z ^ (z &gt;&gt; 30)) * 0xBF58476D1CE4E5B9
+	z = (z ^ (z &gt;&gt; 27)) * 0x94D049BB133111EB
+	return z ^ (z &gt;&gt; 31)
+}
+
+// NextF64 is uniform in [0, 1).
+func (r *Rng) NextF64() float64 { return float64(r.nextU64()&gt;&gt;11) / 9007199254740992.0 }
+
+// Rand returns a rows x cols matrix, uniform in [0, 1), like torch.rand.
+func (r *Rng) Rand(rows, cols int) Matrix {
+	m := NewMatrix(rows, cols)
+	for i := range m.Data {
+		m.Data[i] = float32(r.NextF64())
+	}
+	return m
+}
+
+// Dropout zeroes each element with probability p and scales the rest by 1/(1-p).
+// The scaling keeps the average unchanged, so nothing needs rescaling at
+// inference time (when dropout is simply switched off).
+func Dropout(m Matrix, p float32, r *Rng) Matrix {
+	out := NewMatrix(m.Rows, m.Cols)
+	for i, v := range m.Data {
+		if r.NextF64() &gt;= float64(p) {
+			out.Data[i] = v / (1 - p)
+		}
+	}
+	return out
+}
+</code></pre></div><div class="pane" data-lang="rust"><div class="file">rust-version/src/attention/causal.rs</div><pre><code class="language-rust">//! Step 8 (book 3.5) - causal attention: hide the future.
+//!
+//! A GPT writes text left to right, so token i may only look at tokens 0..i.
+//! We hide the later tokens with a mask. Set their scores to -inf *before*
+//! softmax: exp(-inf) = 0, and the remaining weights in each row still sum to 1.
+//!
+//! ```text
+//! scores (T x T)                       after the mask
+//! [ s00 s01 s02 ]                      [ s00 -inf -inf ]
+//! [ s10 s11 s12 ]      --------&gt;       [ s10  s11 -inf ]
+//! [ s20 s21 s22 ]                      [ s20  s21  s22 ]
+//! ```
+//!
+//! Dropout (training only) randomly zeroes some attention weights so the model
+//! does not lean on any single connection.
+
+use super::self_attention::scale_by_sqrt;
+use super::{Matrix, SelfAttention};
+use crate::tokenization::rng::Rng;
+
+pub struct CausalAttention {
+    pub base: SelfAttention,
+    pub dropout_p: f32,
+}
+
+impl CausalAttention {
+    pub fn new(w_query: Matrix, w_key: Matrix, w_value: Matrix, dropout_p: f32) -&gt; Self {
+        Self {
+            base: SelfAttention {
+                w_query,
+                w_key,
+                w_value,
+            },
+            dropout_p,
+        }
+    }
+
+    /// `x` is [T, d_in]. Pass an `rng` and `train = true` to apply dropout.
+    pub fn attention_weights(&amp;self, x: &amp;Matrix, rng: Option&lt;&amp;mut Rng&gt;) -&gt; Matrix {
+        let queries = x.matmul(&amp;self.base.w_query);
+        let keys = x.matmul(&amp;self.base.w_key);
+        let scores = queries.matmul(&amp;keys.transpose()).mask_future();
+        let weights = scale_by_sqrt(&amp;scores, keys.cols).softmax_rows();
+        match rng {
+            Some(rng) if self.dropout_p &gt; 0.0 =&gt; weights.dropout(self.dropout_p, rng),
+            _ =&gt; weights,
+        }
+    }
+
+    pub fn forward(&amp;self, x: &amp;Matrix, rng: Option&lt;&amp;mut Rng&gt;) -&gt; Matrix {
+        self.attention_weights(x, rng)
+            .matmul(&amp;x.matmul(&amp;self.base.w_value))
+    }
+}
+</code></pre><div class="file">rust-version/src/tokenization/rng.rs</div><pre><code class="language-rust">//! Tiny seeded random generator (splitmix64), so the crate needs no `rand`.
+//!
+//! Used for shuffling batches and for random embedding weights. Same seed,
+//! same numbers, on every run.
+
+pub struct Rng(u64);
+
+impl Rng {
+    pub fn new(seed: u64) -&gt; Self {
+        Self(seed)
+    }
+
+    fn next_u64(&amp;mut self) -&gt; u64 {
+        self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
+        let mut z = self.0;
+        z = (z ^ (z &gt;&gt; 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+        z = (z ^ (z &gt;&gt; 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+        z ^ (z &gt;&gt; 31)
+    }
+
+    /// Uniform in [0, 1).
+    pub fn next_f64(&amp;mut self) -&gt; f64 {
+        (self.next_u64() &gt;&gt; 11) as f64 / (1u64 &lt;&lt; 53) as f64
+    }
+
+    /// Uniform integer in [0, n).
+    pub fn below(&amp;mut self, n: usize) -&gt; usize {
+        (self.next_u64() % n as u64) as usize
+    }
+
+    /// Normal(0, 1) via the Box-Muller transform.
+    pub fn normal(&amp;mut self) -&gt; f32 {
+        let u1 = 1.0 - self.next_f64(); // avoid ln(0)
+        let u2 = self.next_f64();
+        ((-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()) as f32
+    }
+
+    /// Fisher-Yates shuffle.
+    pub fn shuffle&lt;T&gt;(&amp;mut self, items: &amp;mut [T]) {
+        for i in (1..items.len()).rev() {
+            items.swap(i, self.below(i + 1));
+        }
+    }
+}
+</code></pre></div><div class="pane" data-lang="c"><div class="file">C-version/attention/causal.h</div><pre><code class="language-c">/* Step 8 (book 3.5) - causal attention: hide the future.
+ *
+ * A GPT writes text left to right, so token i may only look at tokens 0..i.
+ * We hide the later tokens with a mask. Set their scores to -inf before
+ * softmax: exp(-inf) = 0, and the remaining weights in each row still sum to 1.
+ *
+ *   scores (T x T)                       after the mask
+ *   [ s00 s01 s02 ]                      [ s00 -inf -inf ]
+ *   [ s10 s11 s12 ]      --------&gt;       [ s10  s11 -inf ]
+ *   [ s20 s21 s22 ]                      [ s20  s21  s22 ]
+ *
+ * Dropout (training only) randomly zeroes some attention weights so the model
+ * does not lean on any single connection.
+ */
+#ifndef CAUSAL_H
+#define CAUSAL_H
+
+#include &quot;self_attention.h&quot;
+
+typedef struct {
+    SelfAttention base;
+    float dropout_p;
+} CausalAttention;
+
+/* x is [T, d_in]. Pass an rng to apply dropout (training), or NULL (inference). */
+Matrix causal_weights(Arena *a, const CausalAttention *ca, Matrix x, Rng *rng);
+Matrix causal_forward(Arena *a, const CausalAttention *ca, Matrix x, Rng *rng);
+
+#endif
+</code></pre><div class="file">C-version/attention/causal.c</div><pre><code class="language-c">#include &quot;causal.h&quot;
+
+Matrix causal_weights(Arena *a, const CausalAttention *ca, Matrix x, Rng *rng) {
+    Matrix queries = matmul(a, x, ca-&gt;base.w_query), keys = matmul(a, x, ca-&gt;base.w_key);
+    Matrix scores = mask_future(a, matmul(a, queries, transpose(a, keys)));
+    Matrix weights = softmax_rows(a, scale_by_sqrt(a, scores, keys.cols));
+    if (rng &amp;&amp; ca-&gt;dropout_p &gt; 0) weights = dropout(a, weights, ca-&gt;dropout_p, rng);
+    return weights;
+}
+
+Matrix causal_forward(Arena *a, const CausalAttention *ca, Matrix x, Rng *rng) {
+    return matmul(a, causal_weights(a, ca, x, rng), matmul(a, x, ca-&gt;base.w_value));
+}
+</code></pre><div class="file">C-version/tokenization/rng.h</div><pre><code class="language-c">/* Tiny seeded random generator (splitmix64), no library needed.
+ *
+ * Used for shuffling batches and for random embedding weights. Same seed,
+ * same numbers, on every run. (Same algorithm as rust-version/rng.rs.)
+ */
+#ifndef RNG_H
+#define RNG_H
+
+#include &lt;stddef.h&gt;
+#include &lt;stdint.h&gt;
+
+typedef struct {
+    uint64_t state;
+} Rng;
+
+Rng rng_new(uint64_t seed);
+double rng_f64(Rng *r);          /* uniform in [0, 1) */
+size_t rng_below(Rng *r, size_t n); /* uniform integer in [0, n) */
+float rng_normal(Rng *r);        /* Normal(0, 1), Box-Muller */
+void rng_shuffle(Rng *r, size_t *items, size_t n); /* Fisher-Yates */
+
+#endif
+</code></pre><div class="file">C-version/tokenization/rng.c</div><pre><code class="language-c">#include &quot;rng.h&quot;
+
+#include &lt;math.h&gt;
+
+Rng rng_new(uint64_t seed) { return (Rng){seed}; }
+
+static uint64_t next_u64(Rng *r) {
+    r-&gt;state += 0x9E3779B97F4A7C15ULL;
+    uint64_t z = r-&gt;state;
+    z = (z ^ (z &gt;&gt; 30)) * 0xBF58476D1CE4E5B9ULL;
+    z = (z ^ (z &gt;&gt; 27)) * 0x94D049BB133111EBULL;
+    return z ^ (z &gt;&gt; 31);
+}
+
+double rng_f64(Rng *r) { return (double)(next_u64(r) &gt;&gt; 11) / 9007199254740992.0; /* 2^53 */ }
+
+size_t rng_below(Rng *r, size_t n) { return (size_t)(next_u64(r) % n); }
+
+float rng_normal(Rng *r) {
+    double u1 = 1.0 - rng_f64(r); /* avoid log(0) */
+    double u2 = rng_f64(r);
+    return (float)(sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2));
+}
+
+void rng_shuffle(Rng *r, size_t *items, size_t n) {
+    for (size_t i = n; i-- &gt; 1;) {
+        size_t j = rng_below(r, i + 1);
+        size_t tmp = items[i];
+        items[i] = items[j];
+        items[j] = tmp;
+    }
+}
+</code></pre></div><div class="pane" data-lang="zig"><div class="file">Zig-version/src/attention/causal.zig</div><pre><code class="language-zig">//! Step 8 (book 3.5) - causal attention: hide the future.
+//!
+//! A GPT writes text left to right, so token i may only look at tokens 0..i.
+//! We hide the later tokens with a mask. Set their scores to -inf *before*
+//! softmax: exp(-inf) = 0, and the remaining weights in each row still sum to 1.
+//!
+//! ```
+//! scores (T x T)                       after the mask
+//! [ s00 s01 s02 ]                      [ s00 -inf -inf ]
+//! [ s10 s11 s12 ]      --------&gt;       [ s10  s11 -inf ]
+//! [ s20 s21 s22 ]                      [ s20  s21  s22 ]
+//! ```
+//!
+//! Dropout (training only) randomly zeroes some attention weights so the model
+//! does not lean on any single connection.
+
+const std = @import(&quot;std&quot;);
+const Matrix = @import(&quot;matrix.zig&quot;).Matrix;
+const sa = @import(&quot;self_attention.zig&quot;);
+const Rng = @import(&quot;../tokenization/rng.zig&quot;).Rng;
+
+pub const CausalAttention = struct {
+    base: sa.SelfAttention,
+    dropout_p: f32 = 0,
+
+    /// `x` is [T, d_in]. Pass an `rng` to apply dropout (training), or null (inference).
+    pub fn attentionWeights(self: CausalAttention, gpa: std.mem.Allocator, x: Matrix, rng: ?*Rng) !Matrix {
+        const queries = try x.matmul(gpa, self.base.w_query);
+        const keys = try x.matmul(gpa, self.base.w_key);
+        const scores = try (try queries.matmul(gpa, try keys.transpose(gpa))).maskFuture(gpa);
+        const weights = try (try sa.scaleBySqrt(gpa, scores, keys.cols)).softmaxRows(gpa);
+        if (rng) |r| {
+            if (self.dropout_p &gt; 0) return weights.dropout(gpa, self.dropout_p, r);
+        }
+        return weights;
+    }
+
+    pub fn forward(self: CausalAttention, gpa: std.mem.Allocator, x: Matrix, rng: ?*Rng) !Matrix {
+        const weights = try self.attentionWeights(gpa, x, rng);
+        return weights.matmul(gpa, try x.matmul(gpa, self.base.w_value));
+    }
+};
+</code></pre><div class="file">Zig-version/src/tokenization/rng.zig</div><pre><code class="language-zig">//! Tiny seeded random generator (splitmix64), no library needed.
+//!
+//! Used for shuffling batches and for random embedding weights. Same seed,
+//! same numbers, on every run. (Same algorithm as the Rust and C versions.)
+
+const std = @import(&quot;std&quot;);
+
+pub const Rng = struct {
+    state: u64,
+
+    pub fn init(seed: u64) Rng {
+        return .{ .state = seed };
+    }
+
+    fn nextU64(self: *Rng) u64 {
+        self.state +%= 0x9E37_79B9_7F4A_7C15;
+        var z = self.state;
+        z = (z ^ (z &gt;&gt; 30)) *% 0xBF58_476D_1CE4_E5B9;
+        z = (z ^ (z &gt;&gt; 27)) *% 0x94D0_49BB_1331_11EB;
+        return z ^ (z &gt;&gt; 31);
+    }
+
+    /// Uniform in [0, 1).
+    pub fn nextF64(self: *Rng) f64 {
+        return @as(f64, @floatFromInt(self.nextU64() &gt;&gt; 11)) / 9007199254740992.0; // 2^53
+    }
+
+    /// Uniform integer in [0, n).
+    pub fn below(self: *Rng, n: usize) usize {
+        return @intCast(self.nextU64() % n);
+    }
+
+    /// Normal(0, 1) via the Box-Muller transform.
+    pub fn normal(self: *Rng) f32 {
+        const a = 1.0 - self.nextF64(); // avoid log(0)
+        const b = self.nextF64();
+        return @floatCast(@sqrt(-2.0 * @log(a)) * @cos(2.0 * std.math.pi * b));
+    }
+
+    /// Fisher-Yates shuffle.
+    pub fn shuffle(self: *Rng, comptime T: type, items: []T) void {
+        var i = items.len;
+        while (i &gt; 1) {
+            i -= 1;
+            std.mem.swap(T, &amp;items[i], &amp;items[self.below(i + 1)]);
+        }
+    }
+};
+</code></pre></div></div>
+<h2>Exercise</h2>
+<p>Print the causal weights with and without the <code>-inf</code> trick (the "mask after" way). Confirm they match to 4 decimals. Then change the dropout rate to 0.2 and count how many of the 36 positions survive.</p>
+
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/ch03-5-causal.html">Edit this page on GitHub</a></p>
+<div class="pager"><a href="ch03-4-self-attention.html">&larr; 3.4 Trainable weights</a><a href="ch03-6-multihead.html">3.6 Multi-head &rarr;</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script src="site.js"></script>
+</body></html>
