@@ -1,0 +1,52 @@
+---
+title: Code reference: one table, five languages
+nav: Code reference
+chapter: reference
+order: 10
+---
+<p class="lede">Every public piece, side by side. Names follow each language's convention.</p>
+<table>
+<tr><th>Book</th><th>Python</th><th>Go</th><th>Rust</th><th>C</th><th>Zig</th></tr>
+<tr><td>2.2 split</td><td><code>split_text</code></td><td><code>SplitText</code></td><td><code>split_text</code></td><td><code>split_text</code></td><td><code>splitText</code></td></tr>
+<tr><td>2.3 join</td><td><code>detokenize</code></td><td><code>Detokenize</code></td><td><code>detokenize</code></td><td><code>detokenize</code></td><td><code>detokenize</code></td></tr>
+<tr><td>2.3 vocab</td><td><code>build_vocab(tokens)</code></td><td><code>BuildVocab(tokens)</code></td><td><code>build_vocab(&amp;tokens)</code></td><td><code>build_vocab</code></td><td><code>Vocab.build</code></td></tr>
+<tr><td>2.3-2.4 tokenizers</td><td><code>SimpleTokenizerV1/V2</code></td><td><code>NewSimpleTokenizerV1/V2</code></td><td><code>SimpleTokenizerV1/V2::new</code></td><td><code>simple_tokenizer_v1/v2</code></td><td><code>SimpleTokenizer.v1/v2</code></td></tr>
+<tr><td>2.3 encode / decode</td><td>raises <code>KeyError</code></td><td>returns <code>error</code></td><td>returns <code>Result</code></td><td>returns <code>NULL</code> + message</td><td>error union</td></tr>
+<tr><td>2.4 special tokens</td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>EndOfText</code>, <code>Unknown</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td></tr>
+<tr><td>2.5 BPE</td><td><code>tiktoken.get_encoding("gpt2")</code></td><td><code>tiktoken.GetEncoding("r50k_base")</code></td><td><code>tiktoken_rs::r50k_base()</code></td><td><code>bpe_load</code> / <code>bpe_encode</code></td><td><code>Bpe.init</code> / <code>encode</code></td></tr>
+<tr><td>2.6 windows</td><td><code>GPTDatasetV1</code></td><td><code>NewGPTDataset</code></td><td><code>GptDataset::new</code></td><td><code>gpt_dataset_new</code></td><td><code>GptDataset.init</code></td></tr>
+<tr><td>2.6 batches</td><td><code>create_dataloader_v1</code></td><td><code>NewDataLoader(...).Epoch()</code></td><td><code>DataLoader::new(...).epoch()</code></td><td><code>dataloader_new</code> + <code>_batch</code></td><td><code>DataLoader.init</code> + <code>batch</code></td></tr>
+<tr><td>2.7-2.8 embeddings</td><td><code>InputEmbedding</code> (torch)</td><td><code>NewInputEmbedding</code></td><td><code>InputEmbedding::new</code></td><td><code>input_embedding_new</code></td><td><code>InputEmbedding.init</code></td></tr>
+</table>
+<h2>Layout, same idea in each language</h2>
+<pre class="out">&lt;lang&gt;/
+  README.md
+  main                 demo runner
+  tokenization/
+    preprocess         2.2
+    vocab              2.3
+    simple             2.3-2.4
+    dataset            2.6 (+ dataloader)
+    embedding          2.7-2.8</pre>
+<p>Source comments say "Step 1-5". Map to the book: Step 1 = 2.2, Step 2 = 2.3, Step 3 = 2.3-2.4, Step 4 = 2.6, Step 5 = 2.7-2.8.</p>
+<h2>Key numbers for chapter 2</h2>
+<table>
+<tr><th>Thing</th><th>Value</th></tr>
+<tr><td>Characters in <i>The Verdict</i></td><td>20,479</td></tr>
+<tr><td>Word-level tokens / vocabulary</td><td>4,649 / 1,159 (+2 special = 1,161)</td></tr>
+<tr><td>BPE tokens in the story</td><td>5,145</td></tr>
+<tr><td>GPT-2 BPE vocabulary, <code>&lt;|endoftext|&gt;</code> ID</td><td>50,257, 50256</td></tr>
+<tr><td>Demo batch</td><td>8 windows x 4 tokens, 256 dimensions</td></tr>
+</table>
+<h2>Adding the next chapter</h2>
+<p>Add a sibling module in each language (for example <code>attention</code>), in the book's order, with the same names and a demo in each <code>main</code>. The docs side is in <a href="contributing.html">Contributing</a>.</p>
+<h2>Language differences</h2>
+<table>
+<tr><th>Topic</th><th>Python</th><th>Go</th><th>Rust</th><th>C</th><th>Zig</th></tr>
+<tr><td>Capturing split</td><td><code>re.split</code></td><td>manual</td><td>manual</td><td>byte scan</td><td>byte scan (slices, no copy)</td></tr>
+<tr><td>V2 reuses V1</td><td>subclass</td><td>embed struct</td><td>wrap</td><td>one flag</td><td>one flag</td></tr>
+<tr><td>Tensors</td><td>torch</td><td>nested slices</td><td>nested <code>Vec</code></td><td>flat <code>float[]</code></td><td>flat <code>[]f32</code></td></tr>
+<tr><td>GPT-2 BPE</td><td><code>tiktoken</code></td><td><code>tiktoken-go</code> + offline loader</td><td><code>tiktoken-rs</code></td><td>own encoder</td><td>own encoder</td></tr>
+<tr><td>Random weights</td><td><code>torch</code></td><td><code>math/rand</code></td><td>built-in splitmix64</td><td>splitmix64</td><td>splitmix64</td></tr>
+<tr><td>Memory</td><td>garbage collected</td><td>garbage collected</td><td>ownership</td><td>manual <code>malloc/free</code></td><td>explicit allocators</td></tr>
+</table>

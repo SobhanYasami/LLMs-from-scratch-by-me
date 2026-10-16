@@ -8,25 +8,37 @@
 </head><body><div class="layout">
 <nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
 <h4>Start</h4>
-<a href="index.html">Overview</a>
-<h4>Chapter 1: Understanding LLMs</h4>
-<a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
-<a href="ch01-stages.html">1.3, 1.5 Training stages & data</a>
-<a href="ch01-transformer.html">1.4 Transformers & tasks</a>
-<a href="ch01-gpt.html">1.6-1.7 GPT & the roadmap</a>
-<h4>Chapter 2: Working with text data</h4>
-<a href="ch02-overview.html">2.1 Overview & embeddings</a>
-<a href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
-<a href="ch02-3-token-ids.html">2.3 Token IDs</a>
-<a class="on" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
-<a href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
-<a href="ch02-6-sampling.html">2.6 Sliding window</a>
-<a href="ch02-7-embeddings.html">2.7-2.8 Embeddings & positions</a>
+<a class="" href="index.html">Overview</a>
+<a class="" href="roadmap.html">Roadmap</a>
+<h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a class="" href="ch01-stages.html">1.3, 1.5 Training stages &amp; data</a>
+<a class="" href="ch01-transformer.html">1.4 Transformers &amp; tasks</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT &amp; the roadmap</a>
+<h4><a class="h4link" href="chapter-2.html">Chapter 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 Overview &amp; embeddings</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a class=" on" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a class="" href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
+<a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
+<a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
+<a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
+<h4><a class="h4link" href="chapter-3.html">Chapter 3</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-4.html">Chapter 4</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-5.html">Chapter 5</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-6.html">Chapter 6</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-7.html">Chapter 7</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-A.html">Appendices</a> <em>planned</em></h4>
 <h4>Reference</h4>
-<a href="reference.html">Reference</a>
-<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
+<a class="" href="reference.html">Code reference</a>
+<a class="" href="contributing.html">Contributing</a>
+<a class="" href="glossary.html">Glossary</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
 <main><h1>2.4: Adding special context tokens</h1>
-
+<p class="meta">Book section 2.4 · code in Python, Go, Rust, C, Zig</p>
 <div class="aim"><b>Aim.</b> Handle unknown words and document boundaries by adding two special tokens to the vocabulary.</div>
 <table><tr><th>Token</th><th>Role</th><th>ID in our vocab</th></tr>
 <tr><td><code>&lt;|unk|&gt;</code></td><td>stands for any word not in the vocabulary</td><td>1160</td></tr>
@@ -46,7 +58,7 @@ decoded = "&lt;|unk|&gt;, do you like tea? &lt;|endoftext|&gt; In the sunlit ter
 </ul>
 <div class="tip">GPT uses only <code>&lt;|endoftext|&gt;</code>, for separating <em>and</em> padding (padded positions are masked out later, so which token pads does not matter). GPT also has no <code>&lt;|unk|&gt;</code>: byte pair encoding on the next page replaces it.</div>
 <h2>Code (same file as 2.3, now look at V2)</h2>
-<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/simple.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 3 - Simple tokenizers that combine splitting with the vocabulary.
+<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button><button data-lang="c">C</button><button data-lang="zig">Zig</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/simple.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 3 - Simple tokenizers that combine splitting with the vocabulary.
 
 Both classes expose the same two methods:
 
@@ -239,13 +251,169 @@ impl SimpleTokenizerV2 {
         self.0.decode(ids)
     }
 }
-</code></pre></div></div>
-<div class="tip">V2 reuses V1: subclassing in Python, struct embedding in Go, wrapping in Rust. In Go and Rust both types share one private <code>encode</code> that takes an "unknown to unk" flag.</div>
+</code></pre></div><div class="pane" data-lang="c"><div class="file">C-version/tokenization/simple.h</div><pre><code class="language-c">/* Step 3 (book 2.3-2.4) - simple tokenizers: split text, look tokens up.
+ *
+ *   encode: &quot;Hello, world&quot; -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; [1131, 5, 987]
+ *   decode: [1131, 5, 987] -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; &quot;Hello, world&quot;
+ *
+ * Tip: compare V1 and V2. V1 fails on a word it never saw; V2 swaps it for
+ * &lt;|unk|&gt; and keeps going. That one difference is why real models use BPE.
+ */
+#ifndef SIMPLE_H
+#define SIMPLE_H
 
+#include &lt;stdbool.h&gt;
+#include &lt;stddef.h&gt;
+
+#include &quot;util.h&quot;
+#include &quot;vocab.h&quot;
+
+typedef struct {
+    const Vocab *vocab;
+    bool unknown_to_unk; /* false = V1 (error), true = V2 (&lt;|unk|&gt;) */
+} SimpleTokenizer;
+
+SimpleTokenizer simple_tokenizer_v1(const Vocab *vocab);
+SimpleTokenizer simple_tokenizer_v2(const Vocab *vocab);
+
+/* text -&gt; IDs. Returns NULL and fills `err` on an unknown token (V1). Caller frees. */
+int *simple_encode(const SimpleTokenizer *t, const char *text, size_t *n, char err[ERR_LEN]);
+/* IDs -&gt; text. Returns NULL and fills `err` on an unknown ID. Caller frees. */
+char *simple_decode(const SimpleTokenizer *t, const int *ids, size_t n, char err[ERR_LEN]);
+
+#endif
+</code></pre><div class="file">C-version/tokenization/simple.c</div><pre><code class="language-c">#include &quot;simple.h&quot;
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+#include &quot;preprocess.h&quot;
+
+SimpleTokenizer simple_tokenizer_v1(const Vocab *vocab) { return (SimpleTokenizer){vocab, false}; }
+SimpleTokenizer simple_tokenizer_v2(const Vocab *vocab) { return (SimpleTokenizer){vocab, true}; }
+
+/* V1 and V2 share this code. The only difference is what happens to a token
+ * that is not in the vocab: error (V1) or &lt;|unk|&gt; (V2). */
+int *simple_encode(const SimpleTokenizer *t, const char *text, size_t *n, char err[ERR_LEN]) {
+    Tokens tokens = split_text(text);
+    int *ids = xmalloc(tokens.len * sizeof(int));
+    for (size_t i = 0; i &lt; tokens.len; i++) {
+        int id = vocab_id(t-&gt;vocab, tokens.items[i]);
+        if (id &lt; 0 &amp;&amp; t-&gt;unknown_to_unk) id = vocab_id(t-&gt;vocab, UNK_TOKEN);
+        if (id &lt; 0) {
+            snprintf(err, ERR_LEN, &quot;token not in vocab: \&quot;%s\&quot;&quot;, tokens.items[i]);
+            free(ids);
+            tokens_free(&amp;tokens);
+            return NULL;
+        }
+        ids[i] = id;
+    }
+    *n = tokens.len;
+    tokens_free(&amp;tokens);
+    return ids;
+}
+
+char *simple_decode(const SimpleTokenizer *t, const int *ids, size_t n, char err[ERR_LEN]) {
+    const char **tokens = xmalloc(n * sizeof(char *));
+    for (size_t i = 0; i &lt; n; i++) {
+        tokens[i] = vocab_token(t-&gt;vocab, ids[i]);
+        if (!tokens[i]) {
+            snprintf(err, ERR_LEN, &quot;id not in vocab: %d&quot;, ids[i]);
+            free(tokens);
+            return NULL;
+        }
+    }
+    char *text = detokenize(tokens, n);
+    free(tokens);
+    return text;
+}
+</code></pre></div><div class="pane" data-lang="zig"><div class="file">Zig-version/src/tokenization/simple.zig</div><pre><code class="language-zig">//! Step 3 (book 2.3-2.4) - simple tokenizers: split text, look tokens up.
+//!
+//! ```
+//! encode: &quot;Hello, world&quot; -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; [1131, 5, 987]
+//! decode: [1131, 5, 987] -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; &quot;Hello, world&quot;
+//! ```
+//!
+//! Tip: compare V1 and V2. V1 fails on a word it never saw; V2 swaps it for
+//! `&lt;|unk|&gt;` and keeps going. That one difference is why real models use BPE.
+
+const std = @import(&quot;std&quot;);
+const preprocess = @import(&quot;preprocess.zig&quot;);
+const Vocab = @import(&quot;vocab.zig&quot;).Vocab;
+
+pub const SimpleTokenizer = struct {
+    vocab: *const Vocab,
+    /// false = V1 (error), true = V2 (`&lt;|unk|&gt;`).
+    unknown_to_unk: bool,
+
+    pub fn v1(vocab: *const Vocab) SimpleTokenizer {
+        return .{ .vocab = vocab, .unknown_to_unk = false };
+    }
+
+    pub fn v2(vocab: *const Vocab) SimpleTokenizer {
+        return .{ .vocab = vocab, .unknown_to_unk = true };
+    }
+
+    /// text -&gt; IDs. V1 fails with `error.UnknownToken` on a word outside the
+    /// vocabulary; V2 uses the `&lt;|unk|&gt;` ID instead. Caller frees.
+    pub fn encode(self: SimpleTokenizer, gpa: std.mem.Allocator, text: []const u8) ![]u32 {
+        const tokens = try preprocess.splitText(gpa, text);
+        defer gpa.free(tokens);
+        const ids = try gpa.alloc(u32, tokens.len);
+        errdefer gpa.free(ids);
+        for (tokens, ids) |token, *id| {
+            id.* = self.vocab.idOf(token) orelse
+                (if (self.unknown_to_unk) self.vocab.idOf(preprocess.UNK_TOKEN) else null) orelse
+                return error.UnknownToken;
+        }
+        return ids;
+    }
+
+    /// IDs -&gt; text. Fails with `error.UnknownId` for an ID outside the vocabulary. Caller frees.
+    pub fn decode(self: SimpleTokenizer, gpa: std.mem.Allocator, ids: []const u32) ![]u8 {
+        const tokens = try gpa.alloc([]const u8, ids.len);
+        defer gpa.free(tokens);
+        for (ids, tokens) |id, *token| token.* = self.vocab.tokenOf(id) orelse return error.UnknownId;
+        return preprocess.detokenize(gpa, tokens);
+    }
+};
+
+fn testVocab(gpa: std.mem.Allocator) !Vocab {
+    return Vocab.build(gpa, &amp;.{ &quot;Hello&quot;, &quot;,&quot;, &quot;world&quot; });
+}
+
+test &quot;V1 fails on unknown words, V2 uses &lt;|unk|&gt;&quot; {
+    const gpa = std.testing.allocator;
+    var vocab = try testVocab(gpa);
+    defer vocab.deinit(gpa);
+
+    try std.testing.expectError(error.UnknownToken, SimpleTokenizer.v1(&amp;vocab).encode(gpa, &quot;Hello there&quot;));
+
+    const ids = try SimpleTokenizer.v2(&amp;vocab).encode(gpa, &quot;Hello there&quot;);
+    defer gpa.free(ids);
+    try std.testing.expectEqual(vocab.idOf(preprocess.UNK_TOKEN).?, ids[1]);
+}
+
+test &quot;encode then decode round-trips simple text&quot; {
+    const gpa = std.testing.allocator;
+    var vocab = try testVocab(gpa);
+    defer vocab.deinit(gpa);
+    const t = SimpleTokenizer.v1(&amp;vocab);
+    const ids = try t.encode(gpa, &quot;Hello, world&quot;);
+    defer gpa.free(ids);
+    const text = try t.decode(gpa, ids);
+    defer gpa.free(text);
+    try std.testing.expectEqualStrings(&quot;Hello, world&quot;, text);
+}
+</code></pre></div></div>
+<div class="tip">V2 reuses V1: subclassing in Python, struct embedding in Go, wrapping in Rust. In Go, Rust, C and Zig both types share one encode that takes an "unknown to unk" flag.</div>
+
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/ch02-4-special-tokens.html">Edit this page on GitHub</a></p>
 <div class="pager"><a href="ch02-3-token-ids.html">&larr; 2.3 Token IDs</a><a href="ch02-5-bpe.html">2.5 Byte pair encoding &rarr;</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
 <script src="site.js"></script>
 </body></html>

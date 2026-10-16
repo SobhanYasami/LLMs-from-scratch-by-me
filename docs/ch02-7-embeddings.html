@@ -8,25 +8,37 @@
 </head><body><div class="layout">
 <nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
 <h4>Start</h4>
-<a href="index.html">Overview</a>
-<h4>Chapter 1: Understanding LLMs</h4>
-<a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
-<a href="ch01-stages.html">1.3, 1.5 Training stages & data</a>
-<a href="ch01-transformer.html">1.4 Transformers & tasks</a>
-<a href="ch01-gpt.html">1.6-1.7 GPT & the roadmap</a>
-<h4>Chapter 2: Working with text data</h4>
-<a href="ch02-overview.html">2.1 Overview & embeddings</a>
-<a href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
-<a href="ch02-3-token-ids.html">2.3 Token IDs</a>
-<a href="ch02-4-special-tokens.html">2.4 Special tokens</a>
-<a href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
-<a href="ch02-6-sampling.html">2.6 Sliding window</a>
-<a class="on" href="ch02-7-embeddings.html">2.7-2.8 Embeddings & positions</a>
+<a class="" href="index.html">Overview</a>
+<a class="" href="roadmap.html">Roadmap</a>
+<h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a class="" href="ch01-stages.html">1.3, 1.5 Training stages &amp; data</a>
+<a class="" href="ch01-transformer.html">1.4 Transformers &amp; tasks</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT &amp; the roadmap</a>
+<h4><a class="h4link" href="chapter-2.html">Chapter 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 Overview &amp; embeddings</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a class="" href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a class=" on" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
+<a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
+<a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
+<a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
+<h4><a class="h4link" href="chapter-3.html">Chapter 3</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-4.html">Chapter 4</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-5.html">Chapter 5</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-6.html">Chapter 6</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-7.html">Chapter 7</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-A.html">Appendices</a> <em>planned</em></h4>
 <h4>Reference</h4>
-<a href="reference.html">Reference</a>
-<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
+<a class="" href="reference.html">Code reference</a>
+<a class="" href="contributing.html">Contributing</a>
+<a class="" href="glossary.html">Glossary</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
 <main><h1>2.7-2.8: Token embeddings and word positions</h1>
-
+<p class="meta">Book section 2.7, 2.8 · code in Python, Go, Rust, C, Zig</p>
 <div class="aim"><b>Aim.</b> Turn integer IDs into vectors the model can learn from, and put word order into those vectors.</div>
 <h2>2.7 Token embeddings</h2>
 <p>An <b>embedding layer</b> is a weight matrix with one row per vocabulary entry and one column per dimension. Converting an ID is a <b>row lookup</b>.</p>
@@ -57,7 +69,7 @@ position embeddings (4, 256)      one vector per position 0..3
 input embeddings   (8, 4, 256)    token + position  &lt;- what the model reads</pre>
 <p>The position table is looked up with <code>0, 1, ..., context_length - 1</code> and added to every window in the batch. Text longer than the context length must be truncated.</p>
 <h2>Code</h2>
-<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/embedding.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 5 - Token and positional embeddings.
+<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button><button data-lang="c">C</button><button data-lang="zig">Zig</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/embedding.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 5 - Token and positional embeddings.
 
 A token ID is just an integer. An embedding layer is a lookup table with one
 trainable vector per ID, so every token becomes a vector the model can learn from:
@@ -273,17 +285,296 @@ impl Rng {
         }
     }
 }
+</code></pre></div><div class="pane" data-lang="c"><div class="file">C-version/tokenization/embedding.h</div><pre><code class="language-c">/* Step 5 (book 2.7-2.8) - token and positional embeddings.
+ *
+ * A token ID is just an integer. An embedding layer is a lookup table with
+ * one vector per ID, so every token becomes a vector the model can learn from:
+ *
+ *   ids [B][T]  --token embedding--&gt;  [B][T][D]
+ *   positions 0..T-1 --pos embedding-&gt; [T][D]  (added to every batch row)
+ *   input embeddings = token + position  -&gt; [B][T][D]
+ *
+ * Why add positions? Attention (later chapters) treats its input as a bag of
+ * vectors, so word order must be put into the vectors themselves.
+ *
+ * No tensor library: a tensor is one flat float array, indexed [b][t][d] as
+ * (b * T + t) * D + d. Weights are random (normal, mean 0, std 1) and untrained.
+ */
+#ifndef EMBEDDING_H
+#define EMBEDDING_H
+
+#include &lt;stddef.h&gt;
+#include &lt;stdint.h&gt;
+
+#include &quot;rng.h&quot;
+
+typedef struct {
+    size_t rows; /* vocabulary size (or context length) */
+    size_t dim;
+    float *weight; /* rows x dim */
+} Embedding;
+
+Embedding embedding_new(size_t rows, size_t dim, Rng *rng);
+void embedding_free(Embedding *e);
+/* Look up one vector per ID; `out` holds n * dim floats. */
+void embedding_forward(const Embedding *e, const int *ids, size_t n, float *out);
+
+typedef struct {
+    Embedding token;
+    Embedding pos;
+} InputEmbedding;
+
+InputEmbedding input_embedding_new(size_t vocab_size, size_t context_length, size_t dim, uint64_t seed);
+void input_embedding_free(InputEmbedding *m);
+/* ids is [batch][seq_len] flat; out is [batch][seq_len][dim] flat. */
+void input_embedding_forward(const InputEmbedding *m, const int *ids, size_t batch, size_t seq_len, float *out);
+
+#endif
+</code></pre><div class="file">C-version/tokenization/embedding.c</div><pre><code class="language-c">#include &quot;embedding.h&quot;
+
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#include &quot;util.h&quot;
+
+Embedding embedding_new(size_t rows, size_t dim, Rng *rng) {
+    Embedding e = {rows, dim, xmalloc(rows * dim * sizeof(float))};
+    for (size_t i = 0; i &lt; rows * dim; i++) e.weight[i] = rng_normal(rng);
+    return e;
+}
+
+void embedding_free(Embedding *e) {
+    free(e-&gt;weight);
+    *e = (Embedding){0};
+}
+
+void embedding_forward(const Embedding *e, const int *ids, size_t n, float *out) {
+    for (size_t i = 0; i &lt; n; i++) /* a lookup: copy row `ids[i]` */
+        memcpy(out + i * e-&gt;dim, e-&gt;weight + (size_t)ids[i] * e-&gt;dim, e-&gt;dim * sizeof(float));
+}
+
+InputEmbedding input_embedding_new(size_t vocab_size, size_t context_length, size_t dim, uint64_t seed) {
+    Rng rng = rng_new(seed);
+    InputEmbedding m;
+    m.token = embedding_new(vocab_size, dim, &amp;rng);
+    m.pos = embedding_new(context_length, dim, &amp;rng);
+    return m;
+}
+
+void input_embedding_free(InputEmbedding *m) {
+    embedding_free(&amp;m-&gt;token);
+    embedding_free(&amp;m-&gt;pos);
+}
+
+void input_embedding_forward(const InputEmbedding *m, const int *ids, size_t batch, size_t seq_len, float *out) {
+    size_t dim = m-&gt;token.dim;
+    for (size_t b = 0; b &lt; batch; b++) {
+        float *row = out + b * seq_len * dim;
+        embedding_forward(&amp;m-&gt;token, ids + b * seq_len, seq_len, row);
+        for (size_t t = 0; t &lt; seq_len; t++)         /* token + position */
+            for (size_t d = 0; d &lt; dim; d++) row[t * dim + d] += m-&gt;pos.weight[t * dim + d];
+    }
+}
+</code></pre><div class="file">C-version/tokenization/rng.h</div><pre><code class="language-c">/* Tiny seeded random generator (splitmix64), no library needed.
+ *
+ * Used for shuffling batches and for random embedding weights. Same seed,
+ * same numbers, on every run. (Same algorithm as rust-version/rng.rs.)
+ */
+#ifndef RNG_H
+#define RNG_H
+
+#include &lt;stddef.h&gt;
+#include &lt;stdint.h&gt;
+
+typedef struct {
+    uint64_t state;
+} Rng;
+
+Rng rng_new(uint64_t seed);
+double rng_f64(Rng *r);          /* uniform in [0, 1) */
+size_t rng_below(Rng *r, size_t n); /* uniform integer in [0, n) */
+float rng_normal(Rng *r);        /* Normal(0, 1), Box-Muller */
+void rng_shuffle(Rng *r, size_t *items, size_t n); /* Fisher-Yates */
+
+#endif
+</code></pre><div class="file">C-version/tokenization/rng.c</div><pre><code class="language-c">#include &quot;rng.h&quot;
+
+#include &lt;math.h&gt;
+
+Rng rng_new(uint64_t seed) { return (Rng){seed}; }
+
+static uint64_t next_u64(Rng *r) {
+    r-&gt;state += 0x9E3779B97F4A7C15ULL;
+    uint64_t z = r-&gt;state;
+    z = (z ^ (z &gt;&gt; 30)) * 0xBF58476D1CE4E5B9ULL;
+    z = (z ^ (z &gt;&gt; 27)) * 0x94D049BB133111EBULL;
+    return z ^ (z &gt;&gt; 31);
+}
+
+double rng_f64(Rng *r) { return (double)(next_u64(r) &gt;&gt; 11) / 9007199254740992.0; /* 2^53 */ }
+
+size_t rng_below(Rng *r, size_t n) { return (size_t)(next_u64(r) % n); }
+
+float rng_normal(Rng *r) {
+    double u1 = 1.0 - rng_f64(r); /* avoid log(0) */
+    double u2 = rng_f64(r);
+    return (float)(sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2));
+}
+
+void rng_shuffle(Rng *r, size_t *items, size_t n) {
+    for (size_t i = n; i-- &gt; 1;) {
+        size_t j = rng_below(r, i + 1);
+        size_t tmp = items[i];
+        items[i] = items[j];
+        items[j] = tmp;
+    }
+}
+</code></pre></div><div class="pane" data-lang="zig"><div class="file">Zig-version/src/tokenization/embedding.zig</div><pre><code class="language-zig">//! Step 5 (book 2.7-2.8) - token and positional embeddings.
+//!
+//! A token ID is just an integer. An embedding layer is a lookup table with one
+//! vector per ID, so every token becomes a vector the model can learn from:
+//!
+//! ```
+//! ids [B][T]  --token embedding--&gt;  [B][T][D]
+//! positions 0..T-1 --pos embedding-&gt; [T][D]  (added to every batch row)
+//! input embeddings = token + position  -&gt; [B][T][D]
+//! ```
+//!
+//! Why add positions? Attention (later chapters) treats its input as a bag of
+//! vectors, so word order must be put into the vectors themselves.
+//!
+//! No tensor library: a tensor is one flat `[]f32`, indexed [b][t][d] as
+//! `(b * T + t) * D + d`. Weights are random (normal, mean 0, std 1) and untrained,
+//! like torch&#x27;s `nn.Embedding` at init.
+
+const std = @import(&quot;std&quot;);
+const Rng = @import(&quot;rng.zig&quot;).Rng;
+
+/// A lookup table of `rows` vectors of size `dim`.
+pub const Embedding = struct {
+    rows: usize,
+    dim: usize,
+    weight: []f32, // rows x dim
+
+    pub fn init(gpa: std.mem.Allocator, rows: usize, dim: usize, rng: *Rng) !Embedding {
+        const weight = try gpa.alloc(f32, rows * dim);
+        for (weight) |*w| w.* = rng.normal();
+        return .{ .rows = rows, .dim = dim, .weight = weight };
+    }
+
+    pub fn deinit(self: *Embedding, gpa: std.mem.Allocator) void {
+        gpa.free(self.weight);
+    }
+
+    /// Look up one vector per ID; `out` holds `ids.len * dim` floats.
+    pub fn forward(self: Embedding, ids: []const u32, out: []f32) void {
+        for (ids, 0..) |id, i| { // a lookup: copy row `id`
+            @memcpy(out[i * self.dim ..][0..self.dim], self.weight[@as(usize, id) * self.dim ..][0..self.dim]);
+        }
+    }
+};
+
+/// Token embedding plus absolute positional embedding.
+pub const InputEmbedding = struct {
+    token: Embedding,
+    pos: Embedding,
+
+    pub fn init(gpa: std.mem.Allocator, vocab_size: usize, context_length: usize, dim: usize, seed: u64) !InputEmbedding {
+        var rng = Rng.init(seed);
+        var token = try Embedding.init(gpa, vocab_size, dim, &amp;rng);
+        errdefer token.deinit(gpa);
+        const pos = try Embedding.init(gpa, context_length, dim, &amp;rng);
+        return .{ .token = token, .pos = pos };
+    }
+
+    pub fn deinit(self: *InputEmbedding, gpa: std.mem.Allocator) void {
+        self.token.deinit(gpa);
+        self.pos.deinit(gpa);
+    }
+
+    /// `ids` is [batch][seq_len] flat; `out` is [batch][seq_len][dim] flat.
+    pub fn forward(self: InputEmbedding, ids: []const u32, batch: usize, seq_len: usize, out: []f32) void {
+        const dim = self.token.dim;
+        for (0..batch) |b| {
+            const row = out[b * seq_len * dim ..][0 .. seq_len * dim];
+            self.token.forward(ids[b * seq_len ..][0..seq_len], row);
+            for (0..seq_len) |t| { // token + position
+                for (0..dim) |d| row[t * dim + d] += self.pos.weight[t * dim + d];
+            }
+        }
+    }
+};
+
+test &quot;embedding forward is a row lookup&quot; {
+    const gpa = std.testing.allocator;
+    var rng = Rng.init(1);
+    var e = try Embedding.init(gpa, 6, 3, &amp;rng);
+    defer e.deinit(gpa);
+    var out: [3]f32 = undefined;
+    e.forward(&amp;.{3}, &amp;out);
+    try std.testing.expectEqualSlices(f32, e.weight[9..12], &amp;out);
+}
+</code></pre><div class="file">Zig-version/src/tokenization/rng.zig</div><pre><code class="language-zig">//! Tiny seeded random generator (splitmix64), no library needed.
+//!
+//! Used for shuffling batches and for random embedding weights. Same seed,
+//! same numbers, on every run. (Same algorithm as the Rust and C versions.)
+
+const std = @import(&quot;std&quot;);
+
+pub const Rng = struct {
+    state: u64,
+
+    pub fn init(seed: u64) Rng {
+        return .{ .state = seed };
+    }
+
+    fn nextU64(self: *Rng) u64 {
+        self.state +%= 0x9E37_79B9_7F4A_7C15;
+        var z = self.state;
+        z = (z ^ (z &gt;&gt; 30)) *% 0xBF58_476D_1CE4_E5B9;
+        z = (z ^ (z &gt;&gt; 27)) *% 0x94D0_49BB_1331_11EB;
+        return z ^ (z &gt;&gt; 31);
+    }
+
+    /// Uniform in [0, 1).
+    pub fn nextF64(self: *Rng) f64 {
+        return @as(f64, @floatFromInt(self.nextU64() &gt;&gt; 11)) / 9007199254740992.0; // 2^53
+    }
+
+    /// Uniform integer in [0, n).
+    pub fn below(self: *Rng, n: usize) usize {
+        return @intCast(self.nextU64() % n);
+    }
+
+    /// Normal(0, 1) via the Box-Muller transform.
+    pub fn normal(self: *Rng) f32 {
+        const a = 1.0 - self.nextF64(); // avoid log(0)
+        const b = self.nextF64();
+        return @floatCast(@sqrt(-2.0 * @log(a)) * @cos(2.0 * std.math.pi * b));
+    }
+
+    /// Fisher-Yates shuffle.
+    pub fn shuffle(self: *Rng, comptime T: type, items: []T) void {
+        var i = items.len;
+        while (i &gt; 1) {
+            i -= 1;
+            std.mem.swap(T, &amp;items[i], &amp;items[self.below(i + 1)]);
+        }
+    }
+};
 </code></pre></div></div>
-<div class="tip">Python uses <code>torch.nn.Embedding</code>. Go and Rust use nested slices and a small seeded random generator (<code>rng.rs</code> in Rust), so there are no heavy dependencies. Values differ across languages; shapes do not.</div>
+<div class="tip">Python uses <code>torch.nn.Embedding</code>. Go and Rust use nested slices; C and Zig use one flat float array. All four use a small seeded random generator (<code>rng.rs</code>, <code>rng.c</code>, <code>rng.zig</code>), so there are no heavy dependencies. Values differ across languages; shapes do not.</div>
 <h2>Where next?</h2>
 <p>These input embeddings are exactly what chapter 3 (attention) consumes.</p>
 <h2>Exercise</h2>
 <p>Change <code>output_dim</code> from 256 to 8 and print the shapes again. What changes, and what does not?</p>
 
-<div class="pager"><a href="ch02-6-sampling.html">&larr; 2.6 Sliding window</a><a href="reference.html">Reference &rarr;</a></div>
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/ch02-7-embeddings.html">Edit this page on GitHub</a></p>
+<div class="pager"><a href="ch02-6-sampling.html">&larr; 2.6 Sliding window</a><a href="bpe-walkthrough.html">BPE walkthrough &rarr;</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
 <script src="site.js"></script>
 </body></html>

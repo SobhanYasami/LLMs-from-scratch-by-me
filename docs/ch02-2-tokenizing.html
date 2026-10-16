@@ -8,25 +8,37 @@
 </head><body><div class="layout">
 <nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
 <h4>Start</h4>
-<a href="index.html">Overview</a>
-<h4>Chapter 1: Understanding LLMs</h4>
-<a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
-<a href="ch01-stages.html">1.3, 1.5 Training stages & data</a>
-<a href="ch01-transformer.html">1.4 Transformers & tasks</a>
-<a href="ch01-gpt.html">1.6-1.7 GPT & the roadmap</a>
-<h4>Chapter 2: Working with text data</h4>
-<a href="ch02-overview.html">2.1 Overview & embeddings</a>
-<a class="on" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
-<a href="ch02-3-token-ids.html">2.3 Token IDs</a>
-<a href="ch02-4-special-tokens.html">2.4 Special tokens</a>
-<a href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
-<a href="ch02-6-sampling.html">2.6 Sliding window</a>
-<a href="ch02-7-embeddings.html">2.7-2.8 Embeddings & positions</a>
+<a class="" href="index.html">Overview</a>
+<a class="" href="roadmap.html">Roadmap</a>
+<h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a class="" href="ch01-stages.html">1.3, 1.5 Training stages &amp; data</a>
+<a class="" href="ch01-transformer.html">1.4 Transformers &amp; tasks</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT &amp; the roadmap</a>
+<h4><a class="h4link" href="chapter-2.html">Chapter 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 Overview &amp; embeddings</a>
+<a class=" on" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a class="" href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
+<a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
+<a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
+<a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
+<h4><a class="h4link" href="chapter-3.html">Chapter 3</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-4.html">Chapter 4</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-5.html">Chapter 5</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-6.html">Chapter 6</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-7.html">Chapter 7</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-A.html">Appendices</a> <em>planned</em></h4>
 <h4>Reference</h4>
-<a href="reference.html">Reference</a>
-<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
+<a class="" href="reference.html">Code reference</a>
+<a class="" href="contributing.html">Contributing</a>
+<a class="" href="glossary.html">Glossary</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
 <main><h1>2.2: Tokenizing text</h1>
-
+<p class="meta">Book section 2.2 · code in Python, Go, Rust, C, Zig</p>
 <div class="aim"><b>Aim.</b> A model cannot read text, only numbers. Before numbering anything, cut the text into pieces called <i>tokens</i>.</div>
 <p>A token here is a word or a punctuation mark. A regular expression finds the delimiters (punctuation, <code>--</code>, whitespace), and we <em>keep</em> the delimiters so punctuation becomes its own token. Whitespace pieces are then dropped.</p>
 <pre class="out">"Hello, world!"  -&gt;  ['Hello', ',', 'world', '!']</pre>
@@ -37,10 +49,10 @@
 <li>Filter with <code>item.strip()</code> to drop whitespace pieces.</li>
 <li>Add <code>? " ( ) _ !</code> and <code>--</code>. Result on the whole story: <b>4,649 tokens</b>.</li>
 </ol>
-<div class="tip">In Python, <code>re.split</code> keeps delimiters only when the pattern is in parentheses (a capture group). Go and Rust have no such feature, so they walk the matches by hand. Same result, more visible mechanism.</div>
+<div class="tip">In Python, <code>re.split</code> keeps delimiters only when the pattern is in parentheses (a capture group). Go and Rust have no such feature, so they walk the matches by hand. C and Zig have no regex at all, so they scan byte by byte. Same result, more visible mechanism.</div>
 <div class="tip">We do not lowercase: capitalisation helps a model tell names from common nouns and learn sentence structure. We drop whitespace for brevity; for code (where indentation matters) you would keep it.</div>
 <h2>Code</h2>
-<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/preprocess.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 1 - Split raw text into tokens (and join them back).
+<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button><button data-lang="c">C</button><button data-lang="zig">Zig</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/preprocess.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 1 - Split raw text into tokens (and join them back).
 
 A token here is a word, a punctuation mark, or a whitespace-free piece of text.
 The regex keeps the delimiters, so punctuation becomes its own token:
@@ -207,16 +219,221 @@ pub fn detokenize(tokens: &amp;[String]) -&gt; String {
         .replace_all(&amp;tokens.join(&quot; &quot;), &quot;$1&quot;)
         .into_owned()
 }
+</code></pre></div><div class="pane" data-lang="c"><div class="file">C-version/tokenization/preprocess.h</div><pre><code class="language-c">/* Step 1 (book 2.2) - split raw text into tokens, and join them back.
+ *
+ *   &quot;Hello, world!&quot;  -&gt;  [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;, &quot;!&quot;]
+ *
+ * Tip: start reading here, then vocab -&gt; simple -&gt; dataset -&gt; dataloader -&gt;
+ * embedding. Each file uses the one before it. bpe is the bonus (book 2.5).
+ */
+#ifndef PREPROCESS_H
+#define PREPROCESS_H
+
+#include &lt;stddef.h&gt;
+
+#define END_OF_TEXT &quot;&lt;|endoftext|&gt;&quot;
+#define UNK_TOKEN &quot;&lt;|unk|&gt;&quot;
+
+/* A growable list of owned strings. */
+typedef struct {
+    char **items;
+    size_t len;
+    size_t cap;
+} Tokens;
+
+void tokens_push(Tokens *t, char *owned);
+void tokens_free(Tokens *t);
+
+/* Return the tokens of `text`; whitespace-only pieces are dropped. */
+Tokens split_text(const char *text);
+
+/* Join tokens with spaces, then remove the space before punctuation.
+ * Not a perfect inverse: the original spacing is lost. Caller frees. */
+char *detokenize(const char *const *tokens, size_t n);
+
+#endif
+</code></pre><div class="file">C-version/tokenization/preprocess.c</div><pre><code class="language-c">#include &quot;preprocess.h&quot;
+
+#include &lt;ctype.h&gt;
+#include &lt;stdbool.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#include &quot;util.h&quot;
+
+/* Delimiters that become tokens of their own. &quot;--&quot; and whitespace are handled
+ * in split_text. Same set as the Python regex: , . ? _ ! &quot; ( ) &#x27; */
+#define SPLIT_PUNCT &quot;,.?_!\&quot;()&#x27;&quot;
+/* Punctuation that detokenize glues to the previous word. */
+#define DETOKENIZE_PUNCT &quot;,.?!\&quot;()&#x27;&quot;
+
+void tokens_push(Tokens *t, char *owned) {
+    if (t-&gt;len == t-&gt;cap) {
+        t-&gt;cap = t-&gt;cap ? t-&gt;cap * 2 : 64;
+        t-&gt;items = xrealloc(t-&gt;items, t-&gt;cap * sizeof(char *));
+    }
+    t-&gt;items[t-&gt;len++] = owned;
+}
+
+void tokens_free(Tokens *t) {
+    for (size_t i = 0; i &lt; t-&gt;len; i++) free(t-&gt;items[i]);
+    free(t-&gt;items);
+    *t = (Tokens){0};
+}
+
+/* There is no regex library in C, so we scan by hand: walk the characters and
+ * cut a token whenever we meet whitespace, &quot;--&quot; or a punctuation mark. */
+Tokens split_text(const char *text) {
+    Tokens out = {0};
+    size_t n = strlen(text), word_start = 0;
+
+#define FLUSH(end)                                                    \
+    do {                                                              \
+        if ((end) &gt; word_start)                                       \
+            tokens_push(&amp;out, xstrndup(text + word_start, (end) - word_start)); \
+    } while (0)
+
+    for (size_t i = 0; i &lt; n; i++) {
+        unsigned char c = (unsigned char)text[i];
+        if (isspace(c)) {
+            FLUSH(i);
+            word_start = i + 1;
+        } else if (c == &#x27;-&#x27; &amp;&amp; text[i + 1] == &#x27;-&#x27;) {
+            FLUSH(i);
+            tokens_push(&amp;out, xstrdup(&quot;--&quot;));
+            i++;
+            word_start = i + 1;
+        } else if (strchr(SPLIT_PUNCT, c)) {
+            FLUSH(i);
+            tokens_push(&amp;out, xstrndup(text + i, 1));
+            word_start = i + 1;
+        }
+    }
+    FLUSH(n);
+#undef FLUSH
+    return out;
+}
+
+char *detokenize(const char *const *tokens, size_t n) {
+    size_t total = 1;
+    for (size_t i = 0; i &lt; n; i++) total += strlen(tokens[i]) + 1;
+    char *out = xmalloc(total), *p = out;
+    for (size_t i = 0; i &lt; n; i++) {
+        size_t len = strlen(tokens[i]);
+        bool glue = len == 1 &amp;&amp; strchr(DETOKENIZE_PUNCT, tokens[i][0]);
+        if (i &gt; 0 &amp;&amp; !glue) *p++ = &#x27; &#x27;;
+        memcpy(p, tokens[i], len);
+        p += len;
+    }
+    *p = &#x27;\0&#x27;;
+    return out;
+}
+</code></pre></div><div class="pane" data-lang="zig"><div class="file">Zig-version/src/tokenization/preprocess.zig</div><pre><code class="language-zig">//! Step 1 (book 2.2) - split raw text into tokens, and join them back.
+//!
+//! ```
+//! &quot;Hello, world!&quot;  -&gt;  [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;, &quot;!&quot;]
+//! ```
+//!
+//! Tip: start reading here, then vocab -&gt; simple -&gt; dataset -&gt; dataloader -&gt;
+//! embedding. Each file uses the one before it. bpe is the bonus (book 2.5).
+
+const std = @import(&quot;std&quot;);
+
+/// Special tokens. They are not produced by splitting text; they are added on purpose.
+pub const END_OF_TEXT = &quot;&lt;|endoftext|&gt;&quot;;
+pub const UNK_TOKEN = &quot;&lt;|unk|&gt;&quot;;
+
+/// Delimiters that become tokens of their own. &quot;--&quot; and whitespace are handled
+/// in `splitText`. Same set as the Python regex: , . ? _ ! &quot; ( ) &#x27;
+const split_punct = &quot;,.?_!\&quot;()&#x27;&quot;;
+/// Punctuation that `detokenize` glues to the previous word.
+const detokenize_punct = &quot;,.?!\&quot;()&#x27;&quot;;
+
+fn flush(gpa: std.mem.Allocator, out: *std.ArrayList([]const u8), text: []const u8, start: usize, end: usize) !void {
+    if (end &gt; start) try out.append(gpa, text[start..end]);
+}
+
+/// Return the tokens of `text`; whitespace-only pieces are dropped.
+///
+/// Tip: tokens are *slices into `text`*, nothing is copied. They are only
+/// valid while `text` is alive. The returned list is owned by the caller.
+///
+/// There is no regex library in the standard library, so we scan by hand: walk the
+/// bytes and cut a token whenever we meet whitespace, &quot;--&quot; or a punctuation mark.
+pub fn splitText(gpa: std.mem.Allocator, text: []const u8) ![]const []const u8 {
+    var out: std.ArrayList([]const u8) = .empty;
+    errdefer out.deinit(gpa);
+
+    var word_start: usize = 0;
+    var i: usize = 0;
+    while (i &lt; text.len) : (i += 1) {
+        const c = text[i];
+        if (std.ascii.isWhitespace(c)) {
+            try flush(gpa, &amp;out, text, word_start, i);
+            word_start = i + 1;
+        } else if (c == &#x27;-&#x27; and i + 1 &lt; text.len and text[i + 1] == &#x27;-&#x27;) {
+            try flush(gpa, &amp;out, text, word_start, i);
+            try out.append(gpa, text[i .. i + 2]);
+            i += 1;
+            word_start = i + 1;
+        } else if (std.mem.indexOfScalar(u8, split_punct, c) != null) {
+            try flush(gpa, &amp;out, text, word_start, i);
+            try out.append(gpa, text[i .. i + 1]);
+            word_start = i + 1;
+        }
+    }
+    try flush(gpa, &amp;out, text, word_start, text.len);
+    return out.toOwnedSlice(gpa);
+}
+
+/// Join tokens with spaces, then remove the space before punctuation.
+/// Not a perfect inverse: the original spacing is lost. Caller frees.
+pub fn detokenize(gpa: std.mem.Allocator, tokens: []const []const u8) ![]u8 {
+    var out: std.ArrayList(u8) = .empty;
+    errdefer out.deinit(gpa);
+    for (tokens, 0..) |token, i| {
+        const glue = token.len == 1 and std.mem.indexOfScalar(u8, detokenize_punct, token[0]) != null;
+        if (i &gt; 0 and !glue) try out.append(gpa, &#x27; &#x27;);
+        try out.appendSlice(gpa, token);
+    }
+    return out.toOwnedSlice(gpa);
+}
+
+test &quot;splitText keeps punctuation as tokens&quot; {
+    const gpa = std.testing.allocator;
+    const tokens = try splitText(gpa, &quot;Hello, world!&quot;);
+    defer gpa.free(tokens);
+    try std.testing.expectEqual(@as(usize, 4), tokens.len);
+    try std.testing.expectEqualStrings(&quot;Hello&quot;, tokens[0]);
+    try std.testing.expectEqualStrings(&quot;,&quot;, tokens[1]);
+    try std.testing.expectEqualStrings(&quot;!&quot;, tokens[3]);
+}
+
+test &quot;double dash is one token&quot; {
+    const gpa = std.testing.allocator;
+    const tokens = try splitText(gpa, &quot;Is this-- a test?&quot;);
+    defer gpa.free(tokens);
+    try std.testing.expectEqualStrings(&quot;--&quot;, tokens[2]);
+}
+
+test &quot;detokenize removes space before punctuation&quot; {
+    const gpa = std.testing.allocator;
+    const text = try detokenize(gpa, &amp;.{ &quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;, &quot;!&quot; });
+    defer gpa.free(text);
+    try std.testing.expectEqualStrings(&quot;Hello, world!&quot;, text);
+}
 </code></pre></div></div>
 <h2>Detokenize is lossy</h2>
 <p>Decoding joins tokens with spaces, then removes the space before punctuation. Original spacing is not stored, so <code>detokenize(split(text))</code> only round-trips for simple text.</p>
 <h2>Exercises</h2>
 <ol><li>Feed a sentence with <code>--</code>. One token or two?</li><li>Remove the parentheses from the Python pattern. What happens to punctuation?</li></ol>
 
-<div class="pager"><a href="ch02-overview.html">&larr; 2.1 Overview & embeddings</a><a href="ch02-3-token-ids.html">2.3 Token IDs &rarr;</a></div>
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/ch02-2-tokenizing.html">Edit this page on GitHub</a></p>
+<div class="pager"><a href="ch02-overview.html">&larr; 2.1 Overview &amp; embeddings</a><a href="ch02-3-token-ids.html">2.3 Token IDs &rarr;</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
 <script src="site.js"></script>
 </body></html>

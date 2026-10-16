@@ -1,14 +1,16 @@
 # Build an LLM from scratch
 
-Learning repo and future reference, following *Build a Large Language Model (From Scratch)* by Sebastian Raschka. The same material is implemented in three languages with one layout, so each can be compared side by side.
+Learning repo and future reference, following *Build a Large Language Model (From Scratch)* by Sebastian Raschka. The same material is implemented in five languages with one layout, so each can be compared side by side.
 
 | Dir | Run |
 |---|---|
 | `python-version/` | `python-version/.venv/bin/python python-version/main.py` |
 | `go-version/` | `cd go-version && go run ./cmd` |
 | `rust-version/` | `cd rust-version && cargo run` |
+| `C-version/` | `cd C-version && make run` |
+| `Zig-version/` | `cd Zig-version && zig build run` |
 
-All three print identical token IDs. Shared data lives in `assets/`.
+All five print identical token IDs. Shared data lives in `assets/` (`the-verdict.txt`, and `gpt2-ranks.txt`, the GPT-2 BPE vocabulary used by the C and Zig encoders).
 
 ## Layout convention
 
@@ -24,10 +26,16 @@ New chapters (embeddings, attention, ...) get a new sibling module in each langu
 
 ## Docs site
 
-Tutorial and reference live in `docs/` (GitHub Pages): chapter 1 (concepts) and chapter 2 (code in three languages), following the book's section numbers. Code on the site is read from the source files, so regenerate after changing code:
+A living tutorial and reference for the whole book, published with GitHub Pages from `docs/`. It is built to grow:
+
+- `docs/pages/*.html`: one file per page (small front-matter block, then HTML). Add a file to add a page.
+- `docs/syllabus.py`: the whole book (chapters, sections), the languages, and which source files each code tab shows. The roadmap, progress bars, chapter pages and navigation are generated from it, so unwritten parts show up as "planned".
+- Code on the site is read from the source files, so regenerate after any change and commit the result:
 
 ```bash
 python3 docs/build.py
 ```
+
+Step-by-step guide for adding pages, extras, chapters, code and languages: `docs/pages/contributing.html` (published as "Contributing").
 
 To publish: GitHub repo -> Settings -> Pages -> Source: "Deploy from a branch", branch `main`, folder `/docs`.

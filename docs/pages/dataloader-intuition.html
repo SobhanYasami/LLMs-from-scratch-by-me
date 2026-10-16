@@ -1,0 +1,43 @@
+---
+title: Extra: the data loader with plain numbers
+nav: Data loader intuition
+chapter: 2
+extra: true
+order: 120
+---
+<div class="aim"><b>Aim.</b> Build a feeling for <code>max_length</code>, <code>stride</code> and batches using tiny numbers instead of token IDs.</div>
+<p>Pretend the "text" is the numbers 0 to 11. Each row is one (input, target) window; the target is the input moved one step to the right.</p>
+<h2>stride 1: heavy overlap</h2>
+<pre class="out">max_length = 4, stride = 1
+input [0 1 2 3]   target [1 2 3 4]
+input [1 2 3 4]   target [2 3 4 5]
+input [2 3 4 5]   target [3 4 5 6]
+...
+input [7 8 9 10]  target [8 9 10 11]    -> 8 windows</pre>
+<h2>stride 4: no overlap, nothing skipped</h2>
+<pre class="out">max_length = 4, stride = 4
+input [0 1 2 3]   target [1 2 3 4]
+input [4 5 6 7]   target [5 6 7 8]
+                                       -> 2 windows  (the third would need target[12])</pre>
+<p>The last window is dropped because its target would run off the end. That is why the loop stops at <code>len - max_length</code>.</p>
+<h2>How many windows?</h2>
+<p>With <code>n</code> tokens: <code>ceil((n - max_length) / stride)</code>. For the story, n = 5,145: stride 4 gives <b>1,286</b> windows; stride 1 would give 5,141.</p>
+<h2>Batches</h2>
+<pre class="out">batch_size = 2, drop_last = true, 5 windows w0..w4
+batch 0: w0 w1
+batch 1: w2 w3
+(w4 dropped: a batch of 1 would be a different size)
+
+with shuffle = true the window order is mixed first:  w3 w0 w4 w1 w2 ...</pre>
+<h2>Which settings when?</h2>
+<table><tr><th>Setting</th><th>Small value</th><th>Large value</th></tr>
+<tr><td>max_length</td><td>cheap, little context</td><td>more context per example, more memory</td></tr>
+<tr><td>stride</td><td>many overlapping examples, risk of overfitting</td><td>fewer examples, no repetition</td></tr>
+<tr><td>batch_size</td><td>less memory, noisier updates</td><td>smoother updates, more memory</td></tr></table>
+<h2>Try it</h2>
+<ol>
+<li>Predict the window count for <code>n = 20, max_length = 5, stride = 3</code>, then verify with your code.</li>
+<li>Run the same loader with <code>shuffle=true</code> twice with the same seed, then with different seeds. What changes?</li>
+</ol>
+<details class="qa"><summary>Answer to 1</summary>ceil((20 - 5) / 3) = 5 windows, starting at 0, 3, 6, 9, 12.</details>
+<p>Raschka's version: <a href="https://github.com/rasbt/LLMs-from-scratch/tree/main/ch02/04_bonus_dataloader-intuition">04_bonus_dataloader-intuition</a>.</p>

@@ -8,25 +8,37 @@
 </head><body><div class="layout">
 <nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
 <h4>Start</h4>
-<a href="index.html">Overview</a>
-<h4>Chapter 1: Understanding LLMs</h4>
-<a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
-<a href="ch01-stages.html">1.3, 1.5 Training stages & data</a>
-<a href="ch01-transformer.html">1.4 Transformers & tasks</a>
-<a href="ch01-gpt.html">1.6-1.7 GPT & the roadmap</a>
-<h4>Chapter 2: Working with text data</h4>
-<a href="ch02-overview.html">2.1 Overview & embeddings</a>
-<a href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
-<a href="ch02-3-token-ids.html">2.3 Token IDs</a>
-<a href="ch02-4-special-tokens.html">2.4 Special tokens</a>
-<a href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
-<a class="on" href="ch02-6-sampling.html">2.6 Sliding window</a>
-<a href="ch02-7-embeddings.html">2.7-2.8 Embeddings & positions</a>
+<a class="" href="index.html">Overview</a>
+<a class="" href="roadmap.html">Roadmap</a>
+<h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a class="" href="ch01-stages.html">1.3, 1.5 Training stages &amp; data</a>
+<a class="" href="ch01-transformer.html">1.4 Transformers &amp; tasks</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT &amp; the roadmap</a>
+<h4><a class="h4link" href="chapter-2.html">Chapter 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 Overview &amp; embeddings</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a class=" on" href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
+<a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
+<a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
+<a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
+<h4><a class="h4link" href="chapter-3.html">Chapter 3</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-4.html">Chapter 4</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-5.html">Chapter 5</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-6.html">Chapter 6</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-7.html">Chapter 7</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-A.html">Appendices</a> <em>planned</em></h4>
 <h4>Reference</h4>
-<a href="reference.html">Reference</a>
-<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
+<a class="" href="reference.html">Code reference</a>
+<a class="" href="contributing.html">Contributing</a>
+<a class="" href="glossary.html">Glossary</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
 <main><h1>2.6: Data sampling with a sliding window</h1>
-
+<p class="meta">Book section 2.6 · code in Python, Go, Rust, C, Zig</p>
 <div class="aim"><b>Aim.</b> Turn one long list of token IDs into training examples for <i>next-token prediction</i>.</div>
 <p>BPE-encode the whole story: <b>5,145</b> tokens. Each example is a window of IDs (the <b>input</b>) and the same window shifted by one (the <b>target</b>). Every position in a window is a free question: "given these tokens, what comes next?"</p>
 <pre class="out">x: [290, 4920, 2241, 287]
@@ -57,7 +69,7 @@ as text:
 stride=4, batch_size=8: inputs shape (8, 4), no overlap, no word skipped</pre>
 <div class="tip">The book uses <code>stride = max_length</code> for real batches: the whole text is used but nothing overlaps, since more overlap risks overfitting. Batch size is a trade-off: small uses less memory but gives noisier updates.</div>
 <h2>Code</h2>
-<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/dataset.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 4 - Sliding-window data sampling for next-token prediction.
+<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button><button data-lang="c">C</button><button data-lang="zig">Zig</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/dataset.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 4 - Sliding-window data sampling for next-token prediction.
 
 Given a long list of token IDs, cut it into overlapping windows:
 
@@ -323,6 +335,245 @@ impl&lt;&#x27;a&gt; DataLoader&lt;&#x27;a&gt; {
             .collect()
     }
 }
+</code></pre></div><div class="pane" data-lang="c"><div class="file">C-version/tokenization/dataset.h</div><pre><code class="language-c">/* Step 4 (book 2.6) - sliding-window data sampling for next-token prediction.
+ *
+ *   ids      = [10 11 12 13 14 15]
+ *   window 0: input [10 11 12 13]  target [11 12 13 14]
+ *
+ * Why shifted by one? The model&#x27;s job is: given the tokens so far, guess the
+ * next one. Every position in a window is a free training example.
+ * `stride` is how far the window moves; stride == max_length means no overlap.
+ */
+#ifndef DATASET_H
+#define DATASET_H
+
+#include &lt;stddef.h&gt;
+
+typedef struct {
+    const int *ids; /* borrowed: the caller keeps the token IDs alive */
+    size_t n_ids;
+    size_t max_length;
+    size_t stride;
+    size_t count; /* number of windows */
+} GPTDataset;
+
+GPTDataset gpt_dataset_new(const int *ids, size_t n_ids, size_t max_length, size_t stride);
+/* Window `idx` as two pointers into the ID array (each max_length long). */
+void gpt_dataset_get(const GPTDataset *d, size_t idx, const int **input, const int **target);
+
+#endif
+</code></pre><div class="file">C-version/tokenization/dataset.c</div><pre><code class="language-c">#include &quot;dataset.h&quot;
+
+GPTDataset gpt_dataset_new(const int *ids, size_t n_ids, size_t max_length, size_t stride) {
+    GPTDataset d = {ids, n_ids, max_length, stride, 0};
+    /* Windows start at 0, stride, 2*stride, ... and stop before n_ids - max_length:
+     * the target reaches one token past the input. */
+    if (n_ids &gt; max_length) d.count = (n_ids - max_length + stride - 1) / stride;
+    return d;
+}
+
+void gpt_dataset_get(const GPTDataset *d, size_t idx, const int **input, const int **target) {
+    *input = d-&gt;ids + idx * d-&gt;stride;
+    *target = *input + 1; /* the same window, shifted by one */
+}
+</code></pre><div class="file">C-version/tokenization/dataloader.h</div><pre><code class="language-c">/* Step 4b (book 2.6) - batching. Mirrors torch&#x27;s DataLoader.
+ *
+ * Why batch? The GPU processes many windows at once, which is much faster.
+ * Why shuffle? Windows in book order make training swing; random order smooths it.
+ * Why drop the last short batch? A different size can upset training.
+ */
+#ifndef DATALOADER_H
+#define DATALOADER_H
+
+#include &lt;stdbool.h&gt;
+#include &lt;stddef.h&gt;
+
+#include &quot;dataset.h&quot;
+#include &quot;rng.h&quot;
+
+typedef struct {
+    const GPTDataset *dataset;
+    size_t batch_size;
+    bool shuffle;
+    bool drop_last;
+    Rng rng;
+    size_t *order; /* window indices in the order this epoch serves them */
+} DataLoader;
+
+DataLoader dataloader_new(const GPTDataset *ds, size_t batch_size, bool shuffle, bool drop_last, uint64_t seed);
+void dataloader_free(DataLoader *dl);
+
+/* Start an epoch (reshuffles if shuffle is on). Returns the number of batches. */
+size_t dataloader_start_epoch(DataLoader *dl);
+/* Copy batch `b` into flat arrays of batch_size * max_length IDs each
+ * (row r is inputs[r*max_length .. (r+1)*max_length)). Returns rows filled. */
+size_t dataloader_batch(const DataLoader *dl, size_t b, int *inputs, int *targets);
+
+#endif
+</code></pre><div class="file">C-version/tokenization/dataloader.c</div><pre><code class="language-c">#include &quot;dataloader.h&quot;
+
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#include &quot;util.h&quot;
+
+DataLoader dataloader_new(const GPTDataset *ds, size_t batch_size, bool shuffle, bool drop_last, uint64_t seed) {
+    DataLoader dl = {ds, batch_size, shuffle, drop_last, rng_new(seed), NULL};
+    dl.order = xmalloc(ds-&gt;count * sizeof(size_t));
+    for (size_t i = 0; i &lt; ds-&gt;count; i++) dl.order[i] = i;
+    return dl;
+}
+
+void dataloader_free(DataLoader *dl) {
+    free(dl-&gt;order);
+    dl-&gt;order = NULL;
+}
+
+size_t dataloader_start_epoch(DataLoader *dl) {
+    if (dl-&gt;shuffle) rng_shuffle(&amp;dl-&gt;rng, dl-&gt;order, dl-&gt;dataset-&gt;count);
+    size_t n = dl-&gt;dataset-&gt;count;
+    return dl-&gt;drop_last ? n / dl-&gt;batch_size : (n + dl-&gt;batch_size - 1) / dl-&gt;batch_size;
+}
+
+size_t dataloader_batch(const DataLoader *dl, size_t b, int *inputs, int *targets) {
+    size_t first = b * dl-&gt;batch_size, rows = 0, len = dl-&gt;dataset-&gt;max_length;
+    for (size_t i = first; i &lt; first + dl-&gt;batch_size &amp;&amp; i &lt; dl-&gt;dataset-&gt;count; i++, rows++) {
+        const int *in, *tg;
+        gpt_dataset_get(dl-&gt;dataset, dl-&gt;order[i], &amp;in, &amp;tg);
+        memcpy(inputs + rows * len, in, len * sizeof(int));
+        memcpy(targets + rows * len, tg, len * sizeof(int));
+    }
+    return rows;
+}
+</code></pre></div><div class="pane" data-lang="zig"><div class="file">Zig-version/src/tokenization/dataset.zig</div><pre><code class="language-zig">//! Step 4 (book 2.6) - sliding-window data sampling for next-token prediction.
+//!
+//! ```
+//! ids      = [10 11 12 13 14 15]
+//! window 0: input [10 11 12 13]  target [11 12 13 14]
+//! ```
+//!
+//! Why shifted by one? The model&#x27;s job is: given the tokens so far, guess the
+//! next one. Every position in a window is a free training example.
+//! `stride` is how far the window moves; `stride == max_length` means no overlap.
+
+const std = @import(&quot;std&quot;);
+
+pub const GptDataset = struct {
+    /// Borrowed: the caller keeps the token IDs alive.
+    ids: []const u32,
+    max_length: usize,
+    stride: usize,
+    /// Number of windows.
+    count: usize,
+
+    pub fn init(ids: []const u32, max_length: usize, stride: usize) GptDataset {
+        // Windows start at 0, stride, 2*stride, ... and stop before len - max_length:
+        // the target reaches one token past the input.
+        const count = if (ids.len &gt; max_length) (ids.len - max_length + stride - 1) / stride else 0;
+        return .{ .ids = ids, .max_length = max_length, .stride = stride, .count = count };
+    }
+
+    pub const Window = struct { input: []const u32, target: []const u32 };
+
+    /// Window `idx`: two slices into the ID array, the target shifted by one.
+    pub fn get(self: GptDataset, idx: usize) Window {
+        const start = idx * self.stride;
+        return .{
+            .input = self.ids[start .. start + self.max_length],
+            .target = self.ids[start + 1 .. start + self.max_length + 1],
+        };
+    }
+};
+
+test &quot;windows are shifted by one&quot; {
+    const ids = [_]u32{ 10, 11, 12, 13, 14, 15 };
+    const ds = GptDataset.init(&amp;ids, 4, 1);
+    try std.testing.expectEqual(@as(usize, 2), ds.count);
+    const w = ds.get(0);
+    try std.testing.expectEqualSlices(u32, &amp;.{ 10, 11, 12, 13 }, w.input);
+    try std.testing.expectEqualSlices(u32, &amp;.{ 11, 12, 13, 14 }, w.target);
+}
+
+test &quot;stride equal to max_length gives no overlap&quot; {
+    const ids = [_]u32{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    const ds = GptDataset.init(&amp;ids, 4, 4);
+    try std.testing.expectEqual(@as(usize, 2), ds.count);
+}
+</code></pre><div class="file">Zig-version/src/tokenization/dataloader.zig</div><pre><code class="language-zig">//! Step 4b (book 2.6) - batching. Mirrors torch&#x27;s `DataLoader`.
+//!
+//! Why batch? The GPU processes many windows at once, which is much faster.
+//! Why shuffle? Windows in book order make training swing; random order smooths it.
+//! Why drop the last short batch? A different size can upset training.
+
+const std = @import(&quot;std&quot;);
+const GptDataset = @import(&quot;dataset.zig&quot;).GptDataset;
+const Rng = @import(&quot;rng.zig&quot;).Rng;
+
+pub const DataLoader = struct {
+    dataset: *const GptDataset,
+    batch_size: usize,
+    shuffle: bool,
+    drop_last: bool,
+    rng: Rng,
+    /// Window indices in the order this epoch serves them.
+    order: []usize,
+
+    /// `seed` makes the shuffle repeatable.
+    pub fn init(gpa: std.mem.Allocator, dataset: *const GptDataset, batch_size: usize, shuffle: bool, drop_last: bool, seed: u64) !DataLoader {
+        const order = try gpa.alloc(usize, dataset.count);
+        for (order, 0..) |*o, i| o.* = i;
+        return .{ .dataset = dataset, .batch_size = batch_size, .shuffle = shuffle, .drop_last = drop_last, .rng = Rng.init(seed), .order = order };
+    }
+
+    pub fn deinit(self: *DataLoader, gpa: std.mem.Allocator) void {
+        gpa.free(self.order);
+    }
+
+    /// Start an epoch (reshuffles if shuffle is on). Returns the number of batches.
+    pub fn startEpoch(self: *DataLoader) usize {
+        if (self.shuffle) self.rng.shuffle(usize, self.order);
+        const n = self.dataset.count;
+        return if (self.drop_last) n / self.batch_size else (n + self.batch_size - 1) / self.batch_size;
+    }
+
+    /// Copy batch `b` into flat arrays of `batch_size * max_length` IDs each
+    /// (row r is `inputs[r*max_length .. (r+1)*max_length]`). Returns rows filled.
+    pub fn batch(self: DataLoader, b: usize, inputs: []u32, targets: []u32) usize {
+        const len = self.dataset.max_length;
+        const first = b * self.batch_size;
+        const end = @min(first + self.batch_size, self.dataset.count);
+        var rows: usize = 0;
+        for (self.order[first..end]) |idx| {
+            const w = self.dataset.get(idx);
+            @memcpy(inputs[rows * len ..][0..len], w.input);
+            @memcpy(targets[rows * len ..][0..len], w.target);
+            rows += 1;
+        }
+        return rows;
+    }
+};
+
+test &quot;drop_last drops the short batch&quot; {
+    const gpa = std.testing.allocator;
+    const ids = [_]u32{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    const ds = GptDataset.init(&amp;ids, 2, 2); // 5 windows
+    var dl = try DataLoader.init(gpa, &amp;ds, 2, false, true, 1);
+    defer dl.deinit(gpa);
+    try std.testing.expectEqual(@as(usize, 2), dl.startEpoch());
+}
+
+test &quot;same seed gives the same shuffle&quot; {
+    const gpa = std.testing.allocator;
+    const ids = [_]u32{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    const ds = GptDataset.init(&amp;ids, 2, 2);
+    var a = try DataLoader.init(gpa, &amp;ds, 2, true, true, 123);
+    defer a.deinit(gpa);
+    var b = try DataLoader.init(gpa, &amp;ds, 2, true, true, 123);
+    defer b.deinit(gpa);
+    _ = a.startEpoch();
+    _ = b.startEpoch();
+    try std.testing.expectEqualSlices(usize, a.order, b.order);
+}
 </code></pre></div></div>
 <div class="tip">The loop stops at <code>len - max_length</code> because the target reaches one token past the input.</div>
 <h2>Exercises</h2>
@@ -331,10 +582,12 @@ impl&lt;&#x27;a&gt; DataLoader&lt;&#x27;a&gt; {
 <li>Set <code>stride=1</code>. How many windows now, versus <code>stride=4</code>?</li>
 </ol>
 
-<div class="pager"><a href="ch02-5-bpe.html">&larr; 2.5 Byte pair encoding</a><a href="ch02-7-embeddings.html">2.7-2.8 Embeddings & positions &rarr;</a></div>
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/ch02-6-sampling.html">Edit this page on GitHub</a></p>
+<div class="pager"><a href="ch02-5-bpe.html">&larr; 2.5 Byte pair encoding</a><a href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions &rarr;</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
 <script src="site.js"></script>
 </body></html>

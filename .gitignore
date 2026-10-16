@@ -45,6 +45,13 @@ target/
 **/*.rs.bk
 Cargo.lock.bak
 
+# ---- C (C-version/) ----
+/C-version/build/
+
+# ---- Zig (Zig-version/) ----
+.zig-cache/
+zig-out/
+
 # ---- Model artifacts / large generated data ----
 *.pt
 *.pth

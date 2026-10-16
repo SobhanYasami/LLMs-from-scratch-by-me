@@ -52,3 +52,25 @@ th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06
 details.qa{border:1px solid var(--line);border-radius:8px;padding:8px 14px;margin:.5em 0;background:var(--card);font:15px/1.5 system-ui}
 details.qa summary{cursor:pointer;font-weight:600}
 @media(max-width:600px){.cmp{grid-template-columns:1fr}}
+/* evolving-docs additions */
+.chip{display:inline-block;font:700 11px system-ui;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);vertical-align:middle}
+.chip.ready{background:#dff3e4;color:#1d6b35;border-color:#bfe3c8}
+.chip.in-progress{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+@media (prefers-color-scheme:dark){.chip.ready{background:#173222;color:#7fd39a;border-color:#245a39}}
+.muted{color:var(--muted)}.pad{padding:12px 16px}
+.meta{font:13px system-ui;color:var(--muted);margin:-.2em 0 1.2em}
+.edit{font:13px system-ui;margin-top:3em}
+.lang{display:inline-block;font:12px system-ui;background:var(--code);border-radius:6px;padding:2px 8px;margin:0 2px}
+.bar{height:8px;background:var(--code);border-radius:99px;overflow:hidden;min-width:90px}.bar i{display:block;height:100%;background:var(--accent)}
+td small{color:var(--muted);font-size:12px}
+.matrix td.yes{color:#1d6b35;font-weight:700;text-align:center}.matrix td.no{color:var(--muted);text-align:center}
+.matrix th{text-align:center}.matrix th:nth-child(-n+2){text-align:left}
+nav.side h4 em{font-style:normal;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px}
+nav.side h4 a.h4link{display:inline;padding:0;color:var(--muted);font:inherit;letter-spacing:inherit;text-transform:inherit;background:none}
+nav.side h4 a.h4link:hover,nav.side h4 a.h4link.on{color:var(--accent);background:none}
+nav.side a.extra{padding-left:22px;font-size:14px;color:var(--muted)}
+nav.side a.extra::before{content:"+ ";color:var(--accent)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:1.2em 0}
+.card{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--card);text-decoration:none;color:var(--fg);font:15px/1.35 system-ui}
+.card:hover{border-color:var(--accent)}
+.card b{color:var(--accent)}.card .chip{align-self:flex-start}

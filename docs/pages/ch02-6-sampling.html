@@ -1,0 +1,45 @@
+---
+title: 2.6: Data sampling with a sliding window
+nav: 2.6 Sliding window
+chapter: 2
+section: 2.6
+order: 60
+code: sampling
+---
+<div class="aim"><b>Aim.</b> Turn one long list of token IDs into training examples for <i>next-token prediction</i>.</div>
+<p>BPE-encode the whole story: <b>5,145</b> tokens. Each example is a window of IDs (the <b>input</b>) and the same window shifted by one (the <b>target</b>). Every position in a window is a free question: "given these tokens, what comes next?"</p>
+<pre class="out">x: [290, 4920, 2241, 287]
+y:      [4920, 2241, 287, 257]
+
+[290] ----&gt; 4920
+[290, 4920] ----&gt; 2241
+[290, 4920, 2241] ----&gt; 287
+[290, 4920, 2241, 287] ----&gt; 257
+
+as text:
+ and ----&gt;  established
+ and established ----&gt;  himself
+ and established himself ----&gt;  in
+ and established himself in ----&gt;  a</pre>
+<p>Left of the arrow is what the model sees, right is what it must predict. (The book first drops the first 50 tokens for a more interesting passage.)</p>
+<h2>Dataset and DataLoader</h2>
+<ul>
+<li><b>Dataset</b> (<code>GPTDatasetV1</code>): holds every (input, target) window as tensors. Python extends torch's <code>Dataset</code>; Go and Rust use plain slices.</li>
+<li><b>max_length</b>: window size (the context). Tiny here (4); real training uses 256 or more.</li>
+<li><b>stride</b>: how far the window slides. <code>stride=1</code> gives heavily overlapping windows; <code>stride == max_length</code> gives none.</li>
+<li><b>DataLoader</b>: groups windows into <b>batches</b>, optionally shuffled, optionally dropping a short last batch.</li>
+</ul>
+<pre class="out">stride=1, batch_size=1:
+[tensor([[  40,  367, 2885, 1464]]), tensor([[ 367, 2885, 1464, 1807]])]   first window
+[tensor([[ 367, 2885, 1464, 1807]]), tensor([[2885, 1464, 1807, 3619]])]   second: shifted by one
+
+stride=4, batch_size=8: inputs shape (8, 4), no overlap, no word skipped</pre>
+<div class="tip">The book uses <code>stride = max_length</code> for real batches: the whole text is used but nothing overlaps, since more overlap risks overfitting. Batch size is a trade-off: small uses less memory but gives noisier updates.</div>
+<h2>Code</h2>
+{{code}}
+<div class="tip">The loop stops at <code>len - max_length</code> because the target reaches one token past the input.</div>
+<h2>Exercises</h2>
+<ol>
+<li>Book exercise 2.2: run with <code>max_length=2, stride=2</code> and <code>max_length=8, stride=2</code>. How do the windows change?</li>
+<li>Set <code>stride=1</code>. How many windows now, versus <code>stride=4</code>?</li>
+</ol>

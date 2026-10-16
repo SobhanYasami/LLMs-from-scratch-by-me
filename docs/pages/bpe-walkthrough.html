@@ -1,0 +1,43 @@
+---
+title: Extra: a BPE encode, step by step
+nav: BPE walkthrough
+chapter: 2
+extra: true
+order: 100
+---
+<div class="aim"><b>Aim.</b> Watch the GPT-2 byte pair encoder work on real words, so the merge loop in <code>bpe.c</code> and <code>bpe.zig</code> stops being magic.</div>
+<p>The book treats BPE as a library call. Here is what that call does. Each token in the GPT-2 vocabulary has a <b>rank</b>: its position in the order merges were learned. Encoding a word is the reverse: start from bytes and keep applying the lowest-rank merge available.</p>
+<h2>The loop</h2>
+<ol>
+<li>Split the word into single bytes (one part per byte).</li>
+<li>For every neighbouring pair, glue the two parts and look the result up. If it is a known token, it has a rank.</li>
+<li>Merge the pair with the <b>lowest</b> rank. Repeat from step 2.</li>
+<li>Stop when no neighbouring pair forms a known token. The remaining parts are the tokens.</li>
+</ol>
+<h2>Trace: <code>unbelievable</code></h2>
+<pre class="out">start    u n b e l i e v a b l e
+merge 1  rank   293   le          u n b e l i e v a b [le]
+merge 2  rank   397   ab          u n b e l i e v [ab] le
+merge 3  rank   403   un          [un] b e l i e v ab le
+merge 4  rank   417   el          un b [el] i e v ab le
+merge 5  rank   494   ie          un b el [ie] v ab le
+merge 6  rank   540   able        un b el ie v [able]
+merge 7  rank  6667   bel         un [bel] ie v able
+merge 8  rank 11203   iev         un bel [iev] able
+result   [403, 6667, 11203, 540]   = un | bel | iev | able</pre>
+<p>Notice the ranks climb: common pieces (<code>le</code>, <code>ab</code>, <code>un</code>) merge first, rarer ones (<code>iev</code>) last. The final token IDs are just the ranks of the surviving parts.</p>
+<h2>Trace: an unknown word, <code>Zorblax</code></h2>
+<pre class="out">start    Z o r b l a x
+merge 1  rank   273   or          Z [or] b l a x
+merge 2  rank   897   ax          Z or b l [ax]
+merge 3  rank  2436   bl          Z or [bl] ax
+result   [57, 273, 2436, 897]   = Z | or | bl | ax</pre>
+<p>This answers exercise 2.1 of the page <a href="ch02-5-bpe.html">on BPE</a>: a made-up word becomes four ordinary tokens. No <code>&lt;|unk|&gt;</code> is needed because single bytes are always in the vocabulary.</p>
+<h2>Where the text is cut first</h2>
+<p>Before merging, text is split into <i>pieces</i> by a pattern (contractions, a word with its leading space, digits, symbols, whitespace). Merging never crosses a piece boundary, so <code>" world"</code> and <code>"world"</code> are different tokens. <code>nextPiece</code> / <code>next_piece</code> in the C and Zig files implements that pattern by hand.</p>
+<h2>Try it</h2>
+<ol>
+<li>Pick a word with a common prefix (<code>unhappiness</code>). Predict the merges, then compare with the output of your tokenizer.</li>
+<li>Why does the encoder pick the lowest rank first, not the longest match? (Hint: it reproduces the merge order learned in training.)</li>
+</ol>
+<details class="qa"><summary>Answer to 2</summary>BPE training merged the most frequent pair first. Replaying merges lowest-rank-first recreates exactly the segmentation the model saw during training, which is what its embeddings were learned for.</details>

@@ -2,7 +2,7 @@
 
 This is the Python implementation of the tokenizer chapter from *Build a Large Language Model (From Scratch)*. It starts from plain regular expressions and ends with a real byte pair encoding (BPE) tokenizer from `tiktoken`, so you can see what each layer adds.
 
-The Go (`../go-version`) and Rust (`../rust-version`) versions reproduce the same behavior. Compare the two if you want to see how the ideas translate across languages.
+The Go (`../go-version`), Rust (`../rust-version`), C (`../C-version`) and Zig (`../Zig-version`) versions reproduce the same behavior. Compare the two if you want to see how the ideas translate across languages.
 
 ## Why tokenization?
 

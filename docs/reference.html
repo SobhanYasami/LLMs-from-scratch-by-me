@@ -1,47 +1,59 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reference: one table, three languages</title>
+<title>Code reference: one table, five languages</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
 </head><body><div class="layout">
 <nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
 <h4>Start</h4>
-<a href="index.html">Overview</a>
-<h4>Chapter 1: Understanding LLMs</h4>
-<a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
-<a href="ch01-stages.html">1.3, 1.5 Training stages & data</a>
-<a href="ch01-transformer.html">1.4 Transformers & tasks</a>
-<a href="ch01-gpt.html">1.6-1.7 GPT & the roadmap</a>
-<h4>Chapter 2: Working with text data</h4>
-<a href="ch02-overview.html">2.1 Overview & embeddings</a>
-<a href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
-<a href="ch02-3-token-ids.html">2.3 Token IDs</a>
-<a href="ch02-4-special-tokens.html">2.4 Special tokens</a>
-<a href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
-<a href="ch02-6-sampling.html">2.6 Sliding window</a>
-<a href="ch02-7-embeddings.html">2.7-2.8 Embeddings & positions</a>
+<a class="" href="index.html">Overview</a>
+<a class="" href="roadmap.html">Roadmap</a>
+<h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a class="" href="ch01-stages.html">1.3, 1.5 Training stages &amp; data</a>
+<a class="" href="ch01-transformer.html">1.4 Transformers &amp; tasks</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT &amp; the roadmap</a>
+<h4><a class="h4link" href="chapter-2.html">Chapter 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 Overview &amp; embeddings</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a class="" href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
+<a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
+<a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
+<a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
+<h4><a class="h4link" href="chapter-3.html">Chapter 3</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-4.html">Chapter 4</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-5.html">Chapter 5</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-6.html">Chapter 6</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-7.html">Chapter 7</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-A.html">Appendices</a> <em>planned</em></h4>
 <h4>Reference</h4>
-<a class="on" href="reference.html">Reference</a>
-<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
-<main><h1>Reference: one table, three languages</h1>
+<a class=" on" href="reference.html">Code reference</a>
+<a class="" href="contributing.html">Contributing</a>
+<a class="" href="glossary.html">Glossary</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
+<main><h1>Code reference: one table, five languages</h1>
 
 <p class="lede">Every public piece, side by side. Names follow each language's convention.</p>
 <table>
-<tr><th>Book</th><th>Python</th><th>Go</th><th>Rust</th></tr>
-<tr><td>2.2 split</td><td><code>split_text</code></td><td><code>SplitText</code></td><td><code>split_text</code></td></tr>
-<tr><td>2.3 join</td><td><code>detokenize</code></td><td><code>Detokenize</code></td><td><code>detokenize</code></td></tr>
-<tr><td>2.3 vocab</td><td><code>build_vocab(tokens)</code></td><td><code>BuildVocab(tokens)</code></td><td><code>build_vocab(&amp;tokens)</code></td></tr>
-<tr><td>2.3-2.4 tokenizers</td><td><code>SimpleTokenizerV1/V2</code></td><td><code>NewSimpleTokenizerV1/V2</code></td><td><code>SimpleTokenizerV1/V2::new</code></td></tr>
-<tr><td>2.3 encode / decode</td><td>raises <code>KeyError</code></td><td>returns <code>error</code></td><td>returns <code>Result</code></td></tr>
-<tr><td>2.4 special tokens</td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>EndOfText</code>, <code>Unknown</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td></tr>
-<tr><td>2.5 BPE</td><td><code>tiktoken.get_encoding("gpt2")</code></td><td><code>tiktoken.GetEncoding("r50k_base")</code></td><td><code>tiktoken_rs::r50k_base()</code></td></tr>
-<tr><td>2.6 windows</td><td><code>GPTDatasetV1</code></td><td><code>NewGPTDataset</code></td><td><code>GptDataset::new</code></td></tr>
-<tr><td>2.6 batches</td><td><code>create_dataloader_v1</code></td><td><code>NewDataLoader(...).Epoch()</code></td><td><code>DataLoader::new(...).epoch()</code></td></tr>
-<tr><td>2.7-2.8 embeddings</td><td><code>InputEmbedding</code> (torch)</td><td><code>NewInputEmbedding</code></td><td><code>InputEmbedding::new</code></td></tr>
+<tr><th>Book</th><th>Python</th><th>Go</th><th>Rust</th><th>C</th><th>Zig</th></tr>
+<tr><td>2.2 split</td><td><code>split_text</code></td><td><code>SplitText</code></td><td><code>split_text</code></td><td><code>split_text</code></td><td><code>splitText</code></td></tr>
+<tr><td>2.3 join</td><td><code>detokenize</code></td><td><code>Detokenize</code></td><td><code>detokenize</code></td><td><code>detokenize</code></td><td><code>detokenize</code></td></tr>
+<tr><td>2.3 vocab</td><td><code>build_vocab(tokens)</code></td><td><code>BuildVocab(tokens)</code></td><td><code>build_vocab(&amp;tokens)</code></td><td><code>build_vocab</code></td><td><code>Vocab.build</code></td></tr>
+<tr><td>2.3-2.4 tokenizers</td><td><code>SimpleTokenizerV1/V2</code></td><td><code>NewSimpleTokenizerV1/V2</code></td><td><code>SimpleTokenizerV1/V2::new</code></td><td><code>simple_tokenizer_v1/v2</code></td><td><code>SimpleTokenizer.v1/v2</code></td></tr>
+<tr><td>2.3 encode / decode</td><td>raises <code>KeyError</code></td><td>returns <code>error</code></td><td>returns <code>Result</code></td><td>returns <code>NULL</code> + message</td><td>error union</td></tr>
+<tr><td>2.4 special tokens</td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>EndOfText</code>, <code>Unknown</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td></tr>
+<tr><td>2.5 BPE</td><td><code>tiktoken.get_encoding("gpt2")</code></td><td><code>tiktoken.GetEncoding("r50k_base")</code></td><td><code>tiktoken_rs::r50k_base()</code></td><td><code>bpe_load</code> / <code>bpe_encode</code></td><td><code>Bpe.init</code> / <code>encode</code></td></tr>
+<tr><td>2.6 windows</td><td><code>GPTDatasetV1</code></td><td><code>NewGPTDataset</code></td><td><code>GptDataset::new</code></td><td><code>gpt_dataset_new</code></td><td><code>GptDataset.init</code></td></tr>
+<tr><td>2.6 batches</td><td><code>create_dataloader_v1</code></td><td><code>NewDataLoader(...).Epoch()</code></td><td><code>DataLoader::new(...).epoch()</code></td><td><code>dataloader_new</code> + <code>_batch</code></td><td><code>DataLoader.init</code> + <code>batch</code></td></tr>
+<tr><td>2.7-2.8 embeddings</td><td><code>InputEmbedding</code> (torch)</td><td><code>NewInputEmbedding</code></td><td><code>InputEmbedding::new</code></td><td><code>input_embedding_new</code></td><td><code>InputEmbedding.init</code></td></tr>
 </table>
-<h2>Layout, identical in each language</h2>
+<h2>Layout, same idea in each language</h2>
 <pre class="out">&lt;lang&gt;/
   README.md
   main                 demo runner
@@ -62,21 +74,24 @@
 <tr><td>Demo batch</td><td>8 windows x 4 tokens, 256 dimensions</td></tr>
 </table>
 <h2>Adding the next chapter</h2>
-<p>Add a sibling module in each language (for example <code>attention</code>), in the book's order, with the same names and a demo in each <code>main</code>. Then add pages to <code>PAGES</code> in <code>docs/build.py</code> and run <code>python3 docs/build.py</code>.</p>
+<p>Add a sibling module in each language (for example <code>attention</code>), in the book's order, with the same names and a demo in each <code>main</code>. The docs side is in <a href="contributing.html">Contributing</a>.</p>
 <h2>Language differences</h2>
 <table>
-<tr><th>Topic</th><th>Python</th><th>Go</th><th>Rust</th></tr>
-<tr><td>Capturing split</td><td><code>re.split</code></td><td>manual</td><td>manual</td></tr>
-<tr><td>V2 reuses V1</td><td>subclass</td><td>embed struct</td><td>wrap</td></tr>
-<tr><td>Tensors</td><td>torch</td><td>nested slices</td><td>nested <code>Vec</code></td></tr>
-<tr><td>GPT-2 BPE</td><td><code>tiktoken</code></td><td><code>tiktoken-go</code> + offline loader</td><td><code>tiktoken-rs</code></td></tr>
-<tr><td>Random weights</td><td><code>torch</code></td><td><code>math/rand</code></td><td>built-in splitmix64</td></tr>
+<tr><th>Topic</th><th>Python</th><th>Go</th><th>Rust</th><th>C</th><th>Zig</th></tr>
+<tr><td>Capturing split</td><td><code>re.split</code></td><td>manual</td><td>manual</td><td>byte scan</td><td>byte scan (slices, no copy)</td></tr>
+<tr><td>V2 reuses V1</td><td>subclass</td><td>embed struct</td><td>wrap</td><td>one flag</td><td>one flag</td></tr>
+<tr><td>Tensors</td><td>torch</td><td>nested slices</td><td>nested <code>Vec</code></td><td>flat <code>float[]</code></td><td>flat <code>[]f32</code></td></tr>
+<tr><td>GPT-2 BPE</td><td><code>tiktoken</code></td><td><code>tiktoken-go</code> + offline loader</td><td><code>tiktoken-rs</code></td><td>own encoder</td><td>own encoder</td></tr>
+<tr><td>Random weights</td><td><code>torch</code></td><td><code>math/rand</code></td><td>built-in splitmix64</td><td>splitmix64</td><td>splitmix64</td></tr>
+<tr><td>Memory</td><td>garbage collected</td><td>garbage collected</td><td>ownership</td><td>manual <code>malloc/free</code></td><td>explicit allocators</td></tr>
 </table>
 
-<div class="pager"><a href="ch02-7-embeddings.html">&larr; 2.7-2.8 Embeddings & positions</a><span></span></div>
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/reference.html">Edit this page on GitHub</a></p>
+<div class="pager"><a href="chapter-A.html">&larr; Appendices</a><a href="contributing.html">Contributing &rarr;</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
 <script src="site.js"></script>
 </body></html>

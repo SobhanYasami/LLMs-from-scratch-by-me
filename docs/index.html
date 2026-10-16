@@ -8,53 +8,69 @@
 </head><body><div class="layout">
 <nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
 <h4>Start</h4>
-<a class="on" href="index.html">Overview</a>
-<h4>Chapter 1: Understanding LLMs</h4>
-<a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
-<a href="ch01-stages.html">1.3, 1.5 Training stages & data</a>
-<a href="ch01-transformer.html">1.4 Transformers & tasks</a>
-<a href="ch01-gpt.html">1.6-1.7 GPT & the roadmap</a>
-<h4>Chapter 2: Working with text data</h4>
-<a href="ch02-overview.html">2.1 Overview & embeddings</a>
-<a href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
-<a href="ch02-3-token-ids.html">2.3 Token IDs</a>
-<a href="ch02-4-special-tokens.html">2.4 Special tokens</a>
-<a href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
-<a href="ch02-6-sampling.html">2.6 Sliding window</a>
-<a href="ch02-7-embeddings.html">2.7-2.8 Embeddings & positions</a>
+<a class=" on" href="index.html">Overview</a>
+<a class="" href="roadmap.html">Roadmap</a>
+<h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
+<a class="" href="ch01-stages.html">1.3, 1.5 Training stages &amp; data</a>
+<a class="" href="ch01-transformer.html">1.4 Transformers &amp; tasks</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT &amp; the roadmap</a>
+<h4><a class="h4link" href="chapter-2.html">Chapter 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 Overview &amp; embeddings</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
+<a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a class="" href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
+<a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
+<a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
+<a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
+<h4><a class="h4link" href="chapter-3.html">Chapter 3</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-4.html">Chapter 4</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-5.html">Chapter 5</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-6.html">Chapter 6</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-7.html">Chapter 7</a> <em>planned</em></h4>
+<h4><a class="h4link" href="chapter-A.html">Appendices</a> <em>planned</em></h4>
 <h4>Reference</h4>
-<a href="reference.html">Reference</a>
-<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">GitHub repo</a></nav>
+<a class="" href="reference.html">Code reference</a>
+<a class="" href="contributing.html">Contributing</a>
+<a class="" href="glossary.html">Glossary</a>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
 <main><h1>Build an LLM from scratch</h1>
 
-<p class="lede">A tutorial and reference for the first two chapters of <i>Build a Large Language Model (From Scratch)</i>. Chapter 1 builds the mental model. Chapter 2 turns it into code, written three times: Python, Go and Rust, with the same layout and the same output.</p>
-<div class="aim"><b>Aim.</b> Understand what a GPT-style model is, and how text becomes the numbers it trains on, by reading small programs instead of a framework.</div>
-<h2>The map</h2>
-<div class="flow">
-<div><b>Chapter 1</b>What an LLM is, how it is trained, what a GPT looks like. No code.</div><span>&rarr;</span>
-<div class="hot"><b>Chapter 2</b>Text &rarr; tokens &rarr; IDs &rarr; training pairs &rarr; vectors. All the code on this site.</div><span>&rarr;</span>
-<div><b>Chapter 3+</b>Attention, the GPT model, training. Not covered yet.</div>
-</div>
-<h2>How to read this site</h2>
+<p class="lede">A living tutorial and reference for <i>Build a Large Language Model (From Scratch)</i>. The goal is to cover the whole book, one chapter at a time, with the ideas explained in plain words and the code written in five languages side by side.</p>
+<div class="aim"><b>Aim.</b> Understand how a GPT-style model works by reading small programs instead of a framework, and keep a reference you can come back to.</div>
+<h2>Where we are</h2>
+<div class="cards"><a class="card" href="chapter-1.html"><b>Chapter 1</b><span>Understanding large language models</span><span class="chip ready">ready</span></a><a class="card" href="chapter-2.html"><b>Chapter 2</b><span>Working with text data</span><span class="chip ready">ready</span></a><a class="card" href="chapter-3.html"><b>Chapter 3</b><span>Coding attention mechanisms</span><span class="chip planned">planned</span></a><a class="card" href="chapter-4.html"><b>Chapter 4</b><span>Implementing a GPT model from scratch</span><span class="chip planned">planned</span></a><a class="card" href="chapter-5.html"><b>Chapter 5</b><span>Pretraining on unlabeled data</span><span class="chip planned">planned</span></a><a class="card" href="chapter-6.html"><b>Chapter 6</b><span>Finetuning for text classification</span><span class="chip planned">planned</span></a><a class="card" href="chapter-7.html"><b>Chapter 7</b><span>Finetuning to follow instructions</span><span class="chip planned">planned</span></a><a class="card" href="chapter-A.html"><b>Appendices</b><span>Companion material</span><span class="chip planned">planned</span></a></div>
+<p>Detail, language coverage and what is next are on the <a href="roadmap.html">Roadmap</a>. Pages marked <i>planned</i> are outlined from the book but not written yet.</p>
+<h2>How each page works</h2>
 <ul>
-<li>Read in order. Page titles carry the book's section numbers (1.1, 2.2, ...) so you can follow along with the PDF.</li>
-<li>Every code block has Python / Go / Rust tabs. Your choice is remembered.</li>
-<li>Each page has an <b>Aim</b>. Chapter 1 pages end with <b>check yourself</b> questions. Chapter 2 pages end with exercises.</li>
-<li>The <a href="reference.html">Reference</a> page is a lookup table of every function in all three languages.</li>
+<li><b>Aim</b> at the top says what you will understand by the end.</li>
+<li>The page title carries the book's section numbers (2.2, 2.7-2.8, ...) so you can read along with the PDF.</li>
+<li>Code blocks have tabs for <b>Python, Go, Rust, C and Zig</b>. They are the real source files from this repo, and your tab choice is remembered.</li>
+<li>Chapter 1 pages end with <b>check yourself</b> questions; code chapters end with <b>exercises</b>. Pages marked <i>extra</i> go beyond the book.</li>
 </ul>
 <h2>Run the code</h2>
 <table><tr><th>Language</th><th>Command</th></tr>
 <tr><td>Python</td><td><code>python-version/.venv/bin/python python-version/main.py</code></td></tr>
 <tr><td>Go</td><td><code>cd go-version &amp;&amp; go run ./cmd</code></td></tr>
-<tr><td>Rust</td><td><code>cd rust-version &amp;&amp; cargo run</code></td></tr></table>
-<p>All three print the same token IDs. Embedding values differ (each language draws its own random weights) but shapes match.</p>
-<h2>Sources</h2>
-<p>Text follows the book and Raschka's companion repo, <a href="https://github.com/rasbt/LLMs-from-scratch">rasbt/LLMs-from-scratch</a>, in my own words. The code here is a separate re-implementation for learning in three languages. Buy the book for the full story.</p>
+<tr><td>Rust</td><td><code>cd rust-version &amp;&amp; cargo run</code></td></tr>
+<tr><td>C</td><td><code>cd C-version &amp;&amp; make run</code></td></tr>
+<tr><td>Zig</td><td><code>cd Zig-version &amp;&amp; zig build run</code></td></tr></table>
+<p>All five print identical output for the tokenizers, BPE and data sampling. Embedding values differ (each language draws its own random weights) but shapes match.</p>
+<h2>Why five languages?</h2>
+<p>Seeing the same idea in a high-level and in a low-level language shows what is essential and what is language plumbing. Python hides memory and uses a tensor library; C and Zig make every allocation visible; Go and Rust sit in between. When a concept is hard to see in one, read it in another.</p>
+<h2>Sources and credit</h2>
+<p>Text follows the book and Sebastian Raschka's companion repo, <a href="https://github.com/rasbt/LLMs-from-scratch">rasbt/LLMs-from-scratch</a>, in my own words. The code here is a separate re-implementation for learning. Buy the book for the full story.</p>
+<p><a href="contributing.html">Want to add a chapter, a page or a language? Start here.</a></p>
 
-<div class="pager"><span></span><a href="ch01-what-is-llm.html">1.1-1.2 What is an LLM? &rarr;</a></div>
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/index.html">Edit this page on GitHub</a></p>
+<div class="pager"><span></span><a href="roadmap.html">Roadmap &rarr;</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
 <script src="site.js"></script>
 </body></html>
