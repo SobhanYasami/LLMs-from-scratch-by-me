@@ -1,0 +1,40 @@
+---
+title: تکمیلی: دموی فصل ۳ و خروجی مورد انتظار
+nav: خروجی دموی فصل ۳
+chapter: 3
+extra: true
+order: 110
+code: ch03_demo
+---
+<div class="aim"><b>هدف.</b> کل فصل ۳ را یک‌جا اجرا کنید و خروجی خودتان را با عددهای مورد انتظار، در هر یک از پنج زبان، مقایسه کنید.</div>
+<h2>اجرا</h2>
+<table><tr><th>زبان</th><th>دستور</th></tr>
+<tr><td>Python</td><td><code>python-version/.venv/bin/python python-version/main.py ch03</code></td></tr>
+<tr><td>Go</td><td><code>cd go-version &amp;&amp; go run ./cmd ch03</code></td></tr>
+<tr><td>Rust</td><td><code>cd rust-version &amp;&amp; cargo run -- ch03</code></td></tr>
+<tr><td>C</td><td><code>cd C-version &amp;&amp; make run ARGS=ch03</code></td></tr>
+<tr><td>Zig</td><td><code>cd Zig-version &amp;&amp; zig build run -- ch03</code></td></tr></table>
+<p>هر پنج زبان متن یکسان، نویسه به نویسه، چاپ می‌کنند. بدون آرگومان هر برنامه همهٔ فصل‌ها را اجرا می‌کند.</p>
+<h2>چه چیزی را با کتاب مقایسه کنیم</h2>
+<ul>
+<li><b>3.3 و 3.4</b> دقیقاً با کتاب می‌خوانند: امتیازها، وزن‌ها، <code>query_2 = [0.4306, 1.4551]</code>، <code>context_2 = [0.3061, 0.8210]</code> و شش بردار زمینهٔ <code>SelfAttention_v1</code>. وزن‌های 3.4 همان ماتریس‌های <code>torch.manual_seed(123)</code> کتاب‌اند که در کد نوشته شده‌اند تا هیچ زبانی به torch نیاز نداشته باشد.</li>
+<li><b>وزن‌های 3.5</b> از همین ماتریس‌ها به دست می‌آیند. مثال علّی کتاب از وزن‌های v2 خودش استفاده می‌کند، پس آن سطرها فرق دارند.</li>
+<li><b>Dropout و 3.6</b> از مولد با بذر مشترک همهٔ زبان‌ها استفاده می‌کنند، پس با خروجی torch کتاب فرق دارند اما با هم یکی‌اند.</li>
+</ul>
+<h2>خروجی مورد انتظار (گزیده)</h2>
+<pre class="out">== 3.3.1 simple attention for one query (x2, 'journey') ==
+scores    : [0.9544, 1.4950, 1.4754, 0.8434, 0.7070, 1.0865]
+weights   : [0.1385, 0.2379, 0.2333, 0.1240, 0.1082, 0.1581]
+context z2: [0.4419, 0.6515, 0.5683]
+...
+== 3.4 self-attention with trainable weights (d_in=3, d_out=2) ==
+query_2: [0.4306, 1.4551]
+keys shape: (6, 2), values shape: (6, 2)
+scores_2 (q2 . keys): [1.2705, 1.8524, 1.8111, 1.0795, 0.5577, 1.5440]
+weights_2 (scaled): [0.1500, 0.2264, 0.2199, 0.1311, 0.0906, 0.1820]
+context_2: [0.3061, 0.8210]
+...
+== 3.6 multi-head attention (d_in=3, d_out=2, heads=2) ==
+input shape: (2, 6, 3)  output shape: (2, 6, 2)</pre>
+<h2>کد اجراکننده</h2>
+{{code}}

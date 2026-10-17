@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="fa" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مرجع کد: یک جدول، پنج زبان · ساخت یک LLM از صفر</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark" disabled>
+<link rel="alternate" hreflang="en" href="../reference.html">
+</head><body>
+<a class="skip" href="#main">پرش به محتوا</a>
+<header class="top">
+<button class="icon-btn menu-btn" type="button" aria-label="منو" aria-expanded="false" aria-controls="side"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<a class="brand" href="index.html">ساخت LLM از صفر</a>
+<span class="grow"></span>
+<a class="lang-btn" href="../reference.html" hreflang="en" lang="en" aria-label="تغییر زبان: English">English</a>
+<button class="icon-btn theme-btn" type="button" aria-label="تغییر پوسته"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+</header>
+<div class="layout">
+<nav class="side" id="side" aria-label="ساخت LLM از صفر">
+<input class="filter" type="search" placeholder="جستجو در صفحه‌ها…" aria-label="جستجو در صفحه‌ها" data-nomatch="صفحه‌ای پیدا نشد.">
+<div class="navlinks"><h4>شروع</h4>
+<a class="" href="index.html">مرور کلی</a>
+<a class="" href="roadmap.html">نقشهٔ راه</a>
+<h4><a class="h4link" href="chapter-1.html">فصل 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 LLM چیست؟</a>
+<a class="" href="ch01-stages.html">1.3، 1.5 مراحل آموزش و داده</a>
+<a class="" href="ch01-transformer.html">1.4 ترنسفورمر و وظایف</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT و نقشهٔ راه</a>
+<h4><a class="h4link" href="chapter-2.html">فصل 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 مرور و امبدینگ‌ها</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 توکن‌سازی متن</a>
+<a class="" href="ch02-3-token-ids.html">2.3 شناسهٔ توکن</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 توکن‌های ویژه</a>
+<a class="" href="ch02-5-bpe.html">2.5 رمزگذاری جفت‌بایت</a>
+<a class="" href="ch02-6-sampling.html">2.6 پنجرهٔ لغزان</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 امبدینگ و جایگاه</a>
+<a class="extra" href="bpe-walkthrough.html">ردگیری BPE</a>
+<a class="extra" href="embedding-vs-matmul.html">امبدینگ در برابر matmul</a>
+<a class="extra" href="dataloader-intuition.html">شهود دیتالودر</a>
+<h4><a class="h4link" href="chapter-3.html">فصل 3</a></h4>
+<a class="" href="ch03-1-long-sequences.html">3.1-3.2 چرا توجه</a>
+<a class="" href="ch03-3-simple-attention.html">3.3 توجه ساده</a>
+<a class="" href="ch03-4-self-attention.html">3.4 وزن‌های آموزش‌پذیر</a>
+<a class="" href="ch03-5-causal.html">3.5 توجه علّی</a>
+<a class="" href="ch03-6-multihead.html">3.6 چندسَری</a>
+<a class="extra" href="scaling-sqrt-dk.html">چرا مقیاس sqrt(d_k)</a>
+<a class="extra" href="ch03-demo-output.html">خروجی دموی فصل ۳</a>
+<h4><a class="h4link" href="chapter-4.html">فصل 4</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-5.html">فصل 5</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-6.html">فصل 6</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-7.html">فصل 7</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-A.html">پیوست‌ها</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4>مرجع</h4>
+<a class=" on" href="reference.html" aria-current="page">مرجع کد</a>
+<a class="" href="contributing.html">مشارکت</a>
+<a class="" href="glossary.html">واژه‌نامه</a>
+<h4>منبع</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">این مخزن</a><a href="https://github.com/rasbt/LLMs-from-scratch">مخزن راشکا</a></div>
+</nav>
+<div class="scrim" hidden></div>
+<main id="main" tabindex="-1"><h1>مرجع کد: یک جدول، پنج زبان</h1>
+
+
+<div><p class="lede">هر بخش عمومی، کنار هم. نام‌ها از قرارداد هر زبان پیروی می‌کنند.</p>
+<div class="tbl"><table>
+<tr><th>کتاب</th><th>Python</th><th>Go</th><th>Rust</th><th>C</th><th>Zig</th></tr>
+<tr><td>2.2 تقسیم</td><td><code>split_text</code></td><td><code>SplitText</code></td><td><code>split_text</code></td><td><code>split_text</code></td><td><code>splitText</code></td></tr>
+<tr><td>2.3 اتصال</td><td><code>detokenize</code></td><td><code>Detokenize</code></td><td><code>detokenize</code></td><td><code>detokenize</code></td><td><code>detokenize</code></td></tr>
+<tr><td>2.3 واژگان</td><td><code>build_vocab(tokens)</code></td><td><code>BuildVocab(tokens)</code></td><td><code>build_vocab(&amp;tokens)</code></td><td><code>build_vocab</code></td><td><code>Vocab.build</code></td></tr>
+<tr><td>2.3-2.4 توکن‌سازها</td><td><code>SimpleTokenizerV1/V2</code></td><td><code>NewSimpleTokenizerV1/V2</code></td><td><code>SimpleTokenizerV1/V2::new</code></td><td><code>simple_tokenizer_v1/v2</code></td><td><code>SimpleTokenizer.v1/v2</code></td></tr>
+<tr><td>2.3 encode / decode</td><td><code>KeyError</code> پرتاب می‌کند</td><td><code>error</code> برمی‌گرداند</td><td><code>Result</code> برمی‌گرداند</td><td><code>NULL</code> + پیام برمی‌گرداند</td><td>اجتماع خطا</td></tr>
+<tr><td>2.4 توکن‌های ویژه</td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>EndOfText</code>, <code>Unknown</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td></tr>
+<tr><td>2.5 BPE</td><td><code>tiktoken.get_encoding("gpt2")</code></td><td><code>tiktoken.GetEncoding("r50k_base")</code></td><td><code>tiktoken_rs::r50k_base()</code></td><td><code>bpe_load</code> / <code>bpe_encode</code></td><td><code>Bpe.init</code> / <code>encode</code></td></tr>
+<tr><td>2.6 پنجره‌ها</td><td><code>GPTDatasetV1</code></td><td><code>NewGPTDataset</code></td><td><code>GptDataset::new</code></td><td><code>gpt_dataset_new</code></td><td><code>GptDataset.init</code></td></tr>
+<tr><td>2.6 دسته‌ها</td><td><code>create_dataloader_v1</code></td><td><code>NewDataLoader(...).Epoch()</code></td><td><code>DataLoader::new(...).epoch()</code></td><td><code>dataloader_new</code> + <code>_batch</code></td><td><code>DataLoader.init</code> + <code>batch</code></td></tr>
+<tr><td>3.3 توجه ساده</td><td><code>simple_attention</code></td><td><code>SimpleAttention</code></td><td><code>simple_attention</code></td><td><code>simple_attention</code></td><td><code>simpleAttention</code></td></tr>
+<tr><td>3.4 خودتوجهی</td><td><code>SelfAttention</code></td><td><code>SelfAttention</code></td><td><code>SelfAttention</code></td><td><code>self_attention_forward</code></td><td><code>SelfAttention.forward</code></td></tr>
+<tr><td>3.5 علّی</td><td><code>CausalAttention</code></td><td><code>CausalAttention</code></td><td><code>CausalAttention</code></td><td><code>causal_forward</code></td><td><code>CausalAttention.forward</code></td></tr>
+<tr><td>3.5 dropout</td><td><code>dropout</code></td><td><code>Dropout</code></td><td><code>Matrix::dropout</code></td><td><code>dropout</code></td><td><code>Matrix.dropout</code></td></tr>
+<tr><td>3.6 چندسَری</td><td><code>MultiHeadAttention</code></td><td><code>MultiHeadAttention</code></td><td><code>MultiHeadAttention</code></td><td><code>multihead_forward</code></td><td><code>MultiHeadAttention.forward</code></td></tr>
+<tr><td>2.7-2.8 امبدینگ‌ها</td><td><code>InputEmbedding</code> (torch)</td><td><code>NewInputEmbedding</code></td><td><code>InputEmbedding::new</code></td><td><code>input_embedding_new</code></td><td><code>InputEmbedding.init</code></td></tr>
+</table></div>
+<h2 id="s1">چیدمان، همان ایده در هر زبان</h2>
+<pre class="out">&lt;lang&gt;/
+  README.md
+  main                 demo runner
+  tokenization/
+    preprocess         2.2
+    vocab              2.3
+    simple             2.3-2.4
+    dataset            2.6 (+ dataloader)
+    embedding          2.7-2.8
+  attention/           chapter 3
+    simple             3.3
+    self_attention     3.4
+    causal             3.5 (+ rng, dropout)
+    multihead          3.6</pre>
+<p>کامنت‌های کد می‌گویند «Step 1-5». تطبیق با کتاب: Step 1 = 2.2، Step 2 = 2.3، Step 3 = 2.3-2.4، Step 4 = 2.6، Step 5 = 2.7-2.8.</p>
+<h2 id="s2">عددهای کلیدی فصل ۲</h2>
+<div class="tbl"><table>
+<tr><th>مورد</th><th>مقدار</th></tr>
+<tr><td>نویسه‌ها در <i>The Verdict</i></td><td>20,479</td></tr>
+<tr><td>توکن‌های سطح‌کلمه / واژگان</td><td>4,649 / 1,159 (+2 ویژه = 1,161)</td></tr>
+<tr><td>توکن‌های BPE در داستان</td><td>5,145</td></tr>
+<tr><td>واژگان BPE در GPT-2، شناسهٔ <code>&lt;|endoftext|&gt;</code></td><td>50,257, 50256</td></tr>
+<tr><td>دستهٔ دمو</td><td>۸ پنجره x ۴ توکن، ۲۵۶ بُعد</td></tr>
+<tr><td>مثال توجه</td><td>۶ توکن، d_in برابر 3، d_out برابر 2، ۲ سَر</td></tr>
+</table></div>
+<h2 id="s3">افزودن فصل بعد</h2>
+<p>در هر زبان یک ماژول هم‌ردیف اضافه کنید (برای مثال <code>attention</code>)، به ترتیب کتاب، با همان نام‌ها و یک دمو در هر <code>main</code>. بخش مستندات در <a href="contributing.html">مشارکت</a> آمده است.</p>
+<h2 id="s4">تفاوت زبان‌ها</h2>
+<div class="tbl"><table>
+<tr><th>موضوع</th><th>Python</th><th>Go</th><th>Rust</th><th>C</th><th>Zig</th></tr>
+<tr><td>تقسیم با نگه‌داشتن جداکننده</td><td><code>re.split</code></td><td>دستی</td><td>دستی</td><td>اسکن بایت</td><td>اسکن بایت (slice، بدون کپی)</td></tr>
+<tr><td>استفادهٔ مجدد نسخهٔ ۲ از ۱</td><td>ارث‌بری</td><td>تعبیهٔ struct</td><td>بسته‌بندی</td><td>یک پرچم</td><td>یک پرچم</td></tr>
+<tr><td>تانسورها</td><td>torch</td><td>slice های تودرتو</td><td><code>Vec</code> تودرتو</td><td><code>float[]</code> تخت</td><td><code>[]f32</code> تخت</td></tr>
+<tr><td>BPE در GPT-2</td><td><code>tiktoken</code></td><td><code>tiktoken-go</code> + بارگذار آفلاین</td><td><code>tiktoken-rs</code></td><td>رمزگذار خودی</td><td>رمزگذار خودی</td></tr>
+<tr><td>وزن‌های تصادفی</td><td><code>torch</code></td><td><code>math/rand</code></td><td>splitmix64 داخلی</td><td>splitmix64</td><td>splitmix64</td></tr>
+<tr><td>ماتریس</td><td>تانسور torch</td><td>struct به نام <code>Matrix</code>، <code>[]float32</code></td><td>struct به نام <code>Matrix</code>، <code>Vec&lt;f32&gt;</code></td><td><code>Matrix</code> از یک <code>Arena</code></td><td><code>Matrix</code>، تخصیص‌دهنده از بیرون</td></tr>
+<tr><td>حافظه</td><td>زباله‌روبی‌شده</td><td>زباله‌روبی‌شده</td><td>مالکیت</td><td><code>malloc/free</code> دستی</td><td>تخصیص‌دهنده‌های صریح</td></tr>
+</table></div>
+</div>
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/fa/reference.html">ویرایش این صفحه در GitHub</a></p>
+<div class="pager"><a class="pg prev" href="chapter-A.html" rel="prev"><small>&rarr; قبلی </small><span>پیوست‌ها</span></a><a class="pg next" href="contributing.html" rel="next"><small> بعدی &larr;</small><span>مشارکت</span></a></div>
+</main>
+<aside class="toc" aria-label="در این صفحه"><h4>در این صفحه</h4><a href="#s1">چیدمان، همان ایده در هر زبان</a><a href="#s2">عددهای کلیدی فصل ۲</a><a href="#s3">افزودن فصل بعد</a><a href="#s4">تفاوت زبان‌ها</a></aside>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script>window.I18N={copy:"کپی",copied:"کپی شد"}</script>
+<script src="../site.js"></script>
+</body></html>

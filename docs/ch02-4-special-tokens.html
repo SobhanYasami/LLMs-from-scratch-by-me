@@ -1,13 +1,28 @@
 <!doctype html>
-<html lang="en"><head>
+<html lang="en" dir="ltr"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>2.4: Adding special context tokens</title>
+<title>2.4: Adding special context tokens · Build an LLM from scratch</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
-</head><body><div class="layout">
-<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
-<h4>Start</h4>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark" disabled>
+<link rel="alternate" hreflang="fa" href="fa/ch02-4-special-tokens.html">
+</head><body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<button class="icon-btn menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="side"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<a class="brand" href="index.html">LLM from scratch</a>
+<span class="grow"></span>
+<a class="lang-btn" href="fa/ch02-4-special-tokens.html" hreflang="fa" lang="fa" aria-label="Switch language: فارسی">فارسی</a>
+<button class="icon-btn theme-btn" type="button" aria-label="Toggle theme"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+</header>
+<div class="layout">
+<nav class="side" id="side" aria-label="LLM from scratch">
+<input class="filter" type="search" placeholder="Filter pages…" aria-label="Filter pages" data-nomatch="No page matches.">
+<div class="navlinks"><h4>Start</h4>
 <a class="" href="index.html">Overview</a>
 <a class="" href="roadmap.html">Roadmap</a>
 <h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
@@ -19,7 +34,7 @@
 <a class="" href="ch02-overview.html">2.1 Overview &amp; embeddings</a>
 <a class="" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
 <a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
-<a class=" on" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
+<a class=" on" href="ch02-4-special-tokens.html" aria-current="page">2.4 Special tokens</a>
 <a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
 <a class="" href="ch02-6-sampling.html">2.6 Sliding window</a>
 <a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
@@ -43,29 +58,32 @@
 <a class="" href="reference.html">Code reference</a>
 <a class="" href="contributing.html">Contributing</a>
 <a class="" href="glossary.html">Glossary</a>
-<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
-<main><h1>2.4: Adding special context tokens</h1>
-<p class="meta">Book section 2.4 · code in Python, Go, Rust, C, Zig</p>
-<div class="aim"><b>Aim.</b> Handle unknown words and document boundaries by adding two special tokens to the vocabulary.</div>
-<table><tr><th>Token</th><th>Role</th><th>ID in our vocab</th></tr>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></div>
+</nav>
+<div class="scrim" hidden></div>
+<main id="main" tabindex="-1"><h1>2.4: Adding special context tokens</h1>
+<p class="meta">Book section <span dir="ltr">2.4</span> · code in Python, Go, Rust, C, Zig</p>
+
+<div><div class="aim"><b>Aim.</b> Handle unknown words and document boundaries by adding two special tokens to the vocabulary.</div>
+<div class="tbl"><table><tr><th>Token</th><th>Role</th><th>ID in our vocab</th></tr>
 <tr><td><code>&lt;|unk|&gt;</code></td><td>stands for any word not in the vocabulary</td><td>1160</td></tr>
-<tr><td><code>&lt;|endoftext|&gt;</code></td><td>separates unrelated texts when concatenated for training, so the model does not treat two books as one story</td><td>1159</td></tr></table>
+<tr><td><code>&lt;|endoftext|&gt;</code></td><td>separates unrelated texts when concatenated for training, so the model does not treat two books as one story</td><td>1159</td></tr></table></div>
 <p>They are appended <b>last</b> so existing word IDs do not shift. The vocabulary grows from 1,159 to <b>1,161</b>.</p>
-<h2>SimpleTokenizerV2</h2>
+<h2 id="s1">SimpleTokenizerV2</h2>
 <p>Same as V1, but before lookup any token not in the vocabulary is replaced by <code>&lt;|unk|&gt;</code>, so encoding never fails.</p>
 <pre class="out">text    = "Hello, do you like tea? &lt;|endoftext|&gt; In the sunlit terraces of the palace."
 ids     = [1160, 5, 362, 1155, 642, 1000, 10, 1159, 57, 1013, 981, 1009, 738, 1013, 1160, 7]
 decoded = "&lt;|unk|&gt;, do you like tea? &lt;|endoftext|&gt; In the sunlit terraces of the &lt;|unk|&gt;."</pre>
 <p><i>Hello</i> and <i>palace</i> were never in the story, so both became <code>&lt;|unk|&gt;</code> (ID 1160) and their meaning is lost. The <code>&lt;|endoftext|&gt;</code> separator became 1159.</p>
-<h2>Other special tokens you will meet</h2>
+<h2 id="s2">Other special tokens you will meet</h2>
 <ul>
 <li><code>[BOS]</code> beginning of sequence.</li>
 <li><code>[EOS]</code> end of sequence, like <code>&lt;|endoftext|&gt;</code>.</li>
 <li><code>[PAD]</code> pads shorter texts in a batch to equal length.</li>
 </ul>
 <div class="tip">GPT uses only <code>&lt;|endoftext|&gt;</code>, for separating <em>and</em> padding (padded positions are masked out later, so which token pads does not matter). GPT also has no <code>&lt;|unk|&gt;</code>: byte pair encoding on the next page replaces it.</div>
-<h2>Code (same file as 2.3, now look at V2)</h2>
-<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button><button data-lang="c">C</button><button data-lang="zig">Zig</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/simple.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 3 - Simple tokenizers that combine splitting with the vocabulary.
+<h2 id="s3">Code (same file as 2.3, now look at V2)</h2>
+<div class="tabs"><div class="tabbar" role="tablist" dir="ltr"><button role="tab" type="button" id="t-ch02-4-special-tokens-python" aria-controls="p-ch02-4-special-tokens-python" data-lang="python">Python</button><button role="tab" type="button" id="t-ch02-4-special-tokens-go" aria-controls="p-ch02-4-special-tokens-go" data-lang="go">Go</button><button role="tab" type="button" id="t-ch02-4-special-tokens-rust" aria-controls="p-ch02-4-special-tokens-rust" data-lang="rust">Rust</button><button role="tab" type="button" id="t-ch02-4-special-tokens-c" aria-controls="p-ch02-4-special-tokens-c" data-lang="c">C</button><button role="tab" type="button" id="t-ch02-4-special-tokens-zig" aria-controls="p-ch02-4-special-tokens-zig" data-lang="zig">Zig</button></div><div class="pane" role="tabpanel" id="p-ch02-4-special-tokens-python" aria-labelledby="t-ch02-4-special-tokens-python" data-lang="python"><div class="file" dir="ltr">python-version/tokenization/simple.py</div><pre dir="ltr"><code class="language-python">&quot;&quot;&quot;Step 3 - Simple tokenizers that combine splitting with the vocabulary.
 
 Both classes expose the same two methods:
 
@@ -110,7 +128,7 @@ class SimpleTokenizerV2(SimpleTokenizerV1):
             for token in tokens
         ]
         return [self.str_to_int[token] for token in tokens]
-</code></pre></div><div class="pane" data-lang="go"><div class="file">go-version/tokenization/simple.go</div><pre><code class="language-go">package tokenization
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-4-special-tokens-go" aria-labelledby="t-ch02-4-special-tokens-go" data-lang="go"><div class="file" dir="ltr">go-version/tokenization/simple.go</div><pre dir="ltr"><code class="language-go">package tokenization
 
 import &quot;fmt&quot;
 
@@ -178,7 +196,7 @@ func NewSimpleTokenizerV2(vocab map[string]int) *SimpleTokenizerV2 {
 }
 
 func (t *SimpleTokenizerV2) Encode(text string) ([]int, error) { return t.encode(text, true) }
-</code></pre></div><div class="pane" data-lang="rust"><div class="file">rust-version/src/tokenization/simple.rs</div><pre><code class="language-rust">//! Step 3 - simple tokenizers: split text, then look each token up in the vocab.
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-4-special-tokens-rust" aria-labelledby="t-ch02-4-special-tokens-rust" data-lang="rust"><div class="file" dir="ltr">rust-version/src/tokenization/simple.rs</div><pre dir="ltr"><code class="language-rust">//! Step 3 - simple tokenizers: split text, then look each token up in the vocab.
 //!
 //! ```text
 //! encode: &quot;Hello, world&quot; -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; [1131, 5, 987]
@@ -258,7 +276,7 @@ impl SimpleTokenizerV2 {
         self.0.decode(ids)
     }
 }
-</code></pre></div><div class="pane" data-lang="c"><div class="file">C-version/tokenization/simple.h</div><pre><code class="language-c">/* Step 3 (book 2.3-2.4) - simple tokenizers: split text, look tokens up.
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-4-special-tokens-c" aria-labelledby="t-ch02-4-special-tokens-c" data-lang="c"><div class="file" dir="ltr">C-version/tokenization/simple.h</div><pre dir="ltr"><code class="language-c">/* Step 3 (book 2.3-2.4) - simple tokenizers: split text, look tokens up.
  *
  *   encode: &quot;Hello, world&quot; -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; [1131, 5, 987]
  *   decode: [1131, 5, 987] -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; &quot;Hello, world&quot;
@@ -289,7 +307,7 @@ int *simple_encode(const SimpleTokenizer *t, const char *text, size_t *n, char e
 char *simple_decode(const SimpleTokenizer *t, const int *ids, size_t n, char err[ERR_LEN]);
 
 #endif
-</code></pre><div class="file">C-version/tokenization/simple.c</div><pre><code class="language-c">#include &quot;simple.h&quot;
+</code></pre><div class="file" dir="ltr">C-version/tokenization/simple.c</div><pre dir="ltr"><code class="language-c">#include &quot;simple.h&quot;
 
 #include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
@@ -334,7 +352,7 @@ char *simple_decode(const SimpleTokenizer *t, const int *ids, size_t n, char err
     free(tokens);
     return text;
 }
-</code></pre></div><div class="pane" data-lang="zig"><div class="file">Zig-version/src/tokenization/simple.zig</div><pre><code class="language-zig">//! Step 3 (book 2.3-2.4) - simple tokenizers: split text, look tokens up.
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-4-special-tokens-zig" aria-labelledby="t-ch02-4-special-tokens-zig" data-lang="zig"><div class="file" dir="ltr">Zig-version/src/tokenization/simple.zig</div><pre dir="ltr"><code class="language-zig">//! Step 3 (book 2.3-2.4) - simple tokenizers: split text, look tokens up.
 //!
 //! ```
 //! encode: &quot;Hello, world&quot; -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; [1131, 5, 987]
@@ -414,13 +432,16 @@ test &quot;encode then decode round-trips simple text&quot; {
 }
 </code></pre></div></div>
 <div class="tip">V2 reuses V1: subclassing in Python, struct embedding in Go, wrapping in Rust. In Go, Rust, C and Zig both types share one encode that takes an "unknown to unk" flag.</div>
-
+</div>
 <p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/ch02-4-special-tokens.html">Edit this page on GitHub</a></p>
-<div class="pager"><a href="ch02-3-token-ids.html">&larr; 2.3 Token IDs</a><a href="ch02-5-bpe.html">2.5 Byte pair encoding &rarr;</a></div>
-</main></div>
+<div class="pager"><a class="pg prev" href="ch02-3-token-ids.html" rel="prev"><small>&larr; Previous </small><span>2.3 Token IDs</span></a><a class="pg next" href="ch02-5-bpe.html" rel="next"><small> Next &rarr;</small><span>2.5 Byte pair encoding</span></a></div>
+</main>
+<aside class="toc" aria-label="On this page"><h4>On this page</h4><a href="#s1">SimpleTokenizerV2</a><a href="#s2">Other special tokens you will meet</a><a href="#s3">Code (same file as 2.3, now look at V2)</a></aside>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script>window.I18N={copy:"Copy",copied:"Copied"}</script>
 <script src="site.js"></script>
 </body></html>

@@ -1,0 +1,41 @@
+---
+title: واژه‌نامه
+nav: واژه‌نامه
+chapter: reference
+order: 30
+---
+<p class="lede">اصطلاحات به‌کاررفته در آموزش، همراه با فصلی که هرکدام نخستین بار در آن اهمیت می‌یابد. با افزوده شدن فصل‌های تازه، اصطلاح‌های جدید اضافه کنید.</p>
+<table>
+<tr><th>اصطلاح</th><th>معنا</th><th>ببینید</th></tr>
+<tr><td>توکن (Token)</td><td>واحد متنی که مدل می‌خواند: یک کلمه، بخشی از کلمه یا یک علامت نگارشی.</td><td><a href="ch02-2-tokenizing.html">2.2</a></td></tr>
+<tr><td>شناسهٔ توکن (Token ID)</td><td>عدد صحیحی که واژگان به توکن نسبت می‌دهد.</td><td><a href="ch02-3-token-ids.html">2.3</a></td></tr>
+<tr><td>واژگان (Vocabulary)</td><td>جدول توکن &harr; شناسه. اندازه‌اش تعداد توکن‌های متمایز است.</td><td><a href="ch02-3-token-ids.html">2.3</a></td></tr>
+<tr><td>توکن ویژه (Special token)</td><td>توکنی که عمداً اضافه می‌شود، مانند <code>&lt;|endoftext|&gt;</code> یا <code>&lt;|unk|&gt;</code>.</td><td><a href="ch02-4-special-tokens.html">2.4</a></td></tr>
+<tr><td>BPE (رمزگذاری جفت‌بایت)</td><td>توکن‌ساز زیرکلمه‌ای که با ادغام مکرر پرتکرارترین جفت‌های مجاور ساخته می‌شود.</td><td><a href="ch02-5-bpe.html">2.5</a></td></tr>
+<tr><td>رتبه (Rank در BPE)</td><td>ترتیب ادغام یک توکن. رتبهٔ کمتر یعنی زودتر ادغام شده و رایج‌تر است.</td><td><a href="bpe-walkthrough.html">تکمیلی</a></td></tr>
+<tr><td>طول زمینه / max_length</td><td>مدل در یک لحظه چند توکن می‌بیند.</td><td><a href="ch02-6-sampling.html">2.6</a></td></tr>
+<tr><td>گام لغزش (Stride)</td><td>پنجره میان نمونه‌های آموزشی چقدر می‌لغزد.</td><td><a href="ch02-6-sampling.html">2.6</a></td></tr>
+<tr><td>دسته (Batch)</td><td>گروهی از نمونه‌ها که با هم پردازش می‌شوند.</td><td><a href="ch02-6-sampling.html">2.6</a></td></tr>
+<tr><td>امبدینگ (Embedding)</td><td>برداری که نمایندهٔ یک توکن (یا جایگاه) است. در آموزش یاد گرفته می‌شود.</td><td><a href="ch02-7-embeddings.html">2.7</a></td></tr>
+<tr><td>امبدینگ جایگاه (Positional embedding)</td><td>برداری که اضافه می‌شود تا بگوید توکن کجای دنباله است.</td><td><a href="ch02-7-embeddings.html">2.8</a></td></tr>
+<tr><td>پیش‌بینی توکن بعدی</td><td>وظیفهٔ آموزش: با توکن‌های تا اینجا، توکن بعدی را پیش‌بینی کن.</td><td><a href="ch01-gpt.html">1.6</a></td></tr>
+<tr><td>یادگیری خودنظارتی</td><td>یادگیری‌ای که برچسب‌ها از خود داده می‌آیند (کلمهٔ بعدی).</td><td><a href="ch01-gpt.html">1.6</a></td></tr>
+<tr><td>پیش‌آموزش / فاین‌تیون</td><td>آموزش گسترده روی متن خام، سپس سازگارسازی روی داده برچسب‌دار.</td><td><a href="ch01-stages.html">1.3</a></td></tr>
+<tr><td>ترنسفورمر (Transformer)</td><td>معماری مبتنی بر توجه؛ انکودر، دیکودر یا هر دو.</td><td><a href="ch01-transformer.html">1.4</a></td></tr>
+<tr><td>صفر‌نمونه‌ای / چندنمونه‌ای</td><td>انجام وظیفه بدون مثال، یا با چند مثال در پرامپت.</td><td><a href="ch01-transformer.html">1.4</a></td></tr>
+<tr><td>خودبازگشتی (Autoregressive)</td><td>هر خروجی به‌عنوان ورودی پیش‌بینی بعدی بازگردانده می‌شود.</td><td><a href="ch01-gpt.html">1.6</a></td></tr>
+<tr><td>رفتار پدیدار (Emergent)</td><td>مهارتی که در مقیاس بزرگ و بدون آموزش صریح پدیدار می‌شود.</td><td><a href="ch01-gpt.html">1.6</a></td></tr>
+<tr><td>توجه (Attention)</td><td>راهی برای اینکه هر جایگاه اطلاعات جایگاه‌های دیگر را وزن بدهد و بیامیزد.</td><td><a href="ch03-1-long-sequences.html">3.1</a></td></tr>
+<tr><td>خودتوجهی (Self-attention)</td><td>توجه میان جایگاه‌های یک دنبالهٔ واحد.</td><td><a href="ch03-1-long-sequences.html">3.2</a></td></tr>
+<tr><td>بردار زمینه (Context vector)</td><td>امبدینگ یک توکن، غنی‌شده با اطلاعات توکن‌های دیگر.</td><td><a href="ch03-3-simple-attention.html">3.3</a></td></tr>
+<tr><td>امتیاز توجه (Attention score)</td><td>شباهت خام (ضرب داخلی) میان یک query و یک key.</td><td><a href="ch03-3-simple-attention.html">3.3</a></td></tr>
+<tr><td>وزن توجه (Attention weight)</td><td>softmax امتیازها: مثبت، مجموع هر سطر 1. برای هر ورودی تازه محاسبه می‌شود.</td><td><a href="ch03-3-simple-attention.html">3.3</a></td></tr>
+<tr><td>Softmax</td><td>فهرستی از اعداد را به وزن‌های مثبتی با مجموع 1 تبدیل می‌کند.</td><td><a href="ch03-3-simple-attention.html">3.3</a></td></tr>
+<tr><td>Query / key / value</td><td>سه تصویر از هر توکن: دنبال چه می‌گردد، چه عرضه می‌کند، چه تحویل می‌دهد.</td><td><a href="ch03-4-self-attention.html">3.4</a></td></tr>
+<tr><td>پارامترهای وزن</td><td>ماتریس‌های یادگرفته‌شده (W_query، W_key، W_value، ...). با وزن‌های توجه یکی نیستند.</td><td><a href="ch03-4-self-attention.html">3.4</a></td></tr>
+<tr><td>توجه ضرب داخلی مقیاس‌شده</td><td>خودتوجهی با امتیازهای تقسیم‌شده بر sqrt(d_k).</td><td><a href="scaling-sqrt-dk.html">تکمیلی</a></td></tr>
+<tr><td>توجه علّی (ماسک‌شده)</td><td>توجهی که در آن توکن نمی‌تواند توکن‌های بعدی را ببیند.</td><td><a href="ch03-5-causal.html">3.5</a></td></tr>
+<tr><td>Dropout</td><td>صفر کردن تصادفی مقادیر در آموزش و بزرگ‌نمایی بقیه، برای کاهش بیش‌برازش.</td><td><a href="ch03-5-causal.html">3.5</a></td></tr>
+<tr><td>سَر توجه (Attention head)</td><td>یک محاسبهٔ مستقل توجه با query/key/value.</td><td><a href="ch03-6-multihead.html">3.6</a></td></tr>
+<tr><td>توجه چندسَری</td><td>چند سَر موازی که به هم چسبانده و با یک تصویر خروجی آمیخته می‌شوند.</td><td><a href="ch03-6-multihead.html">3.6</a></td></tr>
+</table>

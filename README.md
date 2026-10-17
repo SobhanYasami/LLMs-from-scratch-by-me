@@ -31,6 +31,7 @@ New chapters (embeddings, attention, ...) get a new sibling module in each langu
 A living tutorial and reference for the whole book, published with GitHub Pages from `docs/`. It is built to grow:
 
 - `docs/pages/*.html`: one file per page (small front-matter block, then HTML). Add a file to add a page.
+- `docs/pages/fa/*.html`: Persian translation of each page (same file name). Untranslated pages fall back to English. UI strings and Persian chapter names are in `docs/i18n.py`. The Persian site is built to `docs/fa/`.
 - `docs/syllabus.py`: the whole book (chapters, sections), the languages, and which source files each code tab shows. The roadmap, progress bars, chapter pages and navigation are generated from it, so unwritten parts show up as "planned".
 - Code on the site is read from the source files, so regenerate after any change and commit the result:
 

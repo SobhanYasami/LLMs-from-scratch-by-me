@@ -18,10 +18,14 @@ import re
 from pathlib import Path
 
 import syllabus as S
+import i18n
 
 ROOT = Path(__file__).resolve().parent.parent
 HERE = Path(__file__).resolve().parent
 PAGES_DIR = HERE / "pages"
+LANG = "en"  # language being rendered; set by main()
+T = i18n.UI["en"]
+
 HLJS = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0"
 LANG_LABEL = {k: n for k, n, _ in S.LANGS}
 LANG_DIR = {k: d for k, _, d in S.LANGS}
@@ -51,12 +55,54 @@ def chapter_slug(num):
     return f"chapter-{num}"
 
 
-PAGES = sorted((parse_page(p) for p in PAGES_DIR.glob("*.html")), key=lambda p: p["order"])
-BY_SLUG = {p["slug"]: p for p in PAGES}
+EN_PAGES = sorted((parse_page(p) for p in PAGES_DIR.glob("*.html")), key=lambda p: p["order"])
+
+
+def load_pages(lang):
+    if lang == "en":
+        return EN_PAGES
+    out = []
+    for en in EN_PAGES:
+        f = PAGES_DIR / lang / f"{en['slug']}.html"
+        if f.exists():
+            p = parse_page(f)
+            for k in ("chapter", "section", "order", "code", "extra"):  # structure comes from the English page
+                p[k] = en[k] if k in en else p.get(k)
+            p["sections"], p["extra"] = en["sections"], en["extra"]
+            out.append(p)
+        else:
+            out.append(dict(en, fallback=True))
+    return out
+
+
+PAGES = EN_PAGES
 
 
 def pages_of(chapter, extra=False):
     return [p for p in PAGES if p.get("chapter") == chapter_key(chapter) and p["extra"] == extra]
+
+
+# ---------------------------------------------------------------- localised syllabus
+def ch_title(ch):
+    if LANG == "fa":
+        return i18n.FA_CHAPTERS.get(ch["num"], {}).get("title", ch["title"])
+    return ch["title"]
+
+
+def ch_summary(ch):
+    if LANG == "fa":
+        return i18n.FA_CHAPTERS.get(ch["num"], {}).get("summary", ch["summary"])
+    return ch["summary"]
+
+
+def sec_title(ch, sid, default):
+    if LANG == "fa":
+        return i18n.FA_CHAPTERS.get(ch["num"], {}).get("sections", {}).get(sid, default)
+    return default
+
+
+def ch_label(ch):
+    return f"{T['chapter']} {ch['num']}" if str(ch["num"]).isdigit() else T["appendices"]
 
 
 def ready_sections(chapter):
@@ -79,12 +125,13 @@ def chapter_status(ch):
 # ------------------------------------------------------------- generated bits
 def chip(status):
     cls = status.replace(" ", "-")
-    return f'<span class="chip {cls}">{status}</span>'
+    label = {"ready": T["s_ready"], "in progress": T["s_progress"], "planned": T["s_planned"]}[status]
+    return f'<span class="chip {cls}">{label}</span>'
 
 
 def lang_badges(langs):
     if not langs:
-        return '<span class="muted">none yet</span>'
+        return f'<span class="muted">{T["none_yet"]}</span>'
     return " ".join(f'<span class="lang">{html.escape(LANG_LABEL[k])}</span>' for k in langs)
 
 
@@ -97,7 +144,6 @@ def book_link(ch):
 def render_chapter_page(ch):
     num = ch["num"]
     status = chapter_status(ch)
-    ready = ready_sections(ch)
     page_of = {}
     for p in pages_of(num):
         for s in p["sections"]:
@@ -105,41 +151,30 @@ def render_chapter_page(ch):
     rows = []
     for sid, title in ch["sections"]:
         p = page_of.get(sid)
-        if p:
-            state = f'{chip("ready")} <a href="{p["slug"]}.html">open</a>'
-        else:
-            state = chip("planned")
-        rows.append(f"<tr><td>{sid}</td><td>{html.escape(title)}</td><td>{state}</td></tr>")
-    table = ""
+        state = f'{chip("ready")} <a href="{p["slug"]}.html">{T["open"]}</a>' if p else chip("planned")
+        rows.append(f'<tr><td dir="ltr">{sid}</td><td>{html.escape(sec_title(ch, sid, title))}</td><td>{state}</td></tr>')
     if rows:
-        table = "<table><tr><th>Book</th><th>Section</th><th>Status</th></tr>" + "".join(rows) + "</table>"
+        table = f'<table><tr><th>{T["th_book"]}</th><th>{T["th_section"]}</th><th>{T["th_status"]}</th></tr>' + "".join(rows) + "</table>"
     else:
-        table = '<p class="muted">Section list not mapped yet. See the book for the outline.</p>'
+        table = f'<p class="muted">{T["no_sections"]}</p>'
     extras = pages_of(num, extra=True)
     extras_html = ""
     if extras:
         items = "".join(f'<li><a href="{p["slug"]}.html">{html.escape(p["nav"])}</a></li>' for p in extras)
-        extras_html = f"<h2>Extras</h2><ul>{items}</ul>"
-    code_line = ""
-    if ch["code"]:
-        code_line = f'<p><b>Code:</b> {lang_badges(ch.get("langs", []))}</p>'
-    planned_note = ""
-    if status == "planned":
-        planned_note = (
-            '<div class="tip">Not written yet. The outline below follows the book. '
-            'To add it, follow <a href="contributing.html">Contributing</a>; the roadmap and navigation update by themselves.</div>'
-        )
+        extras_html = f'<h2>{T["extras_h"]}</h2><ul>{items}</ul>'
+    code_line = f'<p><b>{T["code_label"]}</b> {lang_badges(ch.get("langs", []))}</p>' if ch["code"] else ""
+    planned_note = f'<div class="tip">{T["planned_note"]}</div>' if status == "planned" else ""
     body = f"""
-<p class="lede">{html.escape(ch["summary"])}</p>
-<p>{chip(status)} &nbsp; <a href="{book_link(ch)}">Companion code in Raschka's repo</a></p>
+<p class="lede">{html.escape(ch_summary(ch))}</p>
+<p>{chip(status)} &nbsp; <a href="{book_link(ch)}">{T["companion"]}</a></p>
 {code_line}
 {planned_note}
-<h2>Sections</h2>
+<h2>{T["sections_h"]}</h2>
 {table}
 {extras_html}
 """
-    label = f"Chapter {num}" if str(num).isdigit() else "Appendices"
-    title = f"{label}: {ch['title']}" if str(num).isdigit() else ch["title"]
+    label = ch_label(ch)
+    title = f"{label}: {ch_title(ch)}" if str(num).isdigit() else ch_title(ch)
     return dict(slug=chapter_slug(num), title=title, nav=label, chapter=chapter_key(num), body=body, generated=True)
 
 
@@ -149,14 +184,13 @@ def progress_table():
         total = len(ch["sections"])
         ready = len(ready_sections(ch) & {s for s, _ in ch["sections"]})
         pct = round(100 * ready / total) if total else 0
-        label = f"Chapter {ch['num']}" if str(ch["num"]).isdigit() else "Appendices"
-        bar = f'<div class="bar"><i style="width:{pct}%"></i></div>'
-        count = f"{ready}/{total}" if total else "&ndash;"
+        bar = f'<div class="bar" role="progressbar" aria-valuenow="{pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:{pct}%"></i></div>'
+        count = f"{ready}/{total} {T['sections_word']}" if total else "&ndash;"
         rows.append(
-            f'<tr><td><a href="{chapter_slug(ch["num"])}.html">{label}</a></td><td>{html.escape(ch["title"])}</td>'
-            f"<td>{bar}<small>{count} sections</small></td><td>{chip(chapter_status(ch))}</td></tr>"
+            f'<tr><td><a href="{chapter_slug(ch["num"])}.html">{ch_label(ch)}</a></td><td>{html.escape(ch_title(ch))}</td>'
+            f'<td>{bar}<small>{count}</small></td><td>{chip(chapter_status(ch))}</td></tr>'
         )
-    return "<table><tr><th></th><th>Topic</th><th>Written</th><th>Status</th></tr>" + "".join(rows) + "</table>"
+    return f'<table><tr><th></th><th>{T["th_topic"]}</th><th>{T["th_written"]}</th><th>{T["th_status"]}</th></tr>' + "".join(rows) + "</table>"
 
 
 def language_matrix():
@@ -169,44 +203,32 @@ def language_matrix():
             f'<td class="{"yes" if k in ch.get("langs", []) else "no"}">{"&#10003;" if k in ch.get("langs", []) else "&ndash;"}</td>'
             for k, _, _ in S.LANGS
         )
-        rows.append(f"<tr><td>Chapter {ch['num']}</td><td>{html.escape(ch['title'])}</td>{cells}</tr>")
-    return f"<table class='matrix'><tr><th></th><th>Topic</th>{head}</tr>{''.join(rows)}</table>"
+        rows.append(f"<tr><td>{ch_label(ch)}</td><td>{html.escape(ch_title(ch))}</td>{cells}</tr>")
+    return f"<table class='matrix'><tr><th></th><th>{T['th_topic']}</th>{head}</tr>{''.join(rows)}</table>"
 
 
 def render_roadmap():
-    body = f"""
-<p class="lede">Where the project is, and what is next. This page is generated from <code>docs/syllabus.py</code> and the page files, so it is always current.</p>
-<h2>The book, chapter by chapter</h2>
-{progress_table()}
-<h2>Code by language</h2>
-<p>A tick means that language implements the chapter's code, tested to give the same results as the others.</p>
-{language_matrix()}
-<h2>How the project grows</h2>
-<ol>
-<li><b>Cover the book.</b> One chapter at a time, in the book's order. Concepts first, then code in every language.</li>
-<li><b>Extras.</b> Deeper dives that the book only hints at: worked examples, comparisons, bonus topics. They live next to their chapter.</li>
-<li><b>More languages.</b> Adding a language means filling its folder with the same modules and one column in the tables.</li>
-</ol>
-<p>Want to help or extend it? <a href="contributing.html">Contributing</a> has the exact steps.</p>
-"""
-    return dict(slug="roadmap", title="Roadmap", nav="Roadmap", chapter="start", body=body, generated=True)
+    body = T["roadmap_body"].replace("{progress}", progress_table()).replace("{matrix}", language_matrix())
+    return dict(slug="roadmap", title=T["roadmap_title"], nav=T["roadmap_title"], chapter="start", body=body, generated=True)
 
 
 def cards():
     out = []
     for ch in S.CHAPTERS:
-        label = f"Chapter {ch['num']}" if str(ch["num"]).isdigit() else "Appendices"
         out.append(
-            f'<a class="card" href="{chapter_slug(ch["num"])}.html"><b>{label}</b>'
-            f'<span>{html.escape(ch["title"])}</span>{chip(chapter_status(ch))}</a>'
+            f'<a class="card" href="{chapter_slug(ch["num"])}.html"><b>{ch_label(ch)}</b>'
+            f'<span>{html.escape(ch_title(ch))}</span>{chip(chapter_status(ch))}</a>'
         )
     return f'<div class="cards">{"".join(out)}</div>'
 
 
 # ------------------------------------------------------------------ code tabs
-def code_block(key):
+def code_block(key, uid):
     spec = S.CODE[key]
-    bar = "".join(f'<button data-lang="{k}">{n}</button>' for k, n, _ in S.LANGS)
+    bar = "".join(
+        f'<button role="tab" type="button" id="t-{uid}-{k}" aria-controls="p-{uid}-{k}" data-lang="{k}">{n}</button>'
+        for k, n, _ in S.LANGS
+    )
     panes = []
     for k, _, d in S.LANGS:
         parts = []
@@ -214,13 +236,13 @@ def code_block(key):
             path = f"{d}/{rel}"
             text = (ROOT / path).read_text(encoding="utf-8")
             parts.append(
-                f'<div class="file">{html.escape(path)}</div>'
-                f'<pre><code class="language-{S.HLJS_LANG[k]}">{html.escape(text)}</code></pre>'
+                f'<div class="file" dir="ltr">{html.escape(path)}</div>'
+                f'<pre dir="ltr"><code class="language-{S.HLJS_LANG[k]}">{html.escape(text)}</code></pre>'
             )
         if not parts:
-            parts.append('<p class="muted pad">Not implemented in this language yet.</p>')
-        panes.append(f'<div class="pane" data-lang="{k}">{"".join(parts)}</div>')
-    return f'<div class="tabs"><div class="tabbar">{bar}</div>{"".join(panes)}</div>'
+            parts.append(f'<p class="muted pad">{T["not_impl"]}</p>')
+        panes.append(f'<div class="pane" role="tabpanel" id="p-{uid}-{k}" aria-labelledby="t-{uid}-{k}" data-lang="{k}">{"".join(parts)}</div>')
+    return f'<div class="tabs"><div class="tabbar" role="tablist" dir="ltr">{bar}</div>{"".join(panes)}</div>'
 
 
 # ------------------------------------------------------------------ assembling
@@ -244,9 +266,11 @@ def all_pages():
 def nav_html(pages, current):
     def link(p, cls=""):
         on = " on" if p["slug"] == current else ""
-        return f'<a class="{cls}{on}" href="{p["slug"]}.html">{html.escape(p["nav"])}</a>'
+        cur = ' aria-current="page"' if on else ""
+        mark = f' <span class="en-mark" title="English">{T["untranslated"]}</span>' if p.get("fallback") else ""
+        return f'<a class="{cls}{on}" href="{p["slug"]}.html"{cur}>{html.escape(p["nav"])}{mark}</a>'
 
-    parts = ["<h4>Start</h4>"]
+    parts = [f'<h4>{T["h_start"]}</h4>']
     for p in pages:
         if p.get("chapter") == "start":
             parts.append(link(p))
@@ -254,76 +278,152 @@ def nav_html(pages, current):
         num = ch["num"]
         status = chapter_status(ch)
         head = next(p for p in pages if p["slug"] == chapter_slug(num))
-        label = f"Chapter {num}" if str(num).isdigit() else "Appendices"
-        parts.append(f'<h4><a class="h4link{" on" if head["slug"] == current else ""}" href="{head["slug"]}.html">{label}</a>'
-                     f'{"" if status == "ready" else f" <em>{status}</em>"}</h4>')
+        state = "" if status == "ready" else f' <em>{ {"in progress": T["s_progress"], "planned": T["s_planned"]}[status] }</em>'
+        parts.append(f'<h4><a class="h4link{" on" if head["slug"] == current else ""}" href="{head["slug"]}.html">{ch_label(ch)}</a>{state}</h4>')
         if status == "planned":
             continue
         for p in pages_of(num):
             parts.append(link(p))
         for p in pages_of(num, extra=True):
             parts.append(link(p, "extra"))
-    parts.append("<h4>Reference</h4>")
+    parts.append(f'<h4>{T["h_reference"]}</h4>')
     for p in pages:
         if p.get("chapter") == "reference":
             parts.append(link(p))
-    parts.append(f'<h4>Source</h4><a href="{S.THIS_REPO}">This repo</a><a href="{S.BOOK_REPO[:-len("/tree/main")]}">Raschka\'s repo</a>')
+    parts.append(f'<h4>{T["h_source"]}</h4><a href="{S.THIS_REPO}">{T["this_repo"]}</a><a href="{S.BOOK_REPO[:-len("/tree/main")]}">{T["book_repo"]}</a>')
     return "\n".join(parts)
 
 
 def meta_line(p):
     bits = []
     if p.get("sections") and not p.get("generated"):
-        bits.append(f"Book section {', '.join(p['sections'])}")
+        bits.append(f'{T["book_section"]} <span dir="ltr">{", ".join(p["sections"])}</span>')
     if p.get("code"):
-        bits.append("code in " + ", ".join(LANG_LABEL[k] for k, _, _ in S.LANGS if S.CODE[p["code"]].get(k)))
+        bits.append(T["code_in"] + " " + ", ".join(LANG_LABEL[k] for k, _, _ in S.LANGS if S.CODE[p["code"]].get(k)))
     if p.get("extra"):
-        bits.append("extra")
+        bits.append(T["extra"])
     return f'<p class="meta">{" · ".join(bits)}</p>' if bits else ""
+
+
+def add_toc(body):
+    """Give every h2 an id and return (body, toc_html)."""
+    items = []
+
+    def sub(m):
+        n = len(items) + 1
+        items.append((n, m.group(2)))
+        return f'<h2 id="s{n}"{m.group(1)}>{m.group(2)}</h2>'
+
+    body = re.sub(r"<h2([^>]*)>(.*?)</h2>", sub, body, flags=re.S)
+    if len(items) < 3:
+        return body, ""
+    links = "".join(f'<a href="#s{n}">{re.sub(r"<[^>]+>", "", t)}</a>' for n, t in items)
+    return body, f'<aside class="toc" aria-label="{T["toc"]}"><h4>{T["toc"]}</h4>{links}</aside>'
+
+
+def wrap_tables(body):
+    return re.sub(r"(<table.*?</table>)", r'<div class="tbl">\1</div>', body, flags=re.S)
 
 
 def render(p, pages, i):
     body = p["body"]
     if p.get("code") and "{{code}}" in body:
-        body = body.replace("{{code}}", code_block(p["code"]))
+        body = body.replace("{{code}}", code_block(p["code"], p["slug"]))
     body = body.replace("{{progress}}", progress_table()).replace("{{cards}}", cards()).replace("{{matrix}}", language_matrix())
-    prev = f'<a href="{pages[i-1]["slug"]}.html">&larr; {html.escape(pages[i-1]["nav"])}</a>' if i > 0 else "<span></span>"
-    nxt = f'<a href="{pages[i+1]["slug"]}.html">{html.escape(pages[i+1]["nav"])} &rarr;</a>' if i < len(pages) - 1 else "<span></span>"
+    body, toc = add_toc(body)
+    body = wrap_tables(body)
+    rtl = LANG == "fa"
+    la, ra = ("&rarr;", "&larr;") if rtl else ("&larr;", "&rarr;")
+
+    def pg(q, kind):
+        arrow = la if kind == "prev" else ra
+        label = T["prev"] if kind == "prev" else T["next"]
+        inner = f'<small>{arrow if kind == "prev" else ""} {label} {arrow if kind == "next" else ""}</small><span>{html.escape(q["nav"])}</span>'
+        return f'<a class="pg {kind}" href="{q["slug"]}.html" rel="{kind}">{inner}</a>'
+
+    prev = pg(pages[i - 1], "prev") if i > 0 else "<span></span>"
+    nxt = pg(pages[i + 1], "next") if i < len(pages) - 1 else "<span></span>"
     edit = ""
     if not p.get("generated"):
-        edit = f'<p class="edit"><a href="{S.THIS_REPO}/blob/main/docs/pages/{p["slug"]}.html">Edit this page on GitHub</a></p>'
+        sub = f"pages/{LANG}/" if LANG != "en" and not p.get("fallback") else "pages/"
+        edit = f'<p class="edit"><a href="{S.THIS_REPO}/blob/main/docs/{sub}{p["slug"]}.html">{T["edit"]}</a></p>'
+    notice = ""
+    content_dir = ""
+    if p.get("fallback"):
+        notice = f'<div class="tip notice" dir="rtl" lang="fa">{T["fallback"]}</div>'
+        content_dir = ' dir="ltr" lang="en" class="en-content"'
     title = html.escape(p["title"])
+    h1 = title
+    if rtl:  # keep a leading section number ("2.7-2.8:") in reading order
+        h1 = re.sub(r"^([\d.,\-\s\u0648]+:)", r'<bdi dir="ltr">\1</bdi>', title)
+    root = "../" if LANG != "en" else ""
+    other = "en" if rtl else "fa"
+    other_href = ("../" if rtl else "fa/") + f'{p["slug"]}.html'
+    L = i18n.LANGS_UI[LANG]
+    O = i18n.LANGS_UI[other]
     return f"""<!doctype html>
-<html lang="en"><head>
+<html lang="{L['code']}" dir="{L['dir']}"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{title}</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="{HLJS}/styles/github.min.css" media="(prefers-color-scheme: light)">
-<link rel="stylesheet" href="{HLJS}/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
-</head><body><div class="layout">
-<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
-{nav_html(pages, p["slug"])}</nav>
-<main><h1>{title}</h1>
+<title>{title} · {T['site_title']}</title>
+<meta name="color-scheme" content="light dark">
+<script>try{{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}}catch(e){{}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="{root}style.css">
+<link rel="stylesheet" href="{HLJS}/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="{HLJS}/styles/github-dark.min.css" id="hl-dark" disabled>
+<link rel="alternate" hreflang="{O['code']}" href="{other_href}">
+</head><body>
+<a class="skip" href="#main">{T['skip']}</a>
+<header class="top">
+<button class="icon-btn menu-btn" type="button" aria-label="{T['menu']}" aria-expanded="false" aria-controls="side"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<a class="brand" href="index.html">{T['brand']}</a>
+<span class="grow"></span>
+<a class="lang-btn" href="{other_href}" hreflang="{O['code']}" lang="{O['code']}" aria-label="{T['lang_switch']}: {O['name']}">{O['name']}</a>
+<button class="icon-btn theme-btn" type="button" aria-label="{T['theme']}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+</header>
+<div class="layout">
+<nav class="side" id="side" aria-label="{T['brand']}">
+<input class="filter" type="search" placeholder="{T['filter_ph']}" aria-label="{T['filter']}" data-nomatch="{T['no_match']}">
+<div class="navlinks">{nav_html(pages, p["slug"])}</div>
+</nav>
+<div class="scrim" hidden></div>
+<main id="main" tabindex="-1"><h1>{h1}</h1>
 {meta_line(p)}
-{body}
+{notice}
+<div{content_dir or ''}>{body}</div>
 {edit}
 <div class="pager">{prev}{nxt}</div>
-</main></div>
+</main>
+{toc}
+</div>
 <script src="{HLJS}/highlight.min.js"></script>
 <script src="{HLJS}/languages/go.min.js"></script>
 <script src="{HLJS}/languages/rust.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
-<script src="site.js"></script>
+<script>window.I18N={{copy:"{T['copy']}",copied:"{T['copied']}"}}</script>
+<script src="{root}site.js"></script>
 </body></html>"""
 
 
-def main():
-    for old in HERE.glob("*.html"):
+def build(lang):
+    global LANG, T, PAGES
+    LANG, T = lang, i18n.UI[lang]
+    PAGES = load_pages(lang)
+    out = HERE / i18n.LANGS_UI[lang]["out"]
+    out.mkdir(exist_ok=True)
+    for old in out.glob("*.html"):
         old.unlink()  # drop pages that no longer exist
     pages = all_pages()
     for i, p in enumerate(pages):
-        (HERE / f"{p['slug']}.html").write_text(render(p, pages, i), encoding="utf-8")
-    print(f"wrote {len(pages)} pages to {HERE}")
+        (out / f"{p['slug']}.html").write_text(render(p, pages, i), encoding="utf-8")
+    translated = sum(1 for p in pages if not p.get("fallback") and not p.get("generated"))
+    print(f"[{lang}] wrote {len(pages)} pages to {out} ({translated} hand-written)")
+
+
+def main():
+    for lang in i18n.LANGS_UI:
+        build(lang)
 
 
 main()

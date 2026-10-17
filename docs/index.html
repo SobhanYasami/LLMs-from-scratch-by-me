@@ -1,14 +1,29 @@
 <!doctype html>
-<html lang="en"><head>
+<html lang="en" dir="ltr"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Build an LLM from scratch</title>
+<title>Build an LLM from scratch · Build an LLM from scratch</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
-</head><body><div class="layout">
-<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
-<h4>Start</h4>
-<a class=" on" href="index.html">Overview</a>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark" disabled>
+<link rel="alternate" hreflang="fa" href="fa/index.html">
+</head><body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<button class="icon-btn menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="side"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<a class="brand" href="index.html">LLM from scratch</a>
+<span class="grow"></span>
+<a class="lang-btn" href="fa/index.html" hreflang="fa" lang="fa" aria-label="Switch language: فارسی">فارسی</a>
+<button class="icon-btn theme-btn" type="button" aria-label="Toggle theme"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+</header>
+<div class="layout">
+<nav class="side" id="side" aria-label="LLM from scratch">
+<input class="filter" type="search" placeholder="Filter pages…" aria-label="Filter pages" data-nomatch="No page matches.">
+<div class="navlinks"><h4>Start</h4>
+<a class=" on" href="index.html" aria-current="page">Overview</a>
 <a class="" href="roadmap.html">Roadmap</a>
 <h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
 <a class="" href="ch01-what-is-llm.html">1.1-1.2 What is an LLM?</a>
@@ -43,41 +58,47 @@
 <a class="" href="reference.html">Code reference</a>
 <a class="" href="contributing.html">Contributing</a>
 <a class="" href="glossary.html">Glossary</a>
-<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
-<main><h1>Build an LLM from scratch</h1>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></div>
+</nav>
+<div class="scrim" hidden></div>
+<main id="main" tabindex="-1"><h1>Build an LLM from scratch</h1>
 
-<p class="lede">A living tutorial and reference for <i>Build a Large Language Model (From Scratch)</i>. The goal is to cover the whole book, one chapter at a time, with the ideas explained in plain words and the code written in five languages side by side.</p>
+
+<div><p class="lede">A living tutorial and reference for <i>Build a Large Language Model (From Scratch)</i>. The goal is to cover the whole book, one chapter at a time, with the ideas explained in plain words and the code written in five languages side by side.</p>
 <div class="aim"><b>Aim.</b> Understand how a GPT-style model works by reading small programs instead of a framework, and keep a reference you can come back to.</div>
-<h2>Where we are</h2>
+<h2 id="s1">Where we are</h2>
 <div class="cards"><a class="card" href="chapter-1.html"><b>Chapter 1</b><span>Understanding large language models</span><span class="chip ready">ready</span></a><a class="card" href="chapter-2.html"><b>Chapter 2</b><span>Working with text data</span><span class="chip ready">ready</span></a><a class="card" href="chapter-3.html"><b>Chapter 3</b><span>Coding attention mechanisms</span><span class="chip ready">ready</span></a><a class="card" href="chapter-4.html"><b>Chapter 4</b><span>Implementing a GPT model from scratch</span><span class="chip planned">planned</span></a><a class="card" href="chapter-5.html"><b>Chapter 5</b><span>Pretraining on unlabeled data</span><span class="chip planned">planned</span></a><a class="card" href="chapter-6.html"><b>Chapter 6</b><span>Finetuning for text classification</span><span class="chip planned">planned</span></a><a class="card" href="chapter-7.html"><b>Chapter 7</b><span>Finetuning to follow instructions</span><span class="chip planned">planned</span></a><a class="card" href="chapter-A.html"><b>Appendices</b><span>Companion material</span><span class="chip planned">planned</span></a></div>
 <p>Detail, language coverage and what is next are on the <a href="roadmap.html">Roadmap</a>. Pages marked <i>planned</i> are outlined from the book but not written yet.</p>
-<h2>How each page works</h2>
+<h2 id="s2">How each page works</h2>
 <ul>
 <li><b>Aim</b> at the top says what you will understand by the end.</li>
 <li>The page title carries the book's section numbers (2.2, 2.7-2.8, ...) so you can read along with the PDF.</li>
 <li>Code blocks have tabs for <b>Python, Go, Rust, C and Zig</b>. They are the real source files from this repo, and your tab choice is remembered.</li>
 <li>Chapter 1 pages end with <b>check yourself</b> questions; code chapters end with <b>exercises</b>. Pages marked <i>extra</i> go beyond the book.</li>
 </ul>
-<h2>Run the code</h2>
-<table><tr><th>Language</th><th>Command</th></tr>
+<h2 id="s3">Run the code</h2>
+<div class="tbl"><table><tr><th>Language</th><th>Command</th></tr>
 <tr><td>Python</td><td><code>python-version/.venv/bin/python python-version/main.py</code></td></tr>
 <tr><td>Go</td><td><code>cd go-version &amp;&amp; go run ./cmd</code></td></tr>
 <tr><td>Rust</td><td><code>cd rust-version &amp;&amp; cargo run</code></td></tr>
 <tr><td>C</td><td><code>cd C-version &amp;&amp; make run</code></td></tr>
-<tr><td>Zig</td><td><code>cd Zig-version &amp;&amp; zig build run</code></td></tr></table>
+<tr><td>Zig</td><td><code>cd Zig-version &amp;&amp; zig build run</code></td></tr></table></div>
 <p>All five print identical output for the tokenizers, BPE and data sampling. Embedding values differ (each language draws its own random weights) but shapes match.</p>
-<h2>Why five languages?</h2>
+<h2 id="s4">Why five languages?</h2>
 <p>Seeing the same idea in a high-level and in a low-level language shows what is essential and what is language plumbing. Python hides memory and uses a tensor library; C and Zig make every allocation visible; Go and Rust sit in between. When a concept is hard to see in one, read it in another.</p>
-<h2>Sources and credit</h2>
+<h2 id="s5">Sources and credit</h2>
 <p>Text follows the book and Sebastian Raschka's companion repo, <a href="https://github.com/rasbt/LLMs-from-scratch">rasbt/LLMs-from-scratch</a>, in my own words. The code here is a separate re-implementation for learning. Buy the book for the full story.</p>
 <p><a href="contributing.html">Want to add a chapter, a page or a language? Start here.</a></p>
-
+</div>
 <p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/index.html">Edit this page on GitHub</a></p>
-<div class="pager"><span></span><a href="roadmap.html">Roadmap &rarr;</a></div>
-</main></div>
+<div class="pager"><span></span><a class="pg next" href="roadmap.html" rel="next"><small> Next &rarr;</small><span>Roadmap</span></a></div>
+</main>
+<aside class="toc" aria-label="On this page"><h4>On this page</h4><a href="#s1">Where we are</a><a href="#s2">How each page works</a><a href="#s3">Run the code</a><a href="#s4">Why five languages?</a><a href="#s5">Sources and credit</a></aside>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script>window.I18N={copy:"Copy",copied:"Copied"}</script>
 <script src="site.js"></script>
 </body></html>

@@ -1,13 +1,28 @@
 <!doctype html>
-<html lang="en"><head>
+<html lang="en" dir="ltr"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>2.6: Data sampling with a sliding window</title>
+<title>2.6: Data sampling with a sliding window · Build an LLM from scratch</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
-</head><body><div class="layout">
-<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
-<h4>Start</h4>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark" disabled>
+<link rel="alternate" hreflang="fa" href="fa/ch02-6-sampling.html">
+</head><body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<button class="icon-btn menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="side"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<a class="brand" href="index.html">LLM from scratch</a>
+<span class="grow"></span>
+<a class="lang-btn" href="fa/ch02-6-sampling.html" hreflang="fa" lang="fa" aria-label="Switch language: فارسی">فارسی</a>
+<button class="icon-btn theme-btn" type="button" aria-label="Toggle theme"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+</header>
+<div class="layout">
+<nav class="side" id="side" aria-label="LLM from scratch">
+<input class="filter" type="search" placeholder="Filter pages…" aria-label="Filter pages" data-nomatch="No page matches.">
+<div class="navlinks"><h4>Start</h4>
 <a class="" href="index.html">Overview</a>
 <a class="" href="roadmap.html">Roadmap</a>
 <h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
@@ -21,7 +36,7 @@
 <a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
 <a class="" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
 <a class="" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
-<a class=" on" href="ch02-6-sampling.html">2.6 Sliding window</a>
+<a class=" on" href="ch02-6-sampling.html" aria-current="page">2.6 Sliding window</a>
 <a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
 <a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
 <a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
@@ -43,10 +58,13 @@
 <a class="" href="reference.html">Code reference</a>
 <a class="" href="contributing.html">Contributing</a>
 <a class="" href="glossary.html">Glossary</a>
-<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
-<main><h1>2.6: Data sampling with a sliding window</h1>
-<p class="meta">Book section 2.6 · code in Python, Go, Rust, C, Zig</p>
-<div class="aim"><b>Aim.</b> Turn one long list of token IDs into training examples for <i>next-token prediction</i>.</div>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></div>
+</nav>
+<div class="scrim" hidden></div>
+<main id="main" tabindex="-1"><h1>2.6: Data sampling with a sliding window</h1>
+<p class="meta">Book section <span dir="ltr">2.6</span> · code in Python, Go, Rust, C, Zig</p>
+
+<div><div class="aim"><b>Aim.</b> Turn one long list of token IDs into training examples for <i>next-token prediction</i>.</div>
 <p>BPE-encode the whole story: <b>5,145</b> tokens. Each example is a window of IDs (the <b>input</b>) and the same window shifted by one (the <b>target</b>). Every position in a window is a free question: "given these tokens, what comes next?"</p>
 <pre class="out">x: [290, 4920, 2241, 287]
 y:      [4920, 2241, 287, 257]
@@ -62,7 +80,7 @@ as text:
  and established himself ----&gt;  in
  and established himself in ----&gt;  a</pre>
 <p>Left of the arrow is what the model sees, right is what it must predict. (The book first drops the first 50 tokens for a more interesting passage.)</p>
-<h2>Dataset and DataLoader</h2>
+<h2 id="s1">Dataset and DataLoader</h2>
 <ul>
 <li><b>Dataset</b> (<code>GPTDatasetV1</code>): holds every (input, target) window as tensors. Python extends torch's <code>Dataset</code>; Go and Rust use plain slices.</li>
 <li><b>max_length</b>: window size (the context). Tiny here (4); real training uses 256 or more.</li>
@@ -75,8 +93,8 @@ as text:
 
 stride=4, batch_size=8: inputs shape (8, 4), no overlap, no word skipped</pre>
 <div class="tip">The book uses <code>stride = max_length</code> for real batches: the whole text is used but nothing overlaps, since more overlap risks overfitting. Batch size is a trade-off: small uses less memory but gives noisier updates.</div>
-<h2>Code</h2>
-<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button><button data-lang="c">C</button><button data-lang="zig">Zig</button></div><div class="pane" data-lang="python"><div class="file">python-version/tokenization/dataset.py</div><pre><code class="language-python">&quot;&quot;&quot;Step 4 - Sliding-window data sampling for next-token prediction.
+<h2 id="s2">Code</h2>
+<div class="tabs"><div class="tabbar" role="tablist" dir="ltr"><button role="tab" type="button" id="t-ch02-6-sampling-python" aria-controls="p-ch02-6-sampling-python" data-lang="python">Python</button><button role="tab" type="button" id="t-ch02-6-sampling-go" aria-controls="p-ch02-6-sampling-go" data-lang="go">Go</button><button role="tab" type="button" id="t-ch02-6-sampling-rust" aria-controls="p-ch02-6-sampling-rust" data-lang="rust">Rust</button><button role="tab" type="button" id="t-ch02-6-sampling-c" aria-controls="p-ch02-6-sampling-c" data-lang="c">C</button><button role="tab" type="button" id="t-ch02-6-sampling-zig" aria-controls="p-ch02-6-sampling-zig" data-lang="zig">Zig</button></div><div class="pane" role="tabpanel" id="p-ch02-6-sampling-python" aria-labelledby="t-ch02-6-sampling-python" data-lang="python"><div class="file" dir="ltr">python-version/tokenization/dataset.py</div><pre dir="ltr"><code class="language-python">&quot;&quot;&quot;Step 4 - Sliding-window data sampling for next-token prediction.
 
 Given a long list of token IDs, cut it into overlapping windows:
 
@@ -123,7 +141,7 @@ def create_dataloader_v1(txt, tokenizer, batch_size=4, max_length=256, stride=12
     &quot;&quot;&quot;
     dataset = GPTDatasetV1(txt, tokenizer, max_length, stride)
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last)
-</code></pre></div><div class="pane" data-lang="go"><div class="file">go-version/tokenization/dataset.go</div><pre><code class="language-go">package tokenization
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-6-sampling-go" aria-labelledby="t-ch02-6-sampling-go" data-lang="go"><div class="file" dir="ltr">go-version/tokenization/dataset.go</div><pre dir="ltr"><code class="language-go">package tokenization
 
 // Step 4 - sliding-window data sampling for next-token prediction.
 //
@@ -168,7 +186,7 @@ func (d *GPTDataset) Batches(batchSize int) (inputs, targets [][][]int) {
 	}
 	return inputs, targets
 }
-</code></pre><div class="file">go-version/tokenization/dataloader.go</div><pre><code class="language-go">package tokenization
+</code></pre><div class="file" dir="ltr">go-version/tokenization/dataloader.go</div><pre dir="ltr"><code class="language-go">package tokenization
 
 import &quot;math/rand&quot;
 
@@ -223,7 +241,7 @@ func (l *DataLoader) Epoch() []Batch {
 	}
 	return batches
 }
-</code></pre></div><div class="pane" data-lang="rust"><div class="file">rust-version/src/tokenization/dataset.rs</div><pre><code class="language-rust">//! Step 4 - sliding-window data sampling for next-token prediction.
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-6-sampling-rust" aria-labelledby="t-ch02-6-sampling-rust" data-lang="rust"><div class="file" dir="ltr">rust-version/src/tokenization/dataset.rs</div><pre dir="ltr"><code class="language-rust">//! Step 4 - sliding-window data sampling for next-token prediction.
 //!
 //! ```text
 //! ids      = [10 11 12 13 14 15]
@@ -278,7 +296,7 @@ impl GptDataset {
             .zip(self.target_ids.chunks_exact(batch_size))
     }
 }
-</code></pre><div class="file">rust-version/src/tokenization/dataloader.rs</div><pre><code class="language-rust">//! Step 4b - batching. Mirrors torch&#x27;s `DataLoader`.
+</code></pre><div class="file" dir="ltr">rust-version/src/tokenization/dataloader.rs</div><pre dir="ltr"><code class="language-rust">//! Step 4b - batching. Mirrors torch&#x27;s `DataLoader`.
 //!
 //! Why batch? The GPU processes many windows at once, which is much faster.
 //! Why shuffle? Windows in book order make training swing; random order smooths it.
@@ -342,7 +360,7 @@ impl&lt;&#x27;a&gt; DataLoader&lt;&#x27;a&gt; {
             .collect()
     }
 }
-</code></pre></div><div class="pane" data-lang="c"><div class="file">C-version/tokenization/dataset.h</div><pre><code class="language-c">/* Step 4 (book 2.6) - sliding-window data sampling for next-token prediction.
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-6-sampling-c" aria-labelledby="t-ch02-6-sampling-c" data-lang="c"><div class="file" dir="ltr">C-version/tokenization/dataset.h</div><pre dir="ltr"><code class="language-c">/* Step 4 (book 2.6) - sliding-window data sampling for next-token prediction.
  *
  *   ids      = [10 11 12 13 14 15]
  *   window 0: input [10 11 12 13]  target [11 12 13 14]
@@ -369,7 +387,7 @@ GPTDataset gpt_dataset_new(const int *ids, size_t n_ids, size_t max_length, size
 void gpt_dataset_get(const GPTDataset *d, size_t idx, const int **input, const int **target);
 
 #endif
-</code></pre><div class="file">C-version/tokenization/dataset.c</div><pre><code class="language-c">#include &quot;dataset.h&quot;
+</code></pre><div class="file" dir="ltr">C-version/tokenization/dataset.c</div><pre dir="ltr"><code class="language-c">#include &quot;dataset.h&quot;
 
 GPTDataset gpt_dataset_new(const int *ids, size_t n_ids, size_t max_length, size_t stride) {
     GPTDataset d = {ids, n_ids, max_length, stride, 0};
@@ -383,7 +401,7 @@ void gpt_dataset_get(const GPTDataset *d, size_t idx, const int **input, const i
     *input = d-&gt;ids + idx * d-&gt;stride;
     *target = *input + 1; /* the same window, shifted by one */
 }
-</code></pre><div class="file">C-version/tokenization/dataloader.h</div><pre><code class="language-c">/* Step 4b (book 2.6) - batching. Mirrors torch&#x27;s DataLoader.
+</code></pre><div class="file" dir="ltr">C-version/tokenization/dataloader.h</div><pre dir="ltr"><code class="language-c">/* Step 4b (book 2.6) - batching. Mirrors torch&#x27;s DataLoader.
  *
  * Why batch? The GPU processes many windows at once, which is much faster.
  * Why shuffle? Windows in book order make training swing; random order smooths it.
@@ -417,7 +435,7 @@ size_t dataloader_start_epoch(DataLoader *dl);
 size_t dataloader_batch(const DataLoader *dl, size_t b, int *inputs, int *targets);
 
 #endif
-</code></pre><div class="file">C-version/tokenization/dataloader.c</div><pre><code class="language-c">#include &quot;dataloader.h&quot;
+</code></pre><div class="file" dir="ltr">C-version/tokenization/dataloader.c</div><pre dir="ltr"><code class="language-c">#include &quot;dataloader.h&quot;
 
 #include &lt;stdlib.h&gt;
 #include &lt;string.h&gt;
@@ -452,7 +470,7 @@ size_t dataloader_batch(const DataLoader *dl, size_t b, int *inputs, int *target
     }
     return rows;
 }
-</code></pre></div><div class="pane" data-lang="zig"><div class="file">Zig-version/src/tokenization/dataset.zig</div><pre><code class="language-zig">//! Step 4 (book 2.6) - sliding-window data sampling for next-token prediction.
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-6-sampling-zig" aria-labelledby="t-ch02-6-sampling-zig" data-lang="zig"><div class="file" dir="ltr">Zig-version/src/tokenization/dataset.zig</div><pre dir="ltr"><code class="language-zig">//! Step 4 (book 2.6) - sliding-window data sampling for next-token prediction.
 //!
 //! ```
 //! ids      = [10 11 12 13 14 15]
@@ -506,7 +524,7 @@ test &quot;stride equal to max_length gives no overlap&quot; {
     const ds = GptDataset.init(&amp;ids, 4, 4);
     try std.testing.expectEqual(@as(usize, 2), ds.count);
 }
-</code></pre><div class="file">Zig-version/src/tokenization/dataloader.zig</div><pre><code class="language-zig">//! Step 4b (book 2.6) - batching. Mirrors torch&#x27;s `DataLoader`.
+</code></pre><div class="file" dir="ltr">Zig-version/src/tokenization/dataloader.zig</div><pre dir="ltr"><code class="language-zig">//! Step 4b (book 2.6) - batching. Mirrors torch&#x27;s `DataLoader`.
 //!
 //! Why batch? The GPU processes many windows at once, which is much faster.
 //! Why shuffle? Windows in book order make training swing; random order smooths it.
@@ -583,18 +601,21 @@ test &quot;same seed gives the same shuffle&quot; {
 }
 </code></pre></div></div>
 <div class="tip">The loop stops at <code>len - max_length</code> because the target reaches one token past the input.</div>
-<h2>Exercises</h2>
+<h2 id="s3">Exercises</h2>
 <ol>
 <li>Book exercise 2.2: run with <code>max_length=2, stride=2</code> and <code>max_length=8, stride=2</code>. How do the windows change?</li>
 <li>Set <code>stride=1</code>. How many windows now, versus <code>stride=4</code>?</li>
 </ol>
-
+</div>
 <p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/ch02-6-sampling.html">Edit this page on GitHub</a></p>
-<div class="pager"><a href="ch02-5-bpe.html">&larr; 2.5 Byte pair encoding</a><a href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions &rarr;</a></div>
-</main></div>
+<div class="pager"><a class="pg prev" href="ch02-5-bpe.html" rel="prev"><small>&larr; Previous </small><span>2.5 Byte pair encoding</span></a><a class="pg next" href="ch02-7-embeddings.html" rel="next"><small> Next &rarr;</small><span>2.7-2.8 Embeddings &amp; positions</span></a></div>
+</main>
+<aside class="toc" aria-label="On this page"><h4>On this page</h4><a href="#s1">Dataset and DataLoader</a><a href="#s2">Code</a><a href="#s3">Exercises</a></aside>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script>window.I18N={copy:"Copy",copied:"Copied"}</script>
 <script src="site.js"></script>
 </body></html>

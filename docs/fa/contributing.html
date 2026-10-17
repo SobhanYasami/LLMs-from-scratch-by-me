@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="fa" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مشارکت و گسترش · ساخت یک LLM از صفر</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark" disabled>
+<link rel="alternate" hreflang="en" href="../contributing.html">
+</head><body>
+<a class="skip" href="#main">پرش به محتوا</a>
+<header class="top">
+<button class="icon-btn menu-btn" type="button" aria-label="منو" aria-expanded="false" aria-controls="side"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<a class="brand" href="index.html">ساخت LLM از صفر</a>
+<span class="grow"></span>
+<a class="lang-btn" href="../contributing.html" hreflang="en" lang="en" aria-label="تغییر زبان: English">English</a>
+<button class="icon-btn theme-btn" type="button" aria-label="تغییر پوسته"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+</header>
+<div class="layout">
+<nav class="side" id="side" aria-label="ساخت LLM از صفر">
+<input class="filter" type="search" placeholder="جستجو در صفحه‌ها…" aria-label="جستجو در صفحه‌ها" data-nomatch="صفحه‌ای پیدا نشد.">
+<div class="navlinks"><h4>شروع</h4>
+<a class="" href="index.html">مرور کلی</a>
+<a class="" href="roadmap.html">نقشهٔ راه</a>
+<h4><a class="h4link" href="chapter-1.html">فصل 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 LLM چیست؟</a>
+<a class="" href="ch01-stages.html">1.3، 1.5 مراحل آموزش و داده</a>
+<a class="" href="ch01-transformer.html">1.4 ترنسفورمر و وظایف</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT و نقشهٔ راه</a>
+<h4><a class="h4link" href="chapter-2.html">فصل 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 مرور و امبدینگ‌ها</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 توکن‌سازی متن</a>
+<a class="" href="ch02-3-token-ids.html">2.3 شناسهٔ توکن</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 توکن‌های ویژه</a>
+<a class="" href="ch02-5-bpe.html">2.5 رمزگذاری جفت‌بایت</a>
+<a class="" href="ch02-6-sampling.html">2.6 پنجرهٔ لغزان</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 امبدینگ و جایگاه</a>
+<a class="extra" href="bpe-walkthrough.html">ردگیری BPE</a>
+<a class="extra" href="embedding-vs-matmul.html">امبدینگ در برابر matmul</a>
+<a class="extra" href="dataloader-intuition.html">شهود دیتالودر</a>
+<h4><a class="h4link" href="chapter-3.html">فصل 3</a></h4>
+<a class="" href="ch03-1-long-sequences.html">3.1-3.2 چرا توجه</a>
+<a class="" href="ch03-3-simple-attention.html">3.3 توجه ساده</a>
+<a class="" href="ch03-4-self-attention.html">3.4 وزن‌های آموزش‌پذیر</a>
+<a class="" href="ch03-5-causal.html">3.5 توجه علّی</a>
+<a class="" href="ch03-6-multihead.html">3.6 چندسَری</a>
+<a class="extra" href="scaling-sqrt-dk.html">چرا مقیاس sqrt(d_k)</a>
+<a class="extra" href="ch03-demo-output.html">خروجی دموی فصل ۳</a>
+<h4><a class="h4link" href="chapter-4.html">فصل 4</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-5.html">فصل 5</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-6.html">فصل 6</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-7.html">فصل 7</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-A.html">پیوست‌ها</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4>مرجع</h4>
+<a class="" href="reference.html">مرجع کد</a>
+<a class=" on" href="contributing.html" aria-current="page">مشارکت</a>
+<a class="" href="glossary.html">واژه‌نامه</a>
+<h4>منبع</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">این مخزن</a><a href="https://github.com/rasbt/LLMs-from-scratch">مخزن راشکا</a></div>
+</nav>
+<div class="scrim" hidden></div>
+<main id="main" tabindex="-1"><h1>مشارکت و گسترش</h1>
+
+
+<div><p class="lede">این سایت برای رشد طراحی شده است. یک صفحهٔ جدید یک فایل است؛ یک فصل جدید چند خط داده. بقیه‌چیز (ناوبری، نقشهٔ راه، پیشرفت، صفحهٔ فصل‌ها) خودکار ساخته می‌شود.</p>
+<h2 id="s1">اجزا</h2>
+<div class="tbl"><table><tr><th>کجا</th><th>چه چیزی دارد</th></tr>
+<tr><td><code>docs/pages/*.html</code></td><td>یک فایل برای هر صفحه: یک بلوک front matter، سپس HTML.</td></tr>
+<tr><td><code>docs/pages/fa/*.html</code></td><td>ترجمه‌های فارسی، یک فایل برای هر صفحهٔ انگلیسی.</td></tr>
+<tr><td><code>docs/syllabus.py</code></td><td>کل کتاب (فصل‌ها و بخش‌ها)، زبان‌ها، و اینکه هر تب کد کدام فایل‌های منبع را نشان می‌دهد.</td></tr>
+<tr><td><code>docs/i18n.py</code></td><td>متن‌های رابط کاربری و نام فصل‌ها به فارسی.</td></tr>
+<tr><td><code>docs/build.py</code></td><td>سازنده. به‌ندرت نیاز به ویرایش دارد.</td></tr>
+<tr><td><code>docs/style.css</code>، <code>site.js</code></td><td>ظاهر و رفتار (تب‌های زبان، پوستهٔ تیره، منوی موبایل).</td></tr></table></div>
+<p>با <code>python3 docs/build.py</code> بسازید، سپس HTML تولیدشده را همراه تغییراتتان کامیت کنید.</p>
+<h2 id="s2">افزودن صفحه</h2>
+<ol>
+<li>فایل <code>docs/pages/ch03-3-self-attention.html</code> را بسازید که با این شروع شود:
+<pre class="out">---
+title: 3.3: A simple self-attention mechanism
+nav: 3.3 Self-attention
+chapter: 3
+section: 3.3
+order: 30
+code: attention_simple
+---
+&lt;div class="aim"&gt;&lt;b&gt;Aim.&lt;/b&gt; ...&lt;/div&gt;
+...
+&#123;&#123;code&#125;&#125;</pre></li>
+<li><code>chapter</code> شمارهٔ فصل است (یا <code>A</code> برای پیوست‌ها)؛ <code>section</code> بخش‌های کتابی را که صفحه پوشش می‌دهد فهرست می‌کند (برای دو بخش <code>2.7, 2.8</code>)؛ <code>order</code> صفحه‌ها را درون یک فصل مرتب می‌کند.</li>
+<li><code>&#123;&#123;code&#125;&#125;</code> را جایی بگذارید که تب‌های Python / Go / Rust / C / Zig باید بیایند، و <code>attention_simple</code> را در <code>CODE</code> درون <code>syllabus.py</code> تعریف کنید (پایین را ببینید).</li>
+<li>سازنده را اجرا کنید. بخش در نقشهٔ راه خودبه‌خود از <i>برنامه‌ریزی‌شده</i> به <i>آماده</i> تغییر می‌کند.</li>
+</ol>
+<h2 id="s3">افزودن مطلب تکمیلی</h2>
+<p>مطلب تکمیلی از کتاب فراتر می‌رود. همان front matter را به کار ببرید، <code>extra: true</code> اضافه کنید و <code>section</code> را خالی بگذارید. زیر فصلش با علامت + و در صفحهٔ فصل ظاهر می‌شود.</p>
+<h2 id="s4">افزودن کد برای یک فصل</h2>
+<ol>
+<li>همان ماژول را در پوشهٔ هر زبان با نام‌های یکسان بنویسید (چیدمان را در <a href="reference.html">صفحهٔ مرجع</a> ببینید). خروجی‌ها را میان زبان‌ها یکی کنید.</li>
+<li>در <code>docs/syllabus.py</code> یک مدخل به <code>CODE</code> اضافه کنید و فایل‌هایی را که تب هر زبان نشان می‌دهد فهرست کنید، مثلاً <code>"attention_simple": {"python": ["attention/simple.py"], "go": [...], ...}</code>. زبانی که جا بیندازید «هنوز پیاده‌سازی نشده» نشان می‌دهد.</li>
+<li><code>langs</code> فصل را در <code>CHAPTERS</code> روی زبان‌هایی که اکنون آن را پیاده کرده‌اند تنظیم کنید. ماتریس زبان‌ها در نقشهٔ راه به‌روز می‌شود.</li>
+</ol>
+<h2 id="s5">افزودن زبان برنامه‌نویسی</h2>
+<ol>
+<li>پوشهٔ <code>Lang-version/</code> را با همان چیدمان و یک README بسازید.</li>
+<li>یک خط به <code>LANGS</code> در <code>docs/syllabus.py</code> اضافه کنید، و اگر زبان لازم دارد، دستور زبان highlight.js را در <code>build.py</code>.</li>
+<li>فایل‌هایش را به هر مدخل <code>CODE</code> اضافه کنید و با رسیدن به فصل‌ها در <code>langs</code> آن‌ها بگنجانید.</li>
+</ol>
+<h2 id="s6">افزودن ترجمه</h2>
+<p>سایت به انگلیسی و فارسی ساخته می‌شود. صفحهٔ ترجمه‌شده فایلی با <b>همان نام</b> در <code>docs/pages/fa/</code> است. صفحهٔ انگلیسی را کپی کنید، front matter (<code>title</code>، <code>nav</code>) و متن را ترجمه کنید، و <code>chapter</code>، <code>section</code>، <code>order</code>، <code>code</code> و <code>extra</code> را دست نزنید (به هر حال از صفحهٔ انگلیسی برداشته می‌شوند). بلوک‌های کد، بلوک‌های خروجی و <code>&#123;&#123;code&#125;&#125;</code> را تغییر ندهید.</p>
+<ul>
+<li>صفحه‌هایی که فایل فارسی ندارند متن انگلیسی را درون سایت فارسی نشان می‌دهند، با یک اعلان و نشان <b>EN</b> در ناوبری. بنابراین سایت نیمه‌ترجمه‌شده هم همیشه کار می‌کند.</li>
+<li>عنوان فصل‌ها، خلاصه‌ها و نام بخش‌ها از <code>docs/i18n.py</code> (<code>FA_CHAPTERS</code>) می‌آید؛ دکمه‌ها و برچسب‌ها در <code>UI</code> همان‌جا هستند. یک زبان جدید یعنی یک مدخل دیگر در <code>LANGS_UI</code> و <code>UI</code>.</li>
+</ul>
+<h2 id="s7">افزودن فصل</h2>
+<p>فصل‌های ۳ تا ۷ و پیوست‌ها از پیش در <code>syllabus.py</code> به‌صورت برنامه‌ریزی‌شده طرح شده‌اند. برای اصلاح یکی، فهرست <code>sections</code> آن را ویرایش کنید؛ برای نوشتنش، صفحه‌ها را مانند بالا اضافه کنید.</p>
+<h2 id="s8">راهنمای نوشتن</h2>
+<ul>
+<li>هر صفحه را با یک <b>هدف</b> شروع کنید: خواننده چه چیزی را خواهد فهمید.</li>
+<li>نخست به زبان ساده توضیح دهید، سپس کد نشان دهید. شمارهٔ بخش‌های کتاب را در عنوان‌ها نگه دارید.</li>
+<li>عددهای واقعی از اجراهای واقعی بهتر از عددهای ساختگی‌اند. اگر خروجی می‌چسبانید، نخست کد را اجرا کنید.</li>
+<li>فقط با کلمات خودتان. متن یا شکل‌های کتاب را کپی نکنید.</li>
+<li>با تمرین یا پرسش «خودآزمایی» تمام کنید و پاسخ‌ها را در بلوک <code>&lt;details class="qa"&gt;</code> پنهان کنید.</li>
+</ul>
+</div>
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/fa/contributing.html">ویرایش این صفحه در GitHub</a></p>
+<div class="pager"><a class="pg prev" href="reference.html" rel="prev"><small>&rarr; قبلی </small><span>مرجع کد</span></a><a class="pg next" href="glossary.html" rel="next"><small> بعدی &larr;</small><span>واژه‌نامه</span></a></div>
+</main>
+<aside class="toc" aria-label="در این صفحه"><h4>در این صفحه</h4><a href="#s1">اجزا</a><a href="#s2">افزودن صفحه</a><a href="#s3">افزودن مطلب تکمیلی</a><a href="#s4">افزودن کد برای یک فصل</a><a href="#s5">افزودن زبان برنامه‌نویسی</a><a href="#s6">افزودن ترجمه</a><a href="#s7">افزودن فصل</a><a href="#s8">راهنمای نوشتن</a></aside>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script>window.I18N={copy:"کپی",copied:"کپی شد"}</script>
+<script src="../site.js"></script>
+</body></html>

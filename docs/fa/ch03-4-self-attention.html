@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="fa" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3.4: خودتوجهی با وزن‌های آموزش‌پذیر · ساخت یک LLM از صفر</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark" disabled>
+<link rel="alternate" hreflang="en" href="../ch03-4-self-attention.html">
+</head><body>
+<a class="skip" href="#main">پرش به محتوا</a>
+<header class="top">
+<button class="icon-btn menu-btn" type="button" aria-label="منو" aria-expanded="false" aria-controls="side"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<a class="brand" href="index.html">ساخت LLM از صفر</a>
+<span class="grow"></span>
+<a class="lang-btn" href="../ch03-4-self-attention.html" hreflang="en" lang="en" aria-label="تغییر زبان: English">English</a>
+<button class="icon-btn theme-btn" type="button" aria-label="تغییر پوسته"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+</header>
+<div class="layout">
+<nav class="side" id="side" aria-label="ساخت LLM از صفر">
+<input class="filter" type="search" placeholder="جستجو در صفحه‌ها…" aria-label="جستجو در صفحه‌ها" data-nomatch="صفحه‌ای پیدا نشد.">
+<div class="navlinks"><h4>شروع</h4>
+<a class="" href="index.html">مرور کلی</a>
+<a class="" href="roadmap.html">نقشهٔ راه</a>
+<h4><a class="h4link" href="chapter-1.html">فصل 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 LLM چیست؟</a>
+<a class="" href="ch01-stages.html">1.3، 1.5 مراحل آموزش و داده</a>
+<a class="" href="ch01-transformer.html">1.4 ترنسفورمر و وظایف</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT و نقشهٔ راه</a>
+<h4><a class="h4link" href="chapter-2.html">فصل 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 مرور و امبدینگ‌ها</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 توکن‌سازی متن</a>
+<a class="" href="ch02-3-token-ids.html">2.3 شناسهٔ توکن</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 توکن‌های ویژه</a>
+<a class="" href="ch02-5-bpe.html">2.5 رمزگذاری جفت‌بایت</a>
+<a class="" href="ch02-6-sampling.html">2.6 پنجرهٔ لغزان</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 امبدینگ و جایگاه</a>
+<a class="extra" href="bpe-walkthrough.html">ردگیری BPE</a>
+<a class="extra" href="embedding-vs-matmul.html">امبدینگ در برابر matmul</a>
+<a class="extra" href="dataloader-intuition.html">شهود دیتالودر</a>
+<h4><a class="h4link" href="chapter-3.html">فصل 3</a></h4>
+<a class="" href="ch03-1-long-sequences.html">3.1-3.2 چرا توجه</a>
+<a class="" href="ch03-3-simple-attention.html">3.3 توجه ساده</a>
+<a class=" on" href="ch03-4-self-attention.html" aria-current="page">3.4 وزن‌های آموزش‌پذیر</a>
+<a class="" href="ch03-5-causal.html">3.5 توجه علّی</a>
+<a class="" href="ch03-6-multihead.html">3.6 چندسَری</a>
+<a class="extra" href="scaling-sqrt-dk.html">چرا مقیاس sqrt(d_k)</a>
+<a class="extra" href="ch03-demo-output.html">خروجی دموی فصل ۳</a>
+<h4><a class="h4link" href="chapter-4.html">فصل 4</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-5.html">فصل 5</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-6.html">فصل 6</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-7.html">فصل 7</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-A.html">پیوست‌ها</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4>مرجع</h4>
+<a class="" href="reference.html">مرجع کد</a>
+<a class="" href="contributing.html">مشارکت</a>
+<a class="" href="glossary.html">واژه‌نامه</a>
+<h4>منبع</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">این مخزن</a><a href="https://github.com/rasbt/LLMs-from-scratch">مخزن راشکا</a></div>
+</nav>
+<div class="scrim" hidden></div>
+<main id="main" tabindex="-1"><h1><bdi dir="ltr">3.4:</bdi> خودتوجهی با وزن‌های آموزش‌پذیر</h1>
+<p class="meta">بخش کتاب <span dir="ltr">3.4</span> · کد به زبان Python, Go, Rust, C, Zig</p>
+
+<div><div class="aim"><b>هدف.</b> سه ماتریس وزن اضافه کنید تا مدل بتواند یاد بگیرد دنبال چه بگردد، و ببینید چرا امتیازها بر جذر بُعد کلید تقسیم می‌شوند.</div>
+<p>این سازوکارِ درون ترنسفورمر اصلی و هر GPT است و <b>توجه ضرب داخلی مقیاس‌شده</b> نام دارد. ساختار همان 3.3 است. تفاوت: بردارهایی که مقایسه می‌کنیم دیگر امبدینگ‌های خام نیستند بلکه <i>تصویرهای</i> آن‌ها هستند.</p>
+<h2 id="s1">Query، key، value</h2>
+<div class="tbl"><table><tr><th>نقش</th><th>محاسبه</th><th>چگونه به آن فکر کنیم</th></tr>
+<tr><td>query</td><td><code>x @ W_query</code></td><td>«دنبال چه می‌گردم؟» (یک پرس‌وجو)</td></tr>
+<tr><td>key</td><td><code>x @ W_key</code></td><td>«چه چیزی به جست‌وجوها عرضه می‌کنم؟» (یک نمایه)</td></tr>
+<tr><td>value</td><td><code>x @ W_value</code></td><td>«اگر انتخاب شوم چه چیزی تحویل می‌دهم؟» (محتوای ذخیره‌شده)</td></tr></table></div>
+<p>نام‌ها از پایگاه‌داده می‌آیند: یک query را با key ها تطبیق می‌دهید، سپس value های متناظر را می‌خوانید. اینجا مدل W_query، W_key و W_value را در آموزش <i>یاد می‌گیرد</i>.</p>
+<h2 id="s2">گام‌به‌گام، برای توکن x2</h2>
+<p>ورودی‌های سه‌بعدی را به <code>d_out = 2</code> می‌بریم. (در مدل‌های شبیه GPT معمولاً d_in و d_out برابرند؛ اندازه‌های متفاوت فقط دنبال کردن شکل‌ها را آسان‌تر می‌کند.) وزن‌های زیر وزن‌های کتاب‌اند (<code>torch.manual_seed(123)</code>).</p>
+<pre class="out">query_2 = x2 @ W_query = [0.4306, 1.4551]
+keys   shape (6, 2)     values shape (6, 2)     (all tokens, projected)
+
+scores_2 = query_2 @ keys.T
+         = [1.2705, 1.8524, 1.8111, 1.0795, 0.5577, 1.5440]
+
+weights_2 = softmax(scores_2 / sqrt(d_k))      d_k = 2
+          = [0.1500, 0.2264, 0.2199, 0.1311, 0.0906, 0.1820]
+
+context_2 = weights_2 @ values = [0.3061, 0.8210]</pre>
+<p>فقط منبع بردارها عوض شد: امتیازها query را با key مقایسه می‌کنند (نه ورودی را با ورودی)، و زمینه <b>value ها</b> را می‌آمیزد (نه ورودی‌های خام را).</p>
+<h2 id="s3">چرا بر sqrt(d_k) تقسیم می‌کنیم؟</h2>
+<p>ضرب داخلی با افزایش تعداد بُعدها بزرگ می‌شود. امتیازهای بزرگ softmax را به توزیع «یک برنده» سخت می‌کشانند که در آن گرادیان‌ها تقریباً از بین می‌روند و یادگیری متوقف می‌شود. تقسیم بر جذر بُعد کلید امتیازها را در بازه‌ای نگه می‌دارد که softmax نرم بماند. <a href="scaling-sqrt-dk.html">مطلب تکمیلی دربارهٔ مقیاس</a> عددهای واقعی را نشان می‌دهد.</p>
+<h2 id="s4">همهٔ توکن‌ها یک‌جا</h2>
+<pre class="out">all context vectors (6 x 2):
+  [0.2996, 0.8053]
+  [0.3061, 0.8210]   &lt;- row 2 equals context_2 above
+  [0.3058, 0.8203]
+  [0.2948, 0.7939]
+  [0.2927, 0.7891]
+  [0.2990, 0.8040]</pre>
+<div class="tip"><b>پارامترهای وزن</b> (W_query، W_key، W_value: یادگرفته‌شده و پس از آموزش ثابت) را با <b>وزن‌های توجه</b> (خروجی softmax: برای هر ورودی تازه محاسبه می‌شود) اشتباه نگیرید.</div>
+<h2 id="s5">کد</h2>
+<div class="tabs"><div class="tabbar" role="tablist" dir="ltr"><button role="tab" type="button" id="t-ch03-4-self-attention-python" aria-controls="p-ch03-4-self-attention-python" data-lang="python">Python</button><button role="tab" type="button" id="t-ch03-4-self-attention-go" aria-controls="p-ch03-4-self-attention-go" data-lang="go">Go</button><button role="tab" type="button" id="t-ch03-4-self-attention-rust" aria-controls="p-ch03-4-self-attention-rust" data-lang="rust">Rust</button><button role="tab" type="button" id="t-ch03-4-self-attention-c" aria-controls="p-ch03-4-self-attention-c" data-lang="c">C</button><button role="tab" type="button" id="t-ch03-4-self-attention-zig" aria-controls="p-ch03-4-self-attention-zig" data-lang="zig">Zig</button></div><div class="pane" role="tabpanel" id="p-ch03-4-self-attention-python" aria-labelledby="t-ch03-4-self-attention-python" data-lang="python"><div class="file" dir="ltr">python-version/attention/self_attention.py</div><pre dir="ltr"><code class="language-python">&quot;&quot;&quot;Step 7 (book 3.4) - self-attention with trainable weights (scaled dot-product).
+
+Three weight matrices turn each input vector into three roles:
+
+    query = x @ W_query    &quot;what am I looking for?&quot;
+    key   = x @ W_key      &quot;what do I offer to a search?&quot;
+    value = x @ W_value    &quot;what do I hand over if I am chosen?&quot;
+
+    scores  = query @ key.T                 how well does each query match each key?
+    weights = softmax(scores / sqrt(d_k))   scale, then normalise each row
+    context = weights @ value               mix the values
+
+Why divide by sqrt(d_k)? Big dot products push softmax towards a hard 0/1
+choice, which makes gradients tiny. Scaling keeps training healthy.
+
+Tip: do not confuse *weight parameters* (W_*, learned) with *attention weights*
+(softmax output, computed fresh for every input).
+&quot;&quot;&quot;
+
+import math
+
+import torch
+from torch import nn
+
+from .rng import Rng
+
+
+class SelfAttention(nn.Module):
+    def __init__(self, w_query: torch.Tensor, w_key: torch.Tensor, w_value: torch.Tensor):
+        super().__init__()
+        self.W_query = nn.Parameter(w_query)
+        self.W_key = nn.Parameter(w_key)
+        self.W_value = nn.Parameter(w_value)
+
+    @classmethod
+    def random(cls, d_in: int, d_out: int, rng: Rng) -&gt; &quot;SelfAttention&quot;:
+        &quot;&quot;&quot;Weights drawn uniform in [0, 1), in query, key, value order.&quot;&quot;&quot;
+        return cls(rng.rand(d_in, d_out), rng.rand(d_in, d_out), rng.rand(d_in, d_out))
+
+    def attention_weights(self, x: torch.Tensor) -&gt; torch.Tensor:
+        queries, keys = x @ self.W_query, x @ self.W_key
+        scores = queries @ keys.T
+        return torch.softmax(scores / math.sqrt(keys.shape[-1]), dim=-1)
+
+    def forward(self, x: torch.Tensor) -&gt; torch.Tensor:
+        &quot;&quot;&quot;``x`` is [T, d_in]; returns context vectors [T, d_out].&quot;&quot;&quot;
+        return self.attention_weights(x) @ (x @ self.W_value)
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch03-4-self-attention-go" aria-labelledby="t-ch03-4-self-attention-go" data-lang="go"><div class="file" dir="ltr">go-version/attention/self_attention.go</div><pre dir="ltr"><code class="language-go">package attention
+
+import &quot;math&quot;
+
+// Step 7 (book 3.4) - self-attention with trainable weights (scaled dot-product).
+//
+// Three weight matrices turn each input vector into three roles:
+//
+//	query = x x W_query    &quot;what am I looking for?&quot;
+//	key   = x x W_key      &quot;what do I offer to a search?&quot;
+//	value = x x W_value    &quot;what do I hand over if I am chosen?&quot;
+//
+//	scores  = query x key^T                 how well does each query match each key?
+//	weights = softmax(scores / sqrt(d_k))   scale, then normalise each row
+//	context = weights x value               mix the values
+//
+// Why divide by sqrt(d_k)? Big dot products push softmax towards a hard 0/1
+// choice, which makes gradients tiny. Scaling keeps training healthy.
+//
+// Tip: do not confuse weight parameters (W_*, learned) with attention weights
+// (softmax output, computed fresh for every input).
+
+type SelfAttention struct {
+	WQuery, WKey, WValue Matrix
+}
+
+// NewRandomSelfAttention draws weights uniform in [0, 1), in query, key, value order.
+func NewRandomSelfAttention(dIn, dOut int, rng *Rng) *SelfAttention {
+	return &amp;SelfAttention{rng.Rand(dIn, dOut), rng.Rand(dIn, dOut), rng.Rand(dIn, dOut)}
+}
+
+func scaleBySqrt(scores Matrix, dK int) Matrix {
+	return Scale(scores, 1/float32(math.Sqrt(float64(dK))))
+}
+
+// AttentionWeights takes x [T, d_in] and returns [T, T] weights.
+func (a *SelfAttention) AttentionWeights(x Matrix) Matrix {
+	queries, keys := MatMul(x, a.WQuery), MatMul(x, a.WKey)
+	scores := MatMul(queries, Transpose(keys))
+	return SoftmaxRows(scaleBySqrt(scores, keys.Cols))
+}
+
+// Forward returns context vectors [T, d_out].
+func (a *SelfAttention) Forward(x Matrix) Matrix {
+	return MatMul(a.AttentionWeights(x), MatMul(x, a.WValue))
+}
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch03-4-self-attention-rust" aria-labelledby="t-ch03-4-self-attention-rust" data-lang="rust"><div class="file" dir="ltr">rust-version/src/attention/self_attention.rs</div><pre dir="ltr"><code class="language-rust">//! Step 7 (book 3.4) - self-attention with trainable weights (scaled dot-product).
+//!
+//! Three weight matrices turn each input vector into three roles:
+//!
+//! ```text
+//! query = x x W_query    &quot;what am I looking for?&quot;
+//! key   = x x W_key      &quot;what do I offer to a search?&quot;
+//! value = x x W_value    &quot;what do I hand over if I am chosen?&quot;
+//!
+//! scores  = query x key^T                 how well does each query match each key?
+//! weights = softmax(scores / sqrt(d_k))   scale, then normalise each row
+//! context = weights x value               mix the values
+//! ```
+//!
+//! Why divide by sqrt(d_k)? Big dot products push softmax towards a hard 0/1
+//! choice, which makes gradients tiny. Scaling keeps training healthy.
+//!
+//! Tip: do not confuse *weight parameters* (W_*, learned) with *attention weights*
+//! (softmax output, computed fresh for every input).
+
+use super::Matrix;
+use crate::tokenization::rng::Rng;
+
+pub struct SelfAttention {
+    pub w_query: Matrix,
+    pub w_key: Matrix,
+    pub w_value: Matrix,
+}
+
+impl SelfAttention {
+    /// Weights drawn uniform in [0, 1), in query, key, value order.
+    pub fn random(d_in: usize, d_out: usize, rng: &amp;mut Rng) -&gt; Self {
+        let w_query = Matrix::rand(d_in, d_out, rng);
+        let w_key = Matrix::rand(d_in, d_out, rng);
+        let w_value = Matrix::rand(d_in, d_out, rng);
+        Self {
+            w_query,
+            w_key,
+            w_value,
+        }
+    }
+
+    /// `x` is [T, d_in]; returns [T, T] weights.
+    pub fn attention_weights(&amp;self, x: &amp;Matrix) -&gt; Matrix {
+        let queries = x.matmul(&amp;self.w_query);
+        let keys = x.matmul(&amp;self.w_key);
+        let scores = queries.matmul(&amp;keys.transpose());
+        scale_by_sqrt(&amp;scores, keys.cols).softmax_rows()
+    }
+
+    /// Context vectors [T, d_out].
+    pub fn forward(&amp;self, x: &amp;Matrix) -&gt; Matrix {
+        self.attention_weights(x).matmul(&amp;x.matmul(&amp;self.w_value))
+    }
+}
+
+/// Divide scores by sqrt(d_k).
+pub(super) fn scale_by_sqrt(scores: &amp;Matrix, d_k: usize) -&gt; Matrix {
+    scores.scale(1.0 / (d_k as f64).sqrt() as f32)
+}
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch03-4-self-attention-c" aria-labelledby="t-ch03-4-self-attention-c" data-lang="c"><div class="file" dir="ltr">C-version/attention/self_attention.h</div><pre dir="ltr"><code class="language-c">/* Step 7 (book 3.4) - self-attention with trainable weights (scaled dot-product).
+ *
+ * Three weight matrices turn each input vector into three roles:
+ *
+ *   query = x x W_query    &quot;what am I looking for?&quot;
+ *   key   = x x W_key      &quot;what do I offer to a search?&quot;
+ *   value = x x W_value    &quot;what do I hand over if I am chosen?&quot;
+ *
+ *   scores  = query x key^T                 how well does each query match each key?
+ *   weights = softmax(scores / sqrt(d_k))   scale, then normalise each row
+ *   context = weights x value               mix the values
+ *
+ * Why divide by sqrt(d_k)? Big dot products push softmax towards a hard 0/1
+ * choice, which makes gradients tiny. Scaling keeps training healthy.
+ *
+ * Tip: do not confuse weight parameters (W_*, learned) with attention weights
+ * (softmax output, computed fresh for every input).
+ */
+#ifndef SELF_ATTENTION_H
+#define SELF_ATTENTION_H
+
+#include &quot;matrix.h&quot;
+
+typedef struct {
+    Matrix w_query, w_key, w_value;
+} SelfAttention;
+
+/* Weights drawn uniform in [0, 1), in query, key, value order. */
+SelfAttention self_attention_random(Arena *a, size_t d_in, size_t d_out, Rng *rng);
+/* x is [T, d_in]; returns [T, T] weights. */
+Matrix self_attention_weights(Arena *a, const SelfAttention *sa, Matrix x);
+/* Context vectors [T, d_out]. */
+Matrix self_attention_forward(Arena *a, const SelfAttention *sa, Matrix x);
+
+/* scores / sqrt(d_k), shared by the attention variants. */
+Matrix scale_by_sqrt(Arena *a, Matrix scores, size_t d_k);
+
+#endif
+</code></pre><div class="file" dir="ltr">C-version/attention/self_attention.c</div><pre dir="ltr"><code class="language-c">#include &quot;self_attention.h&quot;
+
+#include &lt;math.h&gt;
+
+SelfAttention self_attention_random(Arena *a, size_t d_in, size_t d_out, Rng *rng) {
+    SelfAttention sa;
+    sa.w_query = matrix_rand(a, d_in, d_out, rng);
+    sa.w_key = matrix_rand(a, d_in, d_out, rng);
+    sa.w_value = matrix_rand(a, d_in, d_out, rng);
+    return sa;
+}
+
+Matrix scale_by_sqrt(Arena *a, Matrix scores, size_t d_k) { return scale(a, scores, 1.0f / (float)sqrt((double)d_k)); }
+
+Matrix self_attention_weights(Arena *a, const SelfAttention *sa, Matrix x) {
+    Matrix queries = matmul(a, x, sa-&gt;w_query), keys = matmul(a, x, sa-&gt;w_key);
+    Matrix scores = matmul(a, queries, transpose(a, keys));
+    return softmax_rows(a, scale_by_sqrt(a, scores, keys.cols));
+}
+
+Matrix self_attention_forward(Arena *a, const SelfAttention *sa, Matrix x) {
+    return matmul(a, self_attention_weights(a, sa, x), matmul(a, x, sa-&gt;w_value));
+}
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch03-4-self-attention-zig" aria-labelledby="t-ch03-4-self-attention-zig" data-lang="zig"><div class="file" dir="ltr">Zig-version/src/attention/self_attention.zig</div><pre dir="ltr"><code class="language-zig">//! Step 7 (book 3.4) - self-attention with trainable weights (scaled dot-product).
+//!
+//! Three weight matrices turn each input vector into three roles:
+//!
+//! ```
+//! query = x x W_query    &quot;what am I looking for?&quot;
+//! key   = x x W_key      &quot;what do I offer to a search?&quot;
+//! value = x x W_value    &quot;what do I hand over if I am chosen?&quot;
+//!
+//! scores  = query x key^T                 how well does each query match each key?
+//! weights = softmax(scores / sqrt(d_k))   scale, then normalise each row
+//! context = weights x value               mix the values
+//! ```
+//!
+//! Why divide by sqrt(d_k)? Big dot products push softmax towards a hard 0/1
+//! choice, which makes gradients tiny. Scaling keeps training healthy.
+//!
+//! Tip: do not confuse *weight parameters* (W_*, learned) with *attention weights*
+//! (softmax output, computed fresh for every input).
+
+const std = @import(&quot;std&quot;);
+const Matrix = @import(&quot;matrix.zig&quot;).Matrix;
+const Rng = @import(&quot;../tokenization/rng.zig&quot;).Rng;
+
+pub const SelfAttention = struct {
+    w_query: Matrix,
+    w_key: Matrix,
+    w_value: Matrix,
+
+    /// Weights drawn uniform in [0, 1), in query, key, value order.
+    pub fn random(gpa: std.mem.Allocator, d_in: usize, d_out: usize, rng: *Rng) !SelfAttention {
+        const w_query = try Matrix.rand(gpa, d_in, d_out, rng);
+        const w_key = try Matrix.rand(gpa, d_in, d_out, rng);
+        const w_value = try Matrix.rand(gpa, d_in, d_out, rng);
+        return .{ .w_query = w_query, .w_key = w_key, .w_value = w_value };
+    }
+
+    /// `x` is [T, d_in]; returns [T, T] weights.
+    pub fn attentionWeights(self: SelfAttention, gpa: std.mem.Allocator, x: Matrix) !Matrix {
+        const queries = try x.matmul(gpa, self.w_query);
+        const keys = try x.matmul(gpa, self.w_key);
+        const scores = try queries.matmul(gpa, try keys.transpose(gpa));
+        return (try scaleBySqrt(gpa, scores, keys.cols)).softmaxRows(gpa);
+    }
+
+    /// Context vectors [T, d_out].
+    pub fn forward(self: SelfAttention, gpa: std.mem.Allocator, x: Matrix) !Matrix {
+        const weights = try self.attentionWeights(gpa, x);
+        return weights.matmul(gpa, try x.matmul(gpa, self.w_value));
+    }
+};
+
+/// scores / sqrt(d_k), shared by the attention variants.
+pub fn scaleBySqrt(gpa: std.mem.Allocator, scores: Matrix, d_k: usize) !Matrix {
+    const root: f32 = @floatCast(@sqrt(@as(f64, @floatFromInt(d_k))));
+    return scores.scale(gpa, 1.0 / root);
+}
+</code></pre></div></div>
+<h2 id="s6">دو کلاس کتاب</h2>
+<p>کتاب این را به‌صورت <code>SelfAttention_v1</code> (با <code>nn.Parameter(torch.rand(...))</code> خام) و <code>SelfAttention_v2</code> (با <code>nn.Linear</code> بدون بایاس) کد می‌کند. هر دو یک چیز را حساب می‌کنند؛ v2 فقط مقداردهی اولیهٔ بهتری دارد، به همین دلیل با بذرهای متفاوت عددهای متفاوتی چاپ می‌کنند. <code>SelfAttention</code> ما به سبک v1 است و وزن‌ها را از بیرون می‌گیرد تا همهٔ زبان‌ها بتوانند عددهای یکسان داشته باشند.</p>
+<h2 id="s7">تمرین‌ها</h2>
+<ol>
+<li>تمرین ۳٫۱ کتاب: وزن‌های یک <code>SelfAttention_v2</code> را در یک v1 کپی کنید تا هر دو خروجی یکسان بدهند. (راهنمایی: <code>nn.Linear</code> ماتریس وزن را ترانهاده ذخیره می‌کند.)</li>
+<li><code>d_out</code> را از 2 به 4 تغییر دهید و شکل‌ها را ببینید. چه چیزی تغییر نمی‌کند؟</li>
+</ol>
+<details class="qa"><summary>پاسخ ۲</summary>وزن‌های توجه همان (6 x 6) می‌مانند: به تعداد توکن‌ها بستگی دارند نه به d_out. فقط key ها، value ها و بردارهای زمینه پهن‌تر می‌شوند.</details>
+</div>
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/fa/ch03-4-self-attention.html">ویرایش این صفحه در GitHub</a></p>
+<div class="pager"><a class="pg prev" href="ch03-3-simple-attention.html" rel="prev"><small>&rarr; قبلی </small><span>3.3 توجه ساده</span></a><a class="pg next" href="ch03-5-causal.html" rel="next"><small> بعدی &larr;</small><span>3.5 توجه علّی</span></a></div>
+</main>
+<aside class="toc" aria-label="در این صفحه"><h4>در این صفحه</h4><a href="#s1">Query، key، value</a><a href="#s2">گام‌به‌گام، برای توکن x2</a><a href="#s3">چرا بر sqrt(d_k) تقسیم می‌کنیم؟</a><a href="#s4">همهٔ توکن‌ها یک‌جا</a><a href="#s5">کد</a><a href="#s6">دو کلاس کتاب</a><a href="#s7">تمرین‌ها</a></aside>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script>window.I18N={copy:"کپی",copied:"کپی شد"}</script>
+<script src="../site.js"></script>
+</body></html>

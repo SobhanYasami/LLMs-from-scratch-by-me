@@ -1,13 +1,28 @@
 <!doctype html>
-<html lang="en"><head>
+<html lang="en" dir="ltr"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>3.1-3.2: Why attention exists</title>
+<title>3.1-3.2: Why attention exists · Build an LLM from scratch</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
-</head><body><div class="layout">
-<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
-<h4>Start</h4>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark" disabled>
+<link rel="alternate" hreflang="fa" href="fa/ch03-1-long-sequences.html">
+</head><body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<button class="icon-btn menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="side"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<a class="brand" href="index.html">LLM from scratch</a>
+<span class="grow"></span>
+<a class="lang-btn" href="fa/ch03-1-long-sequences.html" hreflang="fa" lang="fa" aria-label="Switch language: فارسی">فارسی</a>
+<button class="icon-btn theme-btn" type="button" aria-label="Toggle theme"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+</header>
+<div class="layout">
+<nav class="side" id="side" aria-label="LLM from scratch">
+<input class="filter" type="search" placeholder="Filter pages…" aria-label="Filter pages" data-nomatch="No page matches.">
+<div class="navlinks"><h4>Start</h4>
 <a class="" href="index.html">Overview</a>
 <a class="" href="roadmap.html">Roadmap</a>
 <h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
@@ -27,7 +42,7 @@
 <a class="extra" href="embedding-vs-matmul.html">Embedding vs matmul</a>
 <a class="extra" href="dataloader-intuition.html">Data loader intuition</a>
 <h4><a class="h4link" href="chapter-3.html">Chapter 3</a></h4>
-<a class=" on" href="ch03-1-long-sequences.html">3.1-3.2 Why attention</a>
+<a class=" on" href="ch03-1-long-sequences.html" aria-current="page">3.1-3.2 Why attention</a>
 <a class="" href="ch03-3-simple-attention.html">3.3 Simple attention</a>
 <a class="" href="ch03-4-self-attention.html">3.4 Trainable weights</a>
 <a class="" href="ch03-5-causal.html">3.5 Causal attention</a>
@@ -43,11 +58,14 @@
 <a class="" href="reference.html">Code reference</a>
 <a class="" href="contributing.html">Contributing</a>
 <a class="" href="glossary.html">Glossary</a>
-<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
-<main><h1>3.1-3.2: Why attention exists</h1>
-<p class="meta">Book section 3.1, 3.2</p>
-<div class="aim"><b>Aim.</b> Understand the problem attention solves, and what the four attention variants of this chapter are.</div>
-<h2>The problem: a single summary is not enough</h2>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></div>
+</nav>
+<div class="scrim" hidden></div>
+<main id="main" tabindex="-1"><h1>3.1-3.2: Why attention exists</h1>
+<p class="meta">Book section <span dir="ltr">3.1, 3.2</span></p>
+
+<div><div class="aim"><b>Aim.</b> Understand the problem attention solves, and what the four attention variants of this chapter are.</div>
+<h2 id="s1">The problem: a single summary is not enough</h2>
 <p>Translating a sentence word by word fails, because word order and grammar differ between languages. Before transformers, the standard fix was an <b>encoder-decoder RNN</b>. An <i>RNN</i> reads text one step at a time, updating a hidden state (its memory) at each step.</p>
 <div class="flow">
 <div><b>Encoder</b>reads the whole input, squeezes it into <i>one</i> final hidden state</div><span>&rarr;</span>
@@ -55,10 +73,10 @@
 <div><b>Decoder</b>writes the translation word by word</div>
 </div>
 <p>The decoder cannot look back at the encoder's earlier states. Everything about a long sentence has to survive in that single vector, so context is lost over long distances.</p>
-<h2>The fix: let the decoder look back, selectively</h2>
+<h2 id="s2">The fix: let the decoder look back, selectively</h2>
 <p>In 2014 Bahdanau attention changed the decoder so that, at each output step, it can pick which input positions to read, giving some positions more <b>attention weight</b> than others. Three years later the transformer showed the RNN itself is not needed: use attention alone, applied by the sequence to <i>itself</i>.</p>
 <div class="aim"><b>Self-attention.</b> Every position in a sequence looks at every position in the same sequence (including itself) to build a better representation of itself.</div>
-<h2>The four variants we build</h2>
+<h2 id="s3">The four variants we build</h2>
 <div class="flow">
 <div><b>3.3</b>Simplified self-attention<br><small>no weights, just the idea</small></div><span>&rarr;</span>
 <div><b>3.4</b>Self-attention<br><small>query, key, value, trainable</small></div><span>&rarr;</span>
@@ -66,17 +84,20 @@
 <div class="hot"><b>3.6</b>Multi-head attention<br><small>what chapter 4 plugs in</small></div>
 </div>
 <p>Each builds on the previous one. By the end of 3.6 you have the compact, efficient multi-head attention that the GPT model of chapter 4 uses.</p>
-<h2>Check yourself</h2>
+<h2 id="s4">Check yourself</h2>
 <details class="qa"><summary>What is the bottleneck of an encoder-decoder RNN?</summary>The decoder only sees the encoder's final hidden state, so a long input has to be compressed into one vector.</details>
 <details class="qa"><summary>What does "self" in self-attention mean?</summary>The attention is computed between positions of the same sequence, not between two different sequences.</details>
 <details class="qa"><summary>Which variant is the one GPT uses?</summary>Causal multi-head attention (3.5 and 3.6 combined).</details>
-
+</div>
 <p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/ch03-1-long-sequences.html">Edit this page on GitHub</a></p>
-<div class="pager"><a href="chapter-3.html">&larr; Chapter 3</a><a href="ch03-3-simple-attention.html">3.3 Simple attention &rarr;</a></div>
-</main></div>
+<div class="pager"><a class="pg prev" href="chapter-3.html" rel="prev"><small>&larr; Previous </small><span>Chapter 3</span></a><a class="pg next" href="ch03-3-simple-attention.html" rel="next"><small> Next &rarr;</small><span>3.3 Simple attention</span></a></div>
+</main>
+<aside class="toc" aria-label="On this page"><h4>On this page</h4><a href="#s1">The problem: a single summary is not enough</a><a href="#s2">The fix: let the decoder look back, selectively</a><a href="#s3">The four variants we build</a><a href="#s4">Check yourself</a></aside>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script>window.I18N={copy:"Copy",copied:"Copied"}</script>
 <script src="site.js"></script>
 </body></html>

@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="fa" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2.3: تبدیل توکن‌ها به شناسه · ساخت یک LLM از صفر</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark" disabled>
+<link rel="alternate" hreflang="en" href="../ch02-3-token-ids.html">
+</head><body>
+<a class="skip" href="#main">پرش به محتوا</a>
+<header class="top">
+<button class="icon-btn menu-btn" type="button" aria-label="منو" aria-expanded="false" aria-controls="side"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<a class="brand" href="index.html">ساخت LLM از صفر</a>
+<span class="grow"></span>
+<a class="lang-btn" href="../ch02-3-token-ids.html" hreflang="en" lang="en" aria-label="تغییر زبان: English">English</a>
+<button class="icon-btn theme-btn" type="button" aria-label="تغییر پوسته"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+</header>
+<div class="layout">
+<nav class="side" id="side" aria-label="ساخت LLM از صفر">
+<input class="filter" type="search" placeholder="جستجو در صفحه‌ها…" aria-label="جستجو در صفحه‌ها" data-nomatch="صفحه‌ای پیدا نشد.">
+<div class="navlinks"><h4>شروع</h4>
+<a class="" href="index.html">مرور کلی</a>
+<a class="" href="roadmap.html">نقشهٔ راه</a>
+<h4><a class="h4link" href="chapter-1.html">فصل 1</a></h4>
+<a class="" href="ch01-what-is-llm.html">1.1-1.2 LLM چیست؟</a>
+<a class="" href="ch01-stages.html">1.3، 1.5 مراحل آموزش و داده</a>
+<a class="" href="ch01-transformer.html">1.4 ترنسفورمر و وظایف</a>
+<a class="" href="ch01-gpt.html">1.6-1.7 GPT و نقشهٔ راه</a>
+<h4><a class="h4link" href="chapter-2.html">فصل 2</a></h4>
+<a class="" href="ch02-overview.html">2.1 مرور و امبدینگ‌ها</a>
+<a class="" href="ch02-2-tokenizing.html">2.2 توکن‌سازی متن</a>
+<a class=" on" href="ch02-3-token-ids.html" aria-current="page">2.3 شناسهٔ توکن</a>
+<a class="" href="ch02-4-special-tokens.html">2.4 توکن‌های ویژه</a>
+<a class="" href="ch02-5-bpe.html">2.5 رمزگذاری جفت‌بایت</a>
+<a class="" href="ch02-6-sampling.html">2.6 پنجرهٔ لغزان</a>
+<a class="" href="ch02-7-embeddings.html">2.7-2.8 امبدینگ و جایگاه</a>
+<a class="extra" href="bpe-walkthrough.html">ردگیری BPE</a>
+<a class="extra" href="embedding-vs-matmul.html">امبدینگ در برابر matmul</a>
+<a class="extra" href="dataloader-intuition.html">شهود دیتالودر</a>
+<h4><a class="h4link" href="chapter-3.html">فصل 3</a></h4>
+<a class="" href="ch03-1-long-sequences.html">3.1-3.2 چرا توجه</a>
+<a class="" href="ch03-3-simple-attention.html">3.3 توجه ساده</a>
+<a class="" href="ch03-4-self-attention.html">3.4 وزن‌های آموزش‌پذیر</a>
+<a class="" href="ch03-5-causal.html">3.5 توجه علّی</a>
+<a class="" href="ch03-6-multihead.html">3.6 چندسَری</a>
+<a class="extra" href="scaling-sqrt-dk.html">چرا مقیاس sqrt(d_k)</a>
+<a class="extra" href="ch03-demo-output.html">خروجی دموی فصل ۳</a>
+<h4><a class="h4link" href="chapter-4.html">فصل 4</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-5.html">فصل 5</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-6.html">فصل 6</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-7.html">فصل 7</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4><a class="h4link" href="chapter-A.html">پیوست‌ها</a> <em>برنامه‌ریزی‌شده</em></h4>
+<h4>مرجع</h4>
+<a class="" href="reference.html">مرجع کد</a>
+<a class="" href="contributing.html">مشارکت</a>
+<a class="" href="glossary.html">واژه‌نامه</a>
+<h4>منبع</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">این مخزن</a><a href="https://github.com/rasbt/LLMs-from-scratch">مخزن راشکا</a></div>
+</nav>
+<div class="scrim" hidden></div>
+<main id="main" tabindex="-1"><h1><bdi dir="ltr">2.3:</bdi> تبدیل توکن‌ها به شناسه</h1>
+<p class="meta">بخش کتاب <span dir="ltr">2.3</span> · کد به زبان Python, Go, Rust, C, Zig</p>
+
+<div><div class="aim"><b>هدف.</b> به هر توکن یکتا یک عدد بدهید (<i>واژگان</i> یا vocabulary)، سپس توکن‌سازی با <code>encode</code> (متن به شناسه) و <code>decode</code> (شناسه به متن) بسازید.</div>
+<h2 id="s1">واژگان</h2>
+<p>کل متن آموزشی را توکن‌سازی کن، تکراری‌ها را حذف کن، به ترتیب الفبا مرتب کن و از ۰ شماره بزن. داستان <b>1,159</b> توکن یکتا دارد.</p>
+<pre class="out">('!', 0)  ('"', 1)  ("'", 2)  ...  ('Has', 49)  ('He', 50)</pre>
+<ul>
+<li><b>مرتب‌سازی</b> می‌کنیم تا یک پیکره همیشه شناسه‌های یکسان بدهد. مجموعه‌ها و نگاشت‌ها در هر سه زبان ترتیب تصادفی دارند.</li>
+<li>برای رمزگشایی نگاشت <b>معکوس</b> هم لازم است، یعنی شناسه به توکن.</li>
+</ul>
+<h2 id="s2">توکن‌ساز، نسخهٔ ۱</h2>
+<div class="flow">
+<div><b>encode</b>متن &rarr; توکن‌ها &rarr; شناسه‌ها</div><span>&middot;</span>
+<div><b>decode</b>شناسه‌ها &rarr; توکن‌ها &rarr; اتصال &rarr; مرتب‌سازی علامت‌ها</div>
+</div>
+<p>روی جمله‌ای از داستان امتحانش کنید:</p>
+<pre class="out">[1, 58, 2, 872, 1013, 615, 541, 763, 5, 1155, 608, 5, 1, 69, 7, 39, 873, 1136, 773, 812, 7]
+" It' s the last he painted, you know," Mrs. Gisburn said with pardonable pride.</pre>
+<h2 id="s3">کِی خراب می‌شود</h2>
+<p>جملهٔ <code>"Hello, do you like tea?"</code> را encode کنید و نسخهٔ ۱ شکست می‌خورد (<code>KeyError: 'Hello'</code> در Python، یک <code>error</code> در Go، یک <code>Err</code> در Rust، <code>NULL</code> همراه با پیام در C، و <code>error.UnknownToken</code> در Zig). «Hello» در داستان نیست، پس در واژگان هم نیست. واژگان بسته نمی‌تواند کلمهٔ جدید را مدیریت کند. <a href="ch02-4-special-tokens.html">صفحهٔ بعد</a> این را اصلاح می‌کند.</p>
+<h2 id="s4">کد (واژگان و توکن‌ساز)</h2>
+<div class="tabs"><div class="tabbar" role="tablist" dir="ltr"><button role="tab" type="button" id="t-ch02-3-token-ids-python" aria-controls="p-ch02-3-token-ids-python" data-lang="python">Python</button><button role="tab" type="button" id="t-ch02-3-token-ids-go" aria-controls="p-ch02-3-token-ids-go" data-lang="go">Go</button><button role="tab" type="button" id="t-ch02-3-token-ids-rust" aria-controls="p-ch02-3-token-ids-rust" data-lang="rust">Rust</button><button role="tab" type="button" id="t-ch02-3-token-ids-c" aria-controls="p-ch02-3-token-ids-c" data-lang="c">C</button><button role="tab" type="button" id="t-ch02-3-token-ids-zig" aria-controls="p-ch02-3-token-ids-zig" data-lang="zig">Zig</button></div><div class="pane" role="tabpanel" id="p-ch02-3-token-ids-python" aria-labelledby="t-ch02-3-token-ids-python" data-lang="python"><div class="file" dir="ltr">python-version/tokenization/vocab.py</div><pre dir="ltr"><code class="language-python">&quot;&quot;&quot;Step 2 - Build a vocabulary: a mapping from each token to a unique integer ID.
+
+    vocab = {&quot;!&quot;: 0, &#x27;&quot;&#x27;: 1, ..., &quot;&lt;|endoftext|&gt;&quot;: 1159, &quot;&lt;|unk|&gt;&quot;: 1160}
+
+Computers work with numbers, so every token must get an ID before a model
+can use it. The vocabulary is the lookup table between the two worlds.
+
+Tip: a Python ``set`` has no fixed order. Sorting before numbering is what makes
+the IDs the same on every run.
+&quot;&quot;&quot;
+
+from .preprocess import END_OF_TEXT, UNK_TOKEN
+
+SPECIAL_TOKENS = [END_OF_TEXT, UNK_TOKEN]
+
+
+def build_vocab(tokens: list[str]) -&gt; dict[str, int]:
+    &quot;&quot;&quot;Assign IDs to the unique tokens in sorted order, then append special tokens.
+
+    Sorting makes the IDs deterministic: the same corpus always gives the same vocab.
+    Special tokens go last so the regular word IDs stay stable.
+    &quot;&quot;&quot;
+    all_tokens = sorted(set(tokens))
+    all_tokens.extend(SPECIAL_TOKENS)
+    return {token: integer for integer, token in enumerate(all_tokens)}
+</code></pre><div class="file" dir="ltr">python-version/tokenization/simple.py</div><pre dir="ltr"><code class="language-python">&quot;&quot;&quot;Step 3 - Simple tokenizers that combine splitting with the vocabulary.
+
+Both classes expose the same two methods:
+
+    encode(text) -&gt; list[int]   text  -&gt; token IDs
+    decode(ids)  -&gt; str         IDs   -&gt; text
+
+V1 only knows the words in its vocabulary and raises ``KeyError`` otherwise.
+V2 replaces unknown words with ``&lt;|unk|&gt;`` so encoding never fails.
+&quot;&quot;&quot;
+
+from .preprocess import UNK_TOKEN, detokenize, split_text
+
+
+def _invert(vocab: dict[str, int]) -&gt; dict[int, str]:
+    &quot;&quot;&quot;Swap keys and values: ID -&gt; token, needed for decoding.&quot;&quot;&quot;
+    return {integer: token for token, integer in vocab.items()}
+
+
+class SimpleTokenizerV1:
+    &quot;&quot;&quot;Encode and decode with a vocabulary; unknown tokens are an error.&quot;&quot;&quot;
+
+    def __init__(self, vocab: dict[str, int]):
+        self.str_to_int = vocab              # token -&gt; ID
+        self.int_to_str = _invert(vocab)     # ID -&gt; token
+
+    def encode(self, text: str) -&gt; list[int]:
+        tokens = split_text(text)
+        return [self.str_to_int[token] for token in tokens]  # KeyError if unknown
+
+    def decode(self, ids: list[int]) -&gt; str:
+        tokens = [self.int_to_str[i] for i in ids]
+        return detokenize(tokens)
+
+
+class SimpleTokenizerV2(SimpleTokenizerV1):
+    &quot;&quot;&quot;Same as V1, but unknown tokens become ``&lt;|unk|&gt;`` instead of raising.&quot;&quot;&quot;
+
+    def encode(self, text: str) -&gt; list[int]:
+        tokens = split_text(text)
+        tokens = [
+            token if token in self.str_to_int else UNK_TOKEN
+            for token in tokens
+        ]
+        return [self.str_to_int[token] for token in tokens]
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-3-token-ids-go" aria-labelledby="t-ch02-3-token-ids-go" data-lang="go"><div class="file" dir="ltr">go-version/tokenization/vocab.go</div><pre dir="ltr"><code class="language-go">package tokenization
+
+import &quot;sort&quot;
+
+// Step 2 - build a vocabulary: a mapping from each token to a unique integer ID.
+//
+//	{&quot;!&quot;: 0, &quot;\&quot;&quot;: 1, ..., &quot;&lt;|endoftext|&gt;&quot;: 1159, &quot;&lt;|unk|&gt;&quot;: 1160}
+//
+// Models only understand numbers, so this table is the bridge between text and IDs.
+//
+// Tip: a Go map has random iteration order. Sorting before numbering is what
+// makes the IDs the same on every run.
+
+// SpecialTokens are appended after the regular tokens so word IDs stay stable.
+var SpecialTokens = []string{EndOfText, Unknown}
+
+// BuildVocab assigns IDs to the unique tokens in sorted order, then appends the
+// special tokens. Sorting makes IDs deterministic for a given corpus.
+func BuildVocab(tokens []string) map[string]int {
+	set := make(map[string]struct{})
+	for _, t := range tokens {
+		set[t] = struct{}{}
+	}
+	all := make([]string, 0, len(set)+len(SpecialTokens))
+	for t := range set {
+		all = append(all, t)
+	}
+	sort.Strings(all)
+	all = append(all, SpecialTokens...)
+
+	vocab := make(map[string]int, len(all))
+	for i, t := range all {
+		vocab[t] = i
+	}
+	return vocab
+}
+</code></pre><div class="file" dir="ltr">go-version/tokenization/simple.go</div><pre dir="ltr"><code class="language-go">package tokenization
+
+import &quot;fmt&quot;
+
+// Step 3 - simple tokenizers: split text, then look each token up in the vocab.
+//
+//	encode: &quot;Hello, world&quot; -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; [1131, 5, 987]
+//	decode: [1131, 5, 987] -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; &quot;Hello, world&quot;
+//
+// Tip: compare the two types. V1 fails on a word it never saw; V2 swaps it for
+// &lt;|unk|&gt; and keeps going. That one difference is why real models use BPE.
+
+// SimpleTokenizerV1 maps known tokens to IDs and fails on unknown tokens.
+type SimpleTokenizerV1 struct {
+	strToInt map[string]int // token -&gt; ID, used by Encode
+	intToStr map[int]string // ID -&gt; token, used by Decode (the vocab, inverted)
+}
+
+func NewSimpleTokenizerV1(vocab map[string]int) *SimpleTokenizerV1 {
+	intToStr := make(map[int]string, len(vocab))
+	for s, i := range vocab {
+		intToStr[i] = s
+	}
+	return &amp;SimpleTokenizerV1{strToInt: vocab, intToStr: intToStr}
+}
+
+// encode is shared by V1 and V2. The only difference is what happens to a
+// token that is not in the vocab: error (V1) or &lt;|unk|&gt; (V2).
+func (t *SimpleTokenizerV1) encode(text string, unknownToUnk bool) ([]int, error) {
+	var ids []int
+	for _, token := range SplitText(text) {
+		id, ok := t.strToInt[token]
+		if !ok &amp;&amp; unknownToUnk {
+			id, ok = t.strToInt[Unknown]
+		}
+		if !ok {
+			return nil, fmt.Errorf(&quot;token not in vocab: %q&quot;, token)
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
+}
+
+func (t *SimpleTokenizerV1) Encode(text string) ([]int, error) { return t.encode(text, false) }
+
+func (t *SimpleTokenizerV1) Decode(ids []int) (string, error) {
+	tokens := make([]string, 0, len(ids))
+	for _, id := range ids {
+		token, ok := t.intToStr[id]
+		if !ok {
+			return &quot;&quot;, fmt.Errorf(&quot;id not in vocab: %d&quot;, id)
+		}
+		tokens = append(tokens, token)
+	}
+	return Detokenize(tokens), nil
+}
+
+// SimpleTokenizerV2 is V1, except unknown tokens become &lt;|unk|&gt;.
+// It embeds V1, so Decode is inherited unchanged.
+type SimpleTokenizerV2 struct {
+	SimpleTokenizerV1
+}
+
+func NewSimpleTokenizerV2(vocab map[string]int) *SimpleTokenizerV2 {
+	return &amp;SimpleTokenizerV2{SimpleTokenizerV1: *NewSimpleTokenizerV1(vocab)}
+}
+
+func (t *SimpleTokenizerV2) Encode(text string) ([]int, error) { return t.encode(text, true) }
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-3-token-ids-rust" aria-labelledby="t-ch02-3-token-ids-rust" data-lang="rust"><div class="file" dir="ltr">rust-version/src/tokenization/vocab.rs</div><pre dir="ltr"><code class="language-rust">//! Step 2 - build a vocabulary: a mapping from each token to a unique integer ID.
+//!
+//! ```text
+//! {&quot;!&quot;: 0, &quot;\&quot;&quot;: 1, ..., &quot;&lt;|endoftext|&gt;&quot;: 1159, &quot;&lt;|unk|&gt;&quot;: 1160}
+//! ```
+//!
+//! Models only understand numbers, so this table is the bridge between text and IDs.
+//!
+//! Tip: a `HashMap` has random iteration order. Collecting into a sorted
+//! `BTreeSet` before numbering is what makes IDs the same on every run.
+
+use std::collections::{BTreeSet, HashMap};
+
+use super::preprocess::{END_OF_TEXT, UNK_TOKEN};
+
+pub const SPECIAL_TOKENS: [&amp;str; 2] = [END_OF_TEXT, UNK_TOKEN];
+
+/// Assign IDs to the unique tokens in sorted order, then append special tokens.
+///
+/// Sorting makes IDs deterministic for a given corpus. Special tokens go last so
+/// regular word IDs stay stable.
+pub fn build_vocab(tokens: &amp;[String]) -&gt; HashMap&lt;String, usize&gt; {
+    let unique: BTreeSet&lt;&amp;str&gt; = tokens.iter().map(String::as_str).collect();
+    unique
+        .into_iter()
+        .chain(SPECIAL_TOKENS)
+        .enumerate()
+        .map(|(i, t)| (t.to_string(), i))
+        .collect()
+}
+</code></pre><div class="file" dir="ltr">rust-version/src/tokenization/simple.rs</div><pre dir="ltr"><code class="language-rust">//! Step 3 - simple tokenizers: split text, then look each token up in the vocab.
+//!
+//! ```text
+//! encode: &quot;Hello, world&quot; -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; [1131, 5, 987]
+//! decode: [1131, 5, 987] -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; &quot;Hello, world&quot;
+//! ```
+//!
+//! Tip: compare the two types. V1 fails on a word it never saw; V2 swaps it for
+//! `&lt;|unk|&gt;` and keeps going. That one difference is why real models use BPE.
+
+use std::collections::HashMap;
+
+use super::preprocess::{UNK_TOKEN, detokenize, split_text};
+
+/// Encode and decode with a vocabulary; unknown tokens are an error.
+pub struct SimpleTokenizerV1 {
+    str_to_int: HashMap&lt;String, usize&gt;, // token -&gt; ID, used by encode
+    int_to_str: HashMap&lt;usize, String&gt;, // ID -&gt; token, used by decode (the vocab, inverted)
+}
+
+impl SimpleTokenizerV1 {
+    pub fn new(vocab: HashMap&lt;String, usize&gt;) -&gt; Self {
+        let int_to_str = vocab.iter().map(|(s, &amp;i)| (i, s.clone())).collect();
+        Self {
+            str_to_int: vocab,
+            int_to_str,
+        }
+    }
+
+    /// Shared by V1 and V2. The only difference is what happens to a token that
+    /// is not in the vocab: error (V1) or `&lt;|unk|&gt;` (V2).
+    fn encode_with(&amp;self, text: &amp;str, unknown_to_unk: bool) -&gt; Result&lt;Vec&lt;usize&gt;, String&gt; {
+        split_text(text)
+            .iter()
+            .map(|token| {
+                let known = self.str_to_int.get(token);
+                let id = match (known, unknown_to_unk) {
+                    (None, true) =&gt; self.str_to_int.get(UNK_TOKEN),
+                    _ =&gt; known,
+                };
+                id.copied()
+                    .ok_or_else(|| format!(&quot;token not in vocab: {token:?}&quot;))
+            })
+            .collect()
+    }
+
+    pub fn encode(&amp;self, text: &amp;str) -&gt; Result&lt;Vec&lt;usize&gt;, String&gt; {
+        self.encode_with(text, false)
+    }
+
+    pub fn decode(&amp;self, ids: &amp;[usize]) -&gt; Result&lt;String, String&gt; {
+        let tokens = ids
+            .iter()
+            .map(|id| {
+                self.int_to_str
+                    .get(id)
+                    .cloned()
+                    .ok_or_else(|| format!(&quot;id not in vocab: {id}&quot;))
+            })
+            .collect::&lt;Result&lt;Vec&lt;_&gt;, _&gt;&gt;()?;
+        Ok(detokenize(&amp;tokens))
+    }
+}
+
+/// V1, except unknown tokens become `&lt;|unk|&gt;`. Wraps V1, so decode is reused.
+pub struct SimpleTokenizerV2(SimpleTokenizerV1);
+
+impl SimpleTokenizerV2 {
+    pub fn new(vocab: HashMap&lt;String, usize&gt;) -&gt; Self {
+        Self(SimpleTokenizerV1::new(vocab))
+    }
+
+    pub fn encode(&amp;self, text: &amp;str) -&gt; Result&lt;Vec&lt;usize&gt;, String&gt; {
+        self.0.encode_with(text, true)
+    }
+
+    pub fn decode(&amp;self, ids: &amp;[usize]) -&gt; Result&lt;String, String&gt; {
+        self.0.decode(ids)
+    }
+}
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-3-token-ids-c" aria-labelledby="t-ch02-3-token-ids-c" data-lang="c"><div class="file" dir="ltr">C-version/tokenization/vocab.h</div><pre dir="ltr"><code class="language-c">/* Step 2 (book 2.3) - build a vocabulary: token -&gt; unique integer ID.
+ *
+ *   {&quot;!&quot;: 0, &quot;\&quot;&quot;: 1, ..., &quot;&lt;|endoftext|&gt;&quot;: 1159, &quot;&lt;|unk|&gt;&quot;: 1160}
+ *
+ * Models only understand numbers, so this table is the bridge between text
+ * and IDs. Tip: sorting before numbering makes IDs identical on every run.
+ */
+#ifndef VOCAB_H
+#define VOCAB_H
+
+#include &lt;stddef.h&gt;
+
+#include &quot;preprocess.h&quot;
+
+typedef struct {
+    char **tokens;   /* ID -&gt; token, used by decode */
+    size_t size;
+    int *slots;      /* hash table of IDs (-1 = empty), used by encode */
+    size_t n_slots;
+} Vocab;
+
+/* Unique tokens in sorted order, then &lt;|endoftext|&gt; and &lt;|unk|&gt;. */
+Vocab build_vocab(const Tokens *tokens);
+void vocab_free(Vocab *v);
+
+/* token -&gt; ID, or -1 if the token is not in the vocabulary. */
+int vocab_id(const Vocab *v, const char *token);
+/* ID -&gt; token, or NULL if out of range. */
+const char *vocab_token(const Vocab *v, int id);
+
+#endif
+</code></pre><div class="file" dir="ltr">C-version/tokenization/vocab.c</div><pre dir="ltr"><code class="language-c">#include &quot;vocab.h&quot;
+
+#include &lt;stdint.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#include &quot;util.h&quot;
+
+static uint64_t hash_str(const char *s) { /* FNV-1a */
+    uint64_t h = 1469598103934665603ULL;
+    for (; *s; s++) h = (h ^ (unsigned char)*s) * 1099511628211ULL;
+    return h;
+}
+
+static int cmp_str(const void *a, const void *b) {
+    return strcmp(*(const char *const *)a, *(const char *const *)b);
+}
+
+Vocab build_vocab(const Tokens *tokens) {
+    /* sort a copy of the pointers, then skip duplicates */
+    char **sorted = xmalloc(tokens-&gt;len * sizeof(char *));
+    memcpy(sorted, tokens-&gt;items, tokens-&gt;len * sizeof(char *));
+    qsort(sorted, tokens-&gt;len, sizeof(char *), cmp_str);
+
+    Vocab v = {0};
+    v.tokens = xmalloc((tokens-&gt;len + 2) * sizeof(char *));
+    for (size_t i = 0; i &lt; tokens-&gt;len; i++)
+        if (i == 0 || strcmp(sorted[i], sorted[i - 1]) != 0)
+            v.tokens[v.size++] = xstrdup(sorted[i]);
+    free(sorted);
+    /* special tokens go last so regular word IDs stay stable */
+    v.tokens[v.size++] = xstrdup(END_OF_TEXT);
+    v.tokens[v.size++] = xstrdup(UNK_TOKEN);
+
+    v.n_slots = 1;
+    while (v.n_slots &lt; v.size * 2) v.n_slots &lt;&lt;= 1;
+    v.slots = xmalloc(v.n_slots * sizeof(int));
+    for (size_t i = 0; i &lt; v.n_slots; i++) v.slots[i] = -1;
+    for (size_t id = 0; id &lt; v.size; id++) {
+        size_t s = hash_str(v.tokens[id]) &amp; (v.n_slots - 1);
+        while (v.slots[s] != -1) s = (s + 1) &amp; (v.n_slots - 1);
+        v.slots[s] = (int)id;
+    }
+    return v;
+}
+
+void vocab_free(Vocab *v) {
+    for (size_t i = 0; i &lt; v-&gt;size; i++) free(v-&gt;tokens[i]);
+    free(v-&gt;tokens);
+    free(v-&gt;slots);
+    *v = (Vocab){0};
+}
+
+int vocab_id(const Vocab *v, const char *token) {
+    size_t s = hash_str(token) &amp; (v-&gt;n_slots - 1);
+    while (v-&gt;slots[s] != -1) {
+        if (strcmp(v-&gt;tokens[v-&gt;slots[s]], token) == 0) return v-&gt;slots[s];
+        s = (s + 1) &amp; (v-&gt;n_slots - 1);
+    }
+    return -1;
+}
+
+const char *vocab_token(const Vocab *v, int id) {
+    return (id &gt;= 0 &amp;&amp; (size_t)id &lt; v-&gt;size) ? v-&gt;tokens[id] : NULL;
+}
+</code></pre><div class="file" dir="ltr">C-version/tokenization/simple.h</div><pre dir="ltr"><code class="language-c">/* Step 3 (book 2.3-2.4) - simple tokenizers: split text, look tokens up.
+ *
+ *   encode: &quot;Hello, world&quot; -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; [1131, 5, 987]
+ *   decode: [1131, 5, 987] -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; &quot;Hello, world&quot;
+ *
+ * Tip: compare V1 and V2. V1 fails on a word it never saw; V2 swaps it for
+ * &lt;|unk|&gt; and keeps going. That one difference is why real models use BPE.
+ */
+#ifndef SIMPLE_H
+#define SIMPLE_H
+
+#include &lt;stdbool.h&gt;
+#include &lt;stddef.h&gt;
+
+#include &quot;util.h&quot;
+#include &quot;vocab.h&quot;
+
+typedef struct {
+    const Vocab *vocab;
+    bool unknown_to_unk; /* false = V1 (error), true = V2 (&lt;|unk|&gt;) */
+} SimpleTokenizer;
+
+SimpleTokenizer simple_tokenizer_v1(const Vocab *vocab);
+SimpleTokenizer simple_tokenizer_v2(const Vocab *vocab);
+
+/* text -&gt; IDs. Returns NULL and fills `err` on an unknown token (V1). Caller frees. */
+int *simple_encode(const SimpleTokenizer *t, const char *text, size_t *n, char err[ERR_LEN]);
+/* IDs -&gt; text. Returns NULL and fills `err` on an unknown ID. Caller frees. */
+char *simple_decode(const SimpleTokenizer *t, const int *ids, size_t n, char err[ERR_LEN]);
+
+#endif
+</code></pre><div class="file" dir="ltr">C-version/tokenization/simple.c</div><pre dir="ltr"><code class="language-c">#include &quot;simple.h&quot;
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+#include &quot;preprocess.h&quot;
+
+SimpleTokenizer simple_tokenizer_v1(const Vocab *vocab) { return (SimpleTokenizer){vocab, false}; }
+SimpleTokenizer simple_tokenizer_v2(const Vocab *vocab) { return (SimpleTokenizer){vocab, true}; }
+
+/* V1 and V2 share this code. The only difference is what happens to a token
+ * that is not in the vocab: error (V1) or &lt;|unk|&gt; (V2). */
+int *simple_encode(const SimpleTokenizer *t, const char *text, size_t *n, char err[ERR_LEN]) {
+    Tokens tokens = split_text(text);
+    int *ids = xmalloc(tokens.len * sizeof(int));
+    for (size_t i = 0; i &lt; tokens.len; i++) {
+        int id = vocab_id(t-&gt;vocab, tokens.items[i]);
+        if (id &lt; 0 &amp;&amp; t-&gt;unknown_to_unk) id = vocab_id(t-&gt;vocab, UNK_TOKEN);
+        if (id &lt; 0) {
+            snprintf(err, ERR_LEN, &quot;token not in vocab: \&quot;%s\&quot;&quot;, tokens.items[i]);
+            free(ids);
+            tokens_free(&amp;tokens);
+            return NULL;
+        }
+        ids[i] = id;
+    }
+    *n = tokens.len;
+    tokens_free(&amp;tokens);
+    return ids;
+}
+
+char *simple_decode(const SimpleTokenizer *t, const int *ids, size_t n, char err[ERR_LEN]) {
+    const char **tokens = xmalloc(n * sizeof(char *));
+    for (size_t i = 0; i &lt; n; i++) {
+        tokens[i] = vocab_token(t-&gt;vocab, ids[i]);
+        if (!tokens[i]) {
+            snprintf(err, ERR_LEN, &quot;id not in vocab: %d&quot;, ids[i]);
+            free(tokens);
+            return NULL;
+        }
+    }
+    char *text = detokenize(tokens, n);
+    free(tokens);
+    return text;
+}
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-3-token-ids-zig" aria-labelledby="t-ch02-3-token-ids-zig" data-lang="zig"><div class="file" dir="ltr">Zig-version/src/tokenization/vocab.zig</div><pre dir="ltr"><code class="language-zig">//! Step 2 (book 2.3) - build a vocabulary: token -&gt; unique integer ID.
+//!
+//! ```
+//! {&quot;!&quot;: 0, &quot;\&quot;&quot;: 1, ..., &quot;&lt;|endoftext|&gt;&quot;: 1159, &quot;&lt;|unk|&gt;&quot;: 1160}
+//! ```
+//!
+//! Models only understand numbers, so this table is the bridge between text and IDs.
+//!
+//! Tip: a hash map has no fixed order. Sorting before numbering is what makes
+//! IDs the same on every run.
+
+const std = @import(&quot;std&quot;);
+const preprocess = @import(&quot;preprocess.zig&quot;);
+
+pub const Vocab = struct {
+    /// ID -&gt; token, used by decode.
+    tokens: []const []const u8,
+    /// token -&gt; ID, used by encode.
+    ids: std.StringHashMapUnmanaged(u32),
+
+    /// Unique tokens in sorted order, then `&lt;|endoftext|&gt;` and `&lt;|unk|&gt;`
+    /// (last, so regular word IDs stay stable). The vocab borrows the token
+    /// strings: keep the text they came from alive.
+    pub fn build(gpa: std.mem.Allocator, tokens: []const []const u8) !Vocab {
+        const sorted = try gpa.dupe([]const u8, tokens);
+        defer gpa.free(sorted);
+        std.mem.sort([]const u8, sorted, {}, lessThan);
+
+        var list: std.ArrayList([]const u8) = .empty;
+        errdefer list.deinit(gpa);
+        for (sorted, 0..) |token, i| {
+            if (i == 0 or !std.mem.eql(u8, token, sorted[i - 1])) try list.append(gpa, token);
+        }
+        try list.append(gpa, preprocess.END_OF_TEXT);
+        try list.append(gpa, preprocess.UNK_TOKEN);
+        const all = try list.toOwnedSlice(gpa);
+        errdefer gpa.free(all);
+
+        var ids: std.StringHashMapUnmanaged(u32) = .empty;
+        errdefer ids.deinit(gpa);
+        try ids.ensureTotalCapacity(gpa, @intCast(all.len));
+        for (all, 0..) |token, id| ids.putAssumeCapacity(token, @intCast(id));
+        return .{ .tokens = all, .ids = ids };
+    }
+
+    pub fn deinit(self: *Vocab, gpa: std.mem.Allocator) void {
+        gpa.free(self.tokens);
+        self.ids.deinit(gpa);
+    }
+
+    pub fn size(self: Vocab) usize {
+        return self.tokens.len;
+    }
+
+    /// token -&gt; ID, or null if the token is not in the vocabulary.
+    pub fn idOf(self: Vocab, text: []const u8) ?u32 {
+        return self.ids.get(text);
+    }
+
+    /// ID -&gt; token, or null if out of range.
+    pub fn tokenOf(self: Vocab, id: u32) ?[]const u8 {
+        return if (id &lt; self.tokens.len) self.tokens[id] else null;
+    }
+};
+
+fn lessThan(_: void, a: []const u8, b: []const u8) bool {
+    return std.mem.order(u8, a, b) == .lt;
+}
+
+test &quot;vocab is sorted with special tokens last&quot; {
+    const gpa = std.testing.allocator;
+    var v = try Vocab.build(gpa, &amp;.{ &quot;b&quot;, &quot;a&quot;, &quot;b&quot;, &quot;c&quot; });
+    defer v.deinit(gpa);
+    try std.testing.expectEqual(@as(usize, 5), v.size());
+    try std.testing.expectEqual(@as(?u32, 0), v.idOf(&quot;a&quot;));
+    try std.testing.expectEqual(@as(?u32, 3), v.idOf(preprocess.END_OF_TEXT));
+    try std.testing.expectEqual(@as(?u32, 4), v.idOf(preprocess.UNK_TOKEN));
+    try std.testing.expectEqual(@as(?u32, null), v.idOf(&quot;zzz&quot;));
+}
+</code></pre><div class="file" dir="ltr">Zig-version/src/tokenization/simple.zig</div><pre dir="ltr"><code class="language-zig">//! Step 3 (book 2.3-2.4) - simple tokenizers: split text, look tokens up.
+//!
+//! ```
+//! encode: &quot;Hello, world&quot; -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; [1131, 5, 987]
+//! decode: [1131, 5, 987] -&gt; [&quot;Hello&quot;, &quot;,&quot;, &quot;world&quot;] -&gt; &quot;Hello, world&quot;
+//! ```
+//!
+//! Tip: compare V1 and V2. V1 fails on a word it never saw; V2 swaps it for
+//! `&lt;|unk|&gt;` and keeps going. That one difference is why real models use BPE.
+
+const std = @import(&quot;std&quot;);
+const preprocess = @import(&quot;preprocess.zig&quot;);
+const Vocab = @import(&quot;vocab.zig&quot;).Vocab;
+
+pub const SimpleTokenizer = struct {
+    vocab: *const Vocab,
+    /// false = V1 (error), true = V2 (`&lt;|unk|&gt;`).
+    unknown_to_unk: bool,
+
+    pub fn v1(vocab: *const Vocab) SimpleTokenizer {
+        return .{ .vocab = vocab, .unknown_to_unk = false };
+    }
+
+    pub fn v2(vocab: *const Vocab) SimpleTokenizer {
+        return .{ .vocab = vocab, .unknown_to_unk = true };
+    }
+
+    /// text -&gt; IDs. V1 fails with `error.UnknownToken` on a word outside the
+    /// vocabulary; V2 uses the `&lt;|unk|&gt;` ID instead. Caller frees.
+    pub fn encode(self: SimpleTokenizer, gpa: std.mem.Allocator, text: []const u8) ![]u32 {
+        const tokens = try preprocess.splitText(gpa, text);
+        defer gpa.free(tokens);
+        const ids = try gpa.alloc(u32, tokens.len);
+        errdefer gpa.free(ids);
+        for (tokens, ids) |token, *id| {
+            id.* = self.vocab.idOf(token) orelse
+                (if (self.unknown_to_unk) self.vocab.idOf(preprocess.UNK_TOKEN) else null) orelse
+                return error.UnknownToken;
+        }
+        return ids;
+    }
+
+    /// IDs -&gt; text. Fails with `error.UnknownId` for an ID outside the vocabulary. Caller frees.
+    pub fn decode(self: SimpleTokenizer, gpa: std.mem.Allocator, ids: []const u32) ![]u8 {
+        const tokens = try gpa.alloc([]const u8, ids.len);
+        defer gpa.free(tokens);
+        for (ids, tokens) |id, *token| token.* = self.vocab.tokenOf(id) orelse return error.UnknownId;
+        return preprocess.detokenize(gpa, tokens);
+    }
+};
+
+fn testVocab(gpa: std.mem.Allocator) !Vocab {
+    return Vocab.build(gpa, &amp;.{ &quot;Hello&quot;, &quot;,&quot;, &quot;world&quot; });
+}
+
+test &quot;V1 fails on unknown words, V2 uses &lt;|unk|&gt;&quot; {
+    const gpa = std.testing.allocator;
+    var vocab = try testVocab(gpa);
+    defer vocab.deinit(gpa);
+
+    try std.testing.expectError(error.UnknownToken, SimpleTokenizer.v1(&amp;vocab).encode(gpa, &quot;Hello there&quot;));
+
+    const ids = try SimpleTokenizer.v2(&amp;vocab).encode(gpa, &quot;Hello there&quot;);
+    defer gpa.free(ids);
+    try std.testing.expectEqual(vocab.idOf(preprocess.UNK_TOKEN).?, ids[1]);
+}
+
+test &quot;encode then decode round-trips simple text&quot; {
+    const gpa = std.testing.allocator;
+    var vocab = try testVocab(gpa);
+    defer vocab.deinit(gpa);
+    const t = SimpleTokenizer.v1(&amp;vocab);
+    const ids = try t.encode(gpa, &quot;Hello, world&quot;);
+    defer gpa.free(ids);
+    const text = try t.decode(gpa, ids);
+    defer gpa.free(text);
+    try std.testing.expectEqualStrings(&quot;Hello, world&quot;, text);
+}
+</code></pre></div></div>
+<h2 id="s5">نمونهٔ خروجی</h2>
+<pre class="out">('younger', 1156)
+('your', 1157)
+('yourself', 1158)
+('&lt;|endoftext|&gt;', 1159)
+('&lt;|unk|&gt;', 1160)</pre>
+<p>(دو مدخل آخر توکن‌های ویژهٔ بخش 2.4 هستند.)</p>
+<h2 id="s6">تمرین</h2>
+<p>مرتب‌سازی را در <code>build_vocab</code> بردارید. آیا خروجی‌های رمزگشایی‌شده تغییر می‌کنند؟ چرا یا چرا نه؟</p>
+</div>
+<p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/fa/ch02-3-token-ids.html">ویرایش این صفحه در GitHub</a></p>
+<div class="pager"><a class="pg prev" href="ch02-2-tokenizing.html" rel="prev"><small>&rarr; قبلی </small><span>2.2 توکن‌سازی متن</span></a><a class="pg next" href="ch02-4-special-tokens.html" rel="next"><small> بعدی &larr;</small><span>2.4 توکن‌های ویژه</span></a></div>
+</main>
+<aside class="toc" aria-label="در این صفحه"><h4>در این صفحه</h4><a href="#s1">واژگان</a><a href="#s2">توکن‌ساز، نسخهٔ ۱</a><a href="#s3">کِی خراب می‌شود</a><a href="#s4">کد (واژگان و توکن‌ساز)</a><a href="#s5">نمونهٔ خروجی</a><a href="#s6">تمرین</a></aside>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script>window.I18N={copy:"کپی",copied:"کپی شد"}</script>
+<script src="../site.js"></script>
+</body></html>

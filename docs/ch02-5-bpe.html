@@ -1,13 +1,28 @@
 <!doctype html>
-<html lang="en"><head>
+<html lang="en" dir="ltr"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>2.5: Byte pair encoding</title>
+<title>2.5: Byte pair encoding · Build an LLM from scratch</title>
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
-</head><body><div class="layout">
-<nav class="side"><a class="brand" href="index.html">LLM from scratch</a>
-<h4>Start</h4>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hl-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hl-dark" disabled>
+<link rel="alternate" hreflang="fa" href="fa/ch02-5-bpe.html">
+</head><body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<button class="icon-btn menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="side"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<a class="brand" href="index.html">LLM from scratch</a>
+<span class="grow"></span>
+<a class="lang-btn" href="fa/ch02-5-bpe.html" hreflang="fa" lang="fa" aria-label="Switch language: فارسی">فارسی</a>
+<button class="icon-btn theme-btn" type="button" aria-label="Toggle theme"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+</header>
+<div class="layout">
+<nav class="side" id="side" aria-label="LLM from scratch">
+<input class="filter" type="search" placeholder="Filter pages…" aria-label="Filter pages" data-nomatch="No page matches.">
+<div class="navlinks"><h4>Start</h4>
 <a class="" href="index.html">Overview</a>
 <a class="" href="roadmap.html">Roadmap</a>
 <h4><a class="h4link" href="chapter-1.html">Chapter 1</a></h4>
@@ -20,7 +35,7 @@
 <a class="" href="ch02-2-tokenizing.html">2.2 Tokenizing text</a>
 <a class="" href="ch02-3-token-ids.html">2.3 Token IDs</a>
 <a class="" href="ch02-4-special-tokens.html">2.4 Special tokens</a>
-<a class=" on" href="ch02-5-bpe.html">2.5 Byte pair encoding</a>
+<a class=" on" href="ch02-5-bpe.html" aria-current="page">2.5 Byte pair encoding</a>
 <a class="" href="ch02-6-sampling.html">2.6 Sliding window</a>
 <a class="" href="ch02-7-embeddings.html">2.7-2.8 Embeddings &amp; positions</a>
 <a class="extra" href="bpe-walkthrough.html">BPE walkthrough</a>
@@ -43,19 +58,22 @@
 <a class="" href="reference.html">Code reference</a>
 <a class="" href="contributing.html">Contributing</a>
 <a class="" href="glossary.html">Glossary</a>
-<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></nav>
-<main><h1>2.5: Byte pair encoding</h1>
-<p class="meta">Book section 2.5 · code in Python, Go, Rust, C, Zig</p>
-<div class="aim"><b>Aim.</b> Replace the word-level tokenizer with the one GPT-2, GPT-3 and the original ChatGPT use: sub-word pieces, so no <code>&lt;|unk|&gt;</code> is ever needed.</div>
+<h4>Source</h4><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me">This repo</a><a href="https://github.com/rasbt/LLMs-from-scratch">Raschka's repo</a></div>
+</nav>
+<div class="scrim" hidden></div>
+<main id="main" tabindex="-1"><h1>2.5: Byte pair encoding</h1>
+<p class="meta">Book section <span dir="ltr">2.5</span> · code in Python, Go, Rust, C, Zig</p>
+
+<div><div class="aim"><b>Aim.</b> Replace the word-level tokenizer with the one GPT-2, GPT-3 and the original ChatGPT use: sub-word pieces, so no <code>&lt;|unk|&gt;</code> is ever needed.</div>
 <p>We do not implement BPE <i>training</i> here. Python, Go and Rust call <b>tiktoken</b> (OpenAI, written in Rust) with the GPT-2 vocabulary of <b>50,257</b> tokens. <code>&lt;|endoftext|&gt;</code> gets the last ID, <b>50256</b>.</p>
 <pre class="out">[15496, 11, 466, 345, 588, 8887, 30, 220, 50256, 554, 262, 4252, 18250, 8812, 2114, 286, 262, 20562, 13]
 Hello, do you like tea? &lt;|endoftext|&gt; In the sunlit terraces of the palace.</pre>
-<h2>How BPE avoids unknown words</h2>
+<h2 id="s1">How BPE avoids unknown words</h2>
 <p>Training starts with every single character as a token, then repeatedly <b>merges the most frequent neighbouring pairs</b> into new tokens (<code>d</code> + <code>e</code> becomes <code>de</code>, then maybe <code>def</code>, and so on) up to a size limit. At encode time, an unfamiliar word is split into the largest known pieces, down to single characters or bytes if needed. Any string can be encoded.</p>
 <div class="tip"><b>C and Zig have no tiktoken</b>, so they ship a small from-scratch BPE <i>encoder</i> (<code>bpe.c</code>, <code>bpe.zig</code>, shown in their tabs). It reads the GPT-2 vocabulary from <code>assets/gpt2-ranks.txt</code> and repeatedly merges the neighbouring pair with the lowest rank. It matches tiktoken's IDs, including on emoji, tabs and repeated special tokens. Reading it is the best way to see how BPE merges work.</div>
 <div class="tip">tiktoken refuses special-token text by default, to prevent injection. Python passes <code>allowed_special</code> to opt in. Go and Rust use <code>r50k_base</code>, the same vocabulary as GPT-2 under its tiktoken name.</div>
-<h2>Code (the BPE demo is <code>demo_bpe</code> / <code>demoBPE</code> in each runner)</h2>
-<div class="tabs"><div class="tabbar"><button data-lang="python">Python</button><button data-lang="go">Go</button><button data-lang="rust">Rust</button><button data-lang="c">C</button><button data-lang="zig">Zig</button></div><div class="pane" data-lang="python"><div class="file">python-version/main.py</div><pre><code class="language-python">&quot;&quot;&quot;Demo runner for the educational tokenizers and data sampling.
+<h2 id="s2">Code (the BPE demo is <code>demo_bpe</code> / <code>demoBPE</code> in each runner)</h2>
+<div class="tabs"><div class="tabbar" role="tablist" dir="ltr"><button role="tab" type="button" id="t-ch02-5-bpe-python" aria-controls="p-ch02-5-bpe-python" data-lang="python">Python</button><button role="tab" type="button" id="t-ch02-5-bpe-go" aria-controls="p-ch02-5-bpe-go" data-lang="go">Go</button><button role="tab" type="button" id="t-ch02-5-bpe-rust" aria-controls="p-ch02-5-bpe-rust" data-lang="rust">Rust</button><button role="tab" type="button" id="t-ch02-5-bpe-c" aria-controls="p-ch02-5-bpe-c" data-lang="c">C</button><button role="tab" type="button" id="t-ch02-5-bpe-zig" aria-controls="p-ch02-5-bpe-zig" data-lang="zig">Zig</button></div><div class="pane" role="tabpanel" id="p-ch02-5-bpe-python" aria-labelledby="t-ch02-5-bpe-python" data-lang="python"><div class="file" dir="ltr">python-version/main.py</div><pre dir="ltr"><code class="language-python">&quot;&quot;&quot;Demo runner for the educational tokenizers and data sampling.
 
 Run from anywhere:
 
@@ -236,7 +254,7 @@ def main() -&gt; None:
 
 if __name__ == &quot;__main__&quot;:
     main()
-</code></pre></div><div class="pane" data-lang="go"><div class="file">go-version/cmd/main.go</div><pre><code class="language-go">// Demo runner for the educational tokenizers and data sampling.
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-5-bpe-go" aria-labelledby="t-ch02-5-bpe-go" data-lang="go"><div class="file" dir="ltr">go-version/cmd/main.go</div><pre dir="ltr"><code class="language-go">// Demo runner for the educational tokenizers and data sampling.
 //
 // Run from go-version/:
 //
@@ -450,7 +468,7 @@ func main() {
 		}
 	}
 }
-</code></pre></div><div class="pane" data-lang="rust"><div class="file">rust-version/src/main.rs</div><pre><code class="language-rust">//! Demo runner for the educational tokenizers and data sampling.
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-5-bpe-rust" aria-labelledby="t-ch02-5-bpe-rust" data-lang="rust"><div class="file" dir="ltr">rust-version/src/main.rs</div><pre dir="ltr"><code class="language-rust">//! Demo runner for the educational tokenizers and data sampling.
 //!
 //! Run from anywhere: `cargo run --manifest-path rust-version/Cargo.toml`
 //!
@@ -657,7 +675,7 @@ fn main() {
         }
     }
 }
-</code></pre></div><div class="pane" data-lang="c"><div class="file">C-version/main.c</div><pre><code class="language-c">/* Demo runner for the educational tokenizers and data sampling.
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-5-bpe-c" aria-labelledby="t-ch02-5-bpe-c" data-lang="c"><div class="file" dir="ltr">C-version/main.c</div><pre dir="ltr"><code class="language-c">/* Demo runner for the educational tokenizers and data sampling.
  *
  * Run from C-version/:
  *
@@ -918,7 +936,7 @@ int main(int argc, char **argv) {
     }
     return 0;
 }
-</code></pre><div class="file">C-version/tokenization/bpe.h</div><pre><code class="language-c">/* Bonus (book 2.5) - byte pair encoding, the GPT-2 tokenizer.
+</code></pre><div class="file" dir="ltr">C-version/tokenization/bpe.h</div><pre dir="ltr"><code class="language-c">/* Bonus (book 2.5) - byte pair encoding, the GPT-2 tokenizer.
  *
  * C has no tiktoken, so this is a small from-scratch encoder that reads the
  * GPT-2 vocabulary from assets/gpt2-ranks.txt (one line per token: the token&#x27;s
@@ -958,7 +976,7 @@ int *bpe_encode(const Bpe *b, const char *text, size_t *n);
 char *bpe_decode(const Bpe *b, const int *ids, size_t n);
 
 #endif
-</code></pre><div class="file">C-version/tokenization/bpe.c</div><pre><code class="language-c">#include &quot;bpe.h&quot;
+</code></pre><div class="file" dir="ltr">C-version/tokenization/bpe.c</div><pre dir="ltr"><code class="language-c">#include &quot;bpe.h&quot;
 
 #include &lt;ctype.h&gt;
 #include &lt;stdbool.h&gt;
@@ -1145,7 +1163,7 @@ char *bpe_decode(const Bpe *b, const int *ids, size_t n) {
     *p = &#x27;\0&#x27;;
     return out;
 }
-</code></pre></div><div class="pane" data-lang="zig"><div class="file">Zig-version/src/main.zig</div><pre><code class="language-zig">//! Demo runner for the educational tokenizers and data sampling.
+</code></pre></div><div class="pane" role="tabpanel" id="p-ch02-5-bpe-zig" aria-labelledby="t-ch02-5-bpe-zig" data-lang="zig"><div class="file" dir="ltr">Zig-version/src/main.zig</div><pre dir="ltr"><code class="language-zig">//! Demo runner for the educational tokenizers and data sampling.
 //!
 //! Run from Zig-version/:
 //!
@@ -1365,7 +1383,7 @@ pub fn main() !void {
         }
     }
 }
-</code></pre><div class="file">Zig-version/src/tokenization/bpe.zig</div><pre><code class="language-zig">//! Bonus (book 2.5) - byte pair encoding, the GPT-2 tokenizer.
+</code></pre><div class="file" dir="ltr">Zig-version/src/tokenization/bpe.zig</div><pre dir="ltr"><code class="language-zig">//! Bonus (book 2.5) - byte pair encoding, the GPT-2 tokenizer.
 //!
 //! There is no tiktoken for Zig, so this is a small from-scratch encoder that
 //! reads the GPT-2 vocabulary from `assets/gpt2-ranks.txt` (one line per token:
@@ -1535,20 +1553,23 @@ test &quot;bpe merges by lowest rank&quot; {
     try std.testing.expectEqualSlices(u32, &amp;.{ 2, 2 }, ids);
 }
 </code></pre></div></div>
-<h2>Exercises</h2>
+<h2 id="s3">Exercises</h2>
 <ol>
 <li>Book exercise 2.1: encode the made-up text <code>"Akwirw ier"</code>, print each ID, decode each ID on its own, then decode the whole list. Does it round-trip?</li>
 <li>Encode <code>Zorblax</code>. How many tokens?</li>
 </ol>
 <details class="qa"><summary>Answer to 2</summary>Four: <code>Z | or | bl | ax</code> (IDs 57, 273, 2436, 897). See the <a href="bpe-walkthrough.html">step-by-step trace</a>.</details>
 <p>Want to see the merge loop work on real words? <a href="bpe-walkthrough.html">Extra: a BPE encode, step by step</a>.</p>
-
+</div>
 <p class="edit"><a href="https://github.com/SobhanYasami/LLMs-from-scratch-by-me/blob/main/docs/pages/ch02-5-bpe.html">Edit this page on GitHub</a></p>
-<div class="pager"><a href="ch02-4-special-tokens.html">&larr; 2.4 Special tokens</a><a href="ch02-6-sampling.html">2.6 Sliding window &rarr;</a></div>
-</main></div>
+<div class="pager"><a class="pg prev" href="ch02-4-special-tokens.html" rel="prev"><small>&larr; Previous </small><span>2.4 Special tokens</span></a><a class="pg next" href="ch02-6-sampling.html" rel="next"><small> Next &rarr;</small><span>2.6 Sliding window</span></a></div>
+</main>
+<aside class="toc" aria-label="On this page"><h4>On this page</h4><a href="#s1">How BPE avoids unknown words</a><a href="#s2">Code (the BPE demo is demo_bpe / demoBPE in each runner)</a><a href="#s3">Exercises</a></aside>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highlightjs-zig@1.0.0/dist/zig.min.js"></script>
+<script>window.I18N={copy:"Copy",copied:"Copied"}</script>
 <script src="site.js"></script>
 </body></html>
