@@ -1,0 +1,47 @@
+---
+title: "5.4: Loading and saving model weights"
+nav: 5.4 Save and load
+chapter: "5"
+order: 40
+sections: ["5.4"]
+code: train_checkpoint
+---
+<div class="aim"><b>Aim.</b> Save a trained model so it does not have to be trained again, and save the optimizer too so training can resume exactly where it stopped.</div>
+<p>Training is the expensive part. You want to do it once, store the result, and load it whenever you need the model. A trained model is just its <b>weights</b>: a long list of numbers. Saving it means writing those numbers to a file.</p>
+<h2>What goes into the file</h2>
+<p>The book uses <code>torch.save(model.state_dict(), "model.pth")</code>. Our five languages must read each other's files, so we use one plain format:</p>
+<table><tr><th>Part</th><th>Content</th></tr>
+<tr><td>magic</td><td>8 bytes: <code>LLMCKPT1</code></td></tr>
+<tr><td>settings</td><td>7 numbers (32-bit integers): vocabulary, context length, embedding size, heads, layers, qkv bias (0/1), has optimizer (0/1)</td></tr>
+<tr><td>weights</td><td>every tensor of the model as raw 32-bit floats, in one fixed order (token embedding, position embedding, then each block, the final norm, the output head)</td></tr>
+<tr><td>optimizer (optional)</td><td>the step count, then the two running averages of AdamW for every tensor</td></tr></table>
+<p>That is all. A 3.2 million parameter model plus its optimizer state is exactly <b>38,906,920 bytes</b>: a 36 byte header (8 magic + 28 settings), 3,242,240 weights, a 4 byte step counter, and two more copies of the weights for the optimizer, at 4 bytes per number.</p>
+<h2>Why save the optimizer</h2>
+<p>AdamW remembers, for every weight, two running averages (5.2). If you save only the weights and restart, the optimizer starts from nothing: its first steps are wrong and training can wobble or even throw away progress. To <b>resume</b> training, save and reload the optimizer state as well.</p>
+<h2>Proof that resuming is exact</h2>
+<p>The demo saves the trained model and optimizer, loads them into a brand-new model (built from the file's settings), and checks two things:</p>
+<pre class="out">saved model and optimizer state: 38,906,920 bytes
+largest logit difference between the two models: 0.000000
+3 more steps, continued: losses [5.898, 6.165, 6.076]
+3 more steps, restored : losses [5.898, 6.165, 6.076]
+same losses: true</pre>
+<ul>
+<li>The loaded model gives <b>exactly</b> the same scores as the original.</li>
+<li>Training 3 more steps from the loaded model and optimizer gives <b>exactly</b> the same losses as simply continuing. Nothing was lost in the file.</li>
+</ul>
+<h2>Files travel between languages</h2>
+<p>Because the format is plain, a checkpoint written by one language loads in any other. We checked it: Go, Rust, C and Zig, each trained on its own, write <b>byte-identical files</b> (same checksum). Python's file has slightly different weights (the torch rounding of 5.2) but loads in Rust and gives the same scores as Python itself. Run the chapter in two languages and load one's file in the other as an exercise.</p>
+<div class="tip">The numbers are written as your machine stores them, which is little-endian on every x86 and ARM computer. The files are ignored by git (<code>assets/checkpoints/</code>).</div>
+<h2>Code</h2>
+{{code}}
+<h2>Exercises</h2>
+<ol>
+<li>Exercise 5.4: in a new session, load the checkpoint and train one more epoch. Does the loss keep falling?</li>
+<li>Load a checkpoint without the optimizer and train. How do the first losses compare with a proper resume?</li>
+<li>How many bytes would a checkpoint of GPT-2 small (163,009,536 parameters) take, with and without the optimizer?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) It keeps falling on the training data; watch the validation loss for overfitting. 2) The first steps are larger and noisier because the averages restart at zero (the bias correction compensates a little, but not fully). 3) Without: 163,009,536 x 4 + 36 = 652,038,180 bytes (620 MB); with: three times the weights, 1,956,114,472 bytes (about 1.8 GB).</details>
+<h2>Check yourself</h2>
+<details class="qa"><summary>Why save the optimizer state?</summary>Its running averages shape every step. Without them a resumed run starts over with a cold optimizer.</details>
+<details class="qa"><summary>What is a model checkpoint, really?</summary>Its configuration plus all its weights as numbers.</details>
+<details class="qa"><summary>Why does the loaded model give exactly the same scores?</summary>The file stores the weights bit for bit, as 32-bit floats.</details>

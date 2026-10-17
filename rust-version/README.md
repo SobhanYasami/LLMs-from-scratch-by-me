@@ -40,6 +40,11 @@ cargo test        # runs the split_text doctest
 
 `cargo run -- ch04` runs the chapter 4 demos (`cargo run --release -- ch04-124m` builds the real 124M model). `src/gpt/` has `layers` (layer norm, GELU, Linear, feed forward), `shortcut` (the 4.4 gradient demo with a hand-written backward pass), `block` (reuses chapter 3's `MultiHeadAttention`) and `model` (`Config`, `GptModel`, `parameter_count`, `generate_text_simple`); the demo is `src/ch04.rs`. `cargo test` checks the book's 163,009,536 parameters. Output is identical to Python's.
 
+
+## Chapter 5: pretraining
+
+`cargo run --release -- ch05` trains the tiny GPT for two epochs, then runs the decoding, checkpoint and loading demos; `cargo run --release -- ch05-gpt2` loads OpenAI's GPT-2 weights (download first, see `src/train/openai.rs`). `src/train/` has `loss`, `grad` (the backward pass written by hand: no autograd in Rust) with `adamw`, `sample`, `checkpoint` and `openai`; the demo is `src/ch05.rs`. `cargo test` checks the gradients against numbers from torch's autograd. Output is identical to Go, C and Zig; Python/torch agrees until late in training.
+
 ## Python <-> Rust notes
 
 - The `regex` crate has no capturing split; `split_text` walks `find_iter` matches by hand.

@@ -26,6 +26,9 @@ pub struct MultiHeadAttention {
     pub w_value: Matrix,
     pub out_weight: Matrix,
     pub out_bias: Vec<f32>,
+    /// Biases of the query, key and value projections: `None` in chapters 3 and 4,
+    /// `Some` for OpenAI's GPT-2 weights (5.5).
+    pub qkv_bias: Option<[Vec<f32>; 3]>,
     pub num_heads: usize,
     pub head_dim: usize,
 }
@@ -44,6 +47,7 @@ impl MultiHeadAttention {
             w_value,
             out_weight,
             out_bias: vec![0.0; d_out],
+            qkv_bias: None,
             num_heads,
             head_dim: d_out / num_heads,
         }
@@ -51,11 +55,20 @@ impl MultiHeadAttention {
 
     /// `x` is [T, d_in]; returns [T, d_out].
     pub fn forward(&self, x: &Matrix) -> Matrix {
-        let (q, k, v) = (
+        let (mut q, mut k, mut v) = (
             x.matmul(&self.w_query),
             x.matmul(&self.w_key),
             x.matmul(&self.w_value),
         );
+        if let Some([bq, bk, bv]) = &self.qkv_bias {
+            for (m, b) in [(&mut q, bq), (&mut k, bk), (&mut v, bv)] {
+                for row in m.data.chunks_mut(b.len()) {
+                    for (v, bias) in row.iter_mut().zip(b) {
+                        *v += bias;
+                    }
+                }
+            }
+        }
         let mut context = Matrix::new(x.rows, self.num_heads * self.head_dim);
         for h in 0..self.num_heads {
             let (lo, hi) = (h * self.head_dim, (h + 1) * self.head_dim); // this head's column slice

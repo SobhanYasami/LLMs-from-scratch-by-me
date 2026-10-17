@@ -50,4 +50,16 @@ order: 30
 <tr><td>Weight tying</td><td>Reusing the token embedding matrix as the output head, so its parameters count once.</td><td><a href="ch04-6-gpt-model.html">4.6</a></td></tr>
 <tr><td>Greedy decoding</td><td>Always picking the highest-scoring next token.</td><td><a href="ch04-7-generate.html">4.7</a></td></tr>
 <tr><td>KV cache</td><td>Remembering the keys and values of past tokens so each new token costs one step, not a full re-run.</td><td><a href="ch04-7-generate.html">4.7</a></td></tr>
+<tr><td>Cross entropy loss</td><td>Minus the average log of the probability the model gave to the correct next token. 0 is perfect; ln(vocabulary) is a uniform guess.</td><td><a href="ch05-1-loss.html">5.1</a></td></tr>
+<tr><td>Perplexity</td><td>exp(loss): the effective number of tokens the model is undecided between.</td><td><a href="ch05-1-loss.html">5.1</a></td></tr>
+<tr><td>Validation set</td><td>Text held back from training to check that the model has learned language and not just memorised.</td><td><a href="ch05-1-loss.html">5.1</a></td></tr>
+<tr><td>Epoch</td><td>One pass over all the training batches.</td><td><a href="ch05-2-training.html">5.2</a></td></tr>
+<tr><td>Gradient</td><td>For one weight: how much the loss changes if that weight changes a little.</td><td><a href="ch05-2-training.html">5.2</a></td></tr>
+<tr><td>Backpropagation</td><td>Computing every gradient by walking the layers backwards with the chain rule.</td><td><a href="backprop-by-hand.html">extra</a></td></tr>
+<tr><td>AdamW</td><td>The optimizer: each weight moves by roughly the learning rate in the direction of its steady gradient, with weight decay.</td><td><a href="adamw-by-hand.html">extra</a></td></tr>
+<tr><td>Overfitting</td><td>Training loss keeps falling while validation loss stalls: the model memorises its training text.</td><td><a href="ch05-2-training.html">5.2</a></td></tr>
+<tr><td>Temperature</td><td>A divisor for the logits before softmax: below 1 sharpens, above 1 flattens the distribution.</td><td><a href="ch05-3-decoding.html">5.3</a></td></tr>
+<tr><td>Top-k sampling</td><td>Keep only the k highest logits (the rest become -inf) before drawing the next token.</td><td><a href="ch05-3-decoding.html">5.3</a></td></tr>
+<tr><td>Checkpoint</td><td>A file with a model's settings and weights (and optionally the optimizer state).</td><td><a href="ch05-4-save-load.html">5.4</a></td></tr>
+<tr><td>safetensors</td><td>A plain file format for tensors: header length, JSON header, raw numbers. How OpenAI's GPT-2 weights are shared.</td><td><a href="ch05-5-openai-weights.html">5.5</a></td></tr>
 </table>

@@ -1,0 +1,68 @@
+---
+title: "5.3: Decoding strategies to control randomness"
+nav: 5.3 Temperature and top-k
+chapter: "5"
+order: 30
+sections: ["5.3"]
+code: train_sample
+---
+<div class="aim"><b>Aim.</b> Make the model's text less repetitive with temperature scaling and top-k sampling, and learn what each knob does to the probabilities.</div>
+<p>Greedy decoding (chapter 4.7) always picks the most likely token. Run it twice on the same prompt and you get the same text, often a passage copied from the training data. To get variety, we <b>draw</b> the next token from the probabilities instead of taking the biggest one.</p>
+<h2>A nine-word example</h2>
+<p>Suppose the model must continue <i>"every effort moves you"</i> over a vocabulary of nine words and gives these scores:</p>
+<pre class="out">next-token probabilities: [0.0609, 0.0016, 0.0001, 0.5721, 0.0034, 0.0001, 0.0001, 0.3576, 0.0040]
+greedy pick: forward</pre>
+<table><tr><th>closer</th><th>every</th><th>effort</th><th>forward</th><th>inches</th><th>moves</th><th>pizza</th><th>toward</th><th>you</th></tr>
+<tr><td>0.0609</td><td>0.0016</td><td>0.0001</td><td><b>0.5721</b></td><td>0.0034</td><td>0.0001</td><td>0.0001</td><td>0.3576</td><td>0.0040</td></tr></table>
+<p>Greedy always says "forward". Sampling says "forward" 57% of the time, "toward" 36%, "closer" 6%, and, rarely, something odd.</p>
+<h2>Temperature: sharpen or flatten</h2>
+<p>Divide the scores by a number <b>T</b> before softmax:</p>
+<ul>
+<li><b>T &lt; 1</b> makes big scores bigger relative to the rest: the distribution gets <i>peakier</i>, behaviour approaches greedy.</li>
+<li><b>T = 1</b> changes nothing.</li>
+<li><b>T &gt; 1</b> evens the scores out: the distribution gets <i>flatter</i>, more surprising words get a chance.</li>
+</ul>
+<p>1,000 draws with the repo's generator (seed 123) show it:</p>
+<pre class="out">temperature 1: P(pizza) = 0.0001  1000 draws: 51 x closer, 2 x every, 594 x forward, 3 x inches, 344 x toward, 6 x you
+temperature 0.1: P(pizza) = 0.0000  1000 draws: 990 x forward, 10 x toward
+temperature 5: P(pizza) = 0.0430  1000 draws: 155 x closer, 77 x every, 42 x effort, 247 x forward, 97 x inches, 41 x moves, 45 x pizza, 225 x toward, 71 x you</pre>
+<ul>
+<li>At T = 0.1 "forward" wins 990 times out of 1,000: almost greedy.</li>
+<li>At T = 5 every word gets drawn, including "pizza" 45 times (probability 4.3%): <i>"every effort moves you pizza"</i>.</li>
+</ul>
+<p>(The book's torch counts differ because torch's sampler uses a different random stream; the proportions agree.) Exercise 5.1 asks for the probability of "pizza": no need to sample, just read it from the softmax. That is the faster and more accurate way: <b>0.0001, 0.0000 and 0.0430</b>.</p>
+<h2>Top-k: only the best candidates</h2>
+<p>High temperature lets nonsense in. <b>Top-k</b> keeps only the k highest scores and sets the others to <code>-inf</code>, which softmax turns into probability exactly 0:</p>
+<pre class="out">top-3 logits: [6.75, 6.28, 4.51] at positions [3, 7, 0]
+after masking with -inf: ['4.51', '-inf', '-inf', '6.75', '-inf', '-inf', '-inf', '6.28', '-inf']
+top-3 probabilities: [0.0615, 0.0000, 0.0000, 0.5775, 0.0000, 0.0000, 0.0000, 0.3610, 0.0000]</pre>
+<p>Only "closer", "forward" and "toward" can be drawn. "pizza" is gone for good. (The same <code>-inf</code> trick hid future tokens in chapter 3's causal attention.)</p>
+<h2>The <code>generate</code> function</h2>
+<p>Put together, one generation step is: take the last row of logits, optionally apply top-k, optionally divide by the temperature, softmax, <b>draw</b> (or take the argmax when the temperature is 0), append, repeat.</p>
+<div class="flow">
+<div><b>logits</b>last position</div><span>&rarr;</span>
+<div><b>top-k</b>mask all but k</div><span>&rarr;</span>
+<div><b>/ temperature</b></div><span>&rarr;</span>
+<div><b>softmax</b></div><span>&rarr;</span>
+<div class="hot"><b>draw</b>in proportion to the probabilities</div>
+</div>
+<p>With the trained tiny model:</p>
+<pre class="out">greedy   : 'Every effort moves you............,,,'
+top-k 25, temperature 1.4: 'Every effort moves you it my't with he it him of that. you meI. me'
+temperature 0 equals greedy: true</pre>
+<p>Greedy is stuck on punctuation. Sampling produces a varied (nonsense, but varied) mix of common words. Temperature 0 turns the randomness off, which is exercise 5.3.</p>
+<h2>How the draw works here</h2>
+<p>The book uses <code>torch.multinomial</code>. To make all five languages agree we draw our own way, <b>inverse-CDF sampling</b>: pick one uniform number u between 0 and 1, add up the probabilities in order, and stop at the first token where the running total passes u. A token with probability 0 can never be picked. The uniform numbers come from the same splitmix64 generator as everything else in this repo.</p>
+<h2>Code</h2>
+{{code}}
+<h2>Exercises</h2>
+<ol>
+<li>Exercise 5.2: try temperatures 0.3, 1 and 3 with top-k 5 and 50 on the 124M model of 5.5. When do you want low settings, when high?</li>
+<li>Exercise 5.3: which settings make <code>generate</code> deterministic?</li>
+<li>With top-k = 1, what does the sampler always return?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) Low temperature and small k for tasks with a right answer (code, facts, translation); high ones for brainstorming and creative writing. 2) Temperature 0 (greedy), or top-k = 1: only one token keeps probability. 3) The single best token, i.e. greedy decoding.</details>
+<h2>Check yourself</h2>
+<details class="qa"><summary>What does a temperature above 1 do to the probabilities?</summary>It flattens them, so unlikely tokens get drawn more often.</details>
+<details class="qa"><summary>What does top-k do?</summary>Keeps the k most likely tokens and gives all others probability 0.</details>
+<details class="qa"><summary>Why can a token with probability 0 never be drawn?</summary>The running total does not grow over it, so it can never be the first entry that passes u.</details>

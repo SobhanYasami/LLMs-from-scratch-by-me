@@ -18,7 +18,7 @@ const GptSize GPT_SIZES[GPT_N_SIZES] = {
 
 size_t gpt_parameter_count(const GptConfig *cfg) {
     size_t v = cfg->vocab_size, c = cfg->context_length, d = cfg->emb_dim, n = cfg->n_layers;
-    size_t attention = 4 * d * d + d; /* wq, wk, wv, wo and the output bias */
+    size_t attention = 4 * d * d + d + (cfg->qkv_bias ? 3 * d : 0); /* wq, wk, wv, wo, the output bias (+ qkv biases) */
     size_t feed_forward = d * 4 * d + 4 * d + 4 * d * d + d;
     size_t norms = 2 * 2 * d; /* two layer norms per block, scale + shift each */
     return v * d + c * d + n * (attention + feed_forward + norms) + 2 * d + d * v;
@@ -31,16 +31,12 @@ size_t gpt_arena_bytes(const GptConfig *cfg) {
 }
 
 GptModel gpt_model_new(Arena *a, GptConfig cfg) {
-    if (cfg.qkv_bias) {
-        fputs("this implementation has no query/key/value bias (chapter 6 adds it)\n", stderr);
-        exit(1);
-    }
     GptModel m;
     m.cfg = cfg;
     m.tok_emb = matrix_new(a, cfg.vocab_size, cfg.emb_dim);
     m.pos_emb = matrix_new(a, cfg.context_length, cfg.emb_dim);
     m.blocks = arena_alloc(a, cfg.n_layers * sizeof(TransformerBlock));
-    for (size_t i = 0; i < cfg.n_layers; i++) m.blocks[i] = transformer_block_new(a, cfg.emb_dim, cfg.n_heads);
+    for (size_t i = 0; i < cfg.n_layers; i++) m.blocks[i] = transformer_block_new(a, cfg.emb_dim, cfg.n_heads, cfg.qkv_bias);
     m.final_norm = layernorm_new(a, cfg.emb_dim);
     m.out_head = matrix_new(a, cfg.emb_dim, cfg.vocab_size);
     return m;
@@ -74,10 +70,50 @@ size_t gpt_count_parameters(const GptModel *m) {
         const TransformerBlock *b = &m->blocks[i];
         const MultiHeadAttention *a = &b->att;
         n += size_of(a->w_query) + size_of(a->w_key) + size_of(a->w_value) + size_of(a->out_weight) + size_of(a->out_bias);
+        if (a->has_qkv_bias) n += size_of(a->qkv_bias[0]) + size_of(a->qkv_bias[1]) + size_of(a->qkv_bias[2]);
         n += size_of(b->ff.expand.w) + size_of(b->ff.expand.b) + size_of(b->ff.shrink.w) + size_of(b->ff.shrink.b);
         n += 2 * (size_of(b->norm1.scale) + size_of(b->norm2.scale));
     }
     return n;
+}
+
+size_t gpt_tensors(const GptModel *m, float **data, size_t *len) {
+    size_t n = 0;
+#define ADD(mat) (data[n] = (mat).data, len[n] = (mat).rows * (mat).cols, n++)
+    ADD(m->tok_emb);
+    ADD(m->pos_emb);
+    for (size_t i = 0; i < m->cfg.n_layers; i++) {
+        const TransformerBlock *b = &m->blocks[i];
+        const MultiHeadAttention *a = &b->att;
+        ADD(a->w_query);
+        ADD(a->w_key);
+        ADD(a->w_value);
+        if (a->has_qkv_bias)
+            for (int k = 0; k < 3; k++) ADD(a->qkv_bias[k]);
+        ADD(a->out_weight);
+        ADD(a->out_bias);
+        ADD(b->norm1.scale);
+        ADD(b->norm1.shift);
+        ADD(b->ff.expand.w);
+        ADD(b->ff.expand.b);
+        ADD(b->ff.shrink.w);
+        ADD(b->ff.shrink.b);
+        ADD(b->norm2.scale);
+        ADD(b->norm2.shift);
+    }
+    ADD(m->final_norm.scale);
+    ADD(m->final_norm.shift);
+    ADD(m->out_head);
+#undef ADD
+    return n;
+}
+
+GptModel gpt_model_zeros_like(Arena *a, const GptModel *m) {
+    GptModel z = gpt_model_new(a, m->cfg);
+    float *d[GPT_MAX_TENSORS];
+    size_t l[GPT_MAX_TENSORS], n = gpt_tensors(&z, d, l);
+    for (size_t i = 0; i < n; i++) memset(d[i], 0, l[i] * sizeof(float));
+    return z;
 }
 
 Matrix gpt_embed(Arena *a, const GptModel *m, const int *ids, size_t n) {

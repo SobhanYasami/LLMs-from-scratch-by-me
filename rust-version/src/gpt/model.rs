@@ -71,10 +71,6 @@ pub struct GptModel {
 
 impl GptModel {
     pub fn new(cfg: Config) -> Self {
-        assert!(
-            !cfg.qkv_bias,
-            "this implementation has no query/key/value bias (chapter 6 adds it)"
-        );
         Self {
             cfg,
             tok_emb: Matrix::new(cfg.vocab_size, cfg.emb_dim),
@@ -134,6 +130,82 @@ impl GptModel {
         self.final_norm.forward(&x).matmul(&self.out_head)
     }
 
+    /// Every weight as a flat slice, in the canonical order shared by all languages (see
+    /// `train::checkpoint`): token emb, position emb, then per block wq, wk, wv, [bq, bk, bv],
+    /// wo, bo, ln1 scale, ln1 shift, ff1 w, ff1 b, ff2 w, ff2 b, ln2 scale, ln2 shift; then
+    /// the final norm scale and shift and the output head.
+    pub fn tensors(&self) -> Vec<&[f32]> {
+        let mut t: Vec<&[f32]> = vec![&self.tok_emb.data, &self.pos_emb.data];
+        for b in &self.blocks {
+            let a = &b.att;
+            t.extend([&a.w_query.data[..], &a.w_key.data, &a.w_value.data]);
+            if let Some(qb) = &a.qkv_bias {
+                t.extend(qb.iter().map(|v| &v[..]));
+            }
+            t.extend([
+                &a.out_weight.data[..],
+                &a.out_bias,
+                &b.norm1.scale,
+                &b.norm1.shift,
+            ]);
+            t.extend([
+                &b.ff.expand.w.data[..],
+                &b.ff.expand.b,
+                &b.ff.shrink.w.data,
+                &b.ff.shrink.b,
+            ]);
+            t.extend([&b.norm2.scale[..], &b.norm2.shift]);
+        }
+        t.extend([
+            &self.final_norm.scale[..],
+            &self.final_norm.shift,
+            &self.out_head.data,
+        ]);
+        t
+    }
+
+    /// The same list, writable (the optimizer and the checkpoint loader use it).
+    pub fn tensors_mut(&mut self) -> Vec<&mut [f32]> {
+        let mut t: Vec<&mut [f32]> = vec![&mut self.tok_emb.data, &mut self.pos_emb.data];
+        for b in self.blocks.iter_mut() {
+            let a = &mut b.att;
+            t.extend([
+                &mut a.w_query.data[..],
+                &mut a.w_key.data,
+                &mut a.w_value.data,
+            ]);
+            if let Some(qb) = &mut a.qkv_bias {
+                t.extend(qb.iter_mut().map(|v| &mut v[..]));
+            }
+            t.extend([
+                &mut a.out_weight.data[..],
+                &mut a.out_bias,
+                &mut b.norm1.scale,
+                &mut b.norm1.shift,
+            ]);
+            t.extend([
+                &mut b.ff.expand.w.data[..],
+                &mut b.ff.expand.b,
+                &mut b.ff.shrink.w.data,
+                &mut b.ff.shrink.b,
+            ]);
+            t.extend([&mut b.norm2.scale[..], &mut b.norm2.shift]);
+        }
+        t.extend([
+            &mut self.final_norm.scale[..],
+            &mut self.final_norm.shift,
+            &mut self.out_head.data,
+        ]);
+        t
+    }
+
+    /// A model of the same shape with every number 0 (gradients and optimizer state live in one).
+    pub fn zeros_like(&self) -> Self {
+        let mut z = Self::new(self.cfg);
+        z.tensors_mut().into_iter().for_each(|t| t.fill(0.0));
+        z
+    }
+
     /// Add up every weight the model holds.
     pub fn count_parameters(&self) -> usize {
         let mut n = self.tok_emb.data.len()
@@ -147,6 +219,10 @@ impl GptModel {
                 + a.w_value.data.len()
                 + a.out_weight.data.len()
                 + a.out_bias.len();
+            n += a
+                .qkv_bias
+                .as_ref()
+                .map_or(0, |b| b.iter().map(Vec::len).sum());
             n += b.ff.expand.w.data.len()
                 + b.ff.expand.b.len()
                 + b.ff.shrink.w.data.len()
@@ -165,7 +241,7 @@ pub fn parameter_count(cfg: &Config) -> usize {
         cfg.emb_dim,
         cfg.n_layers,
     );
-    let attention = 4 * d * d + d; // wq, wk, wv, wo and the output bias
+    let attention = 4 * d * d + d + if cfg.qkv_bias { 3 * d } else { 0 }; // wq, wk, wv, wo, the output bias (+ qkv biases)
     let feed_forward = d * 4 * d + 4 * d + 4 * d * d + d;
     let norms = 2 * 2 * d; // two layer norms per block, scale + shift each
     v * d + c * d + n * (attention + feed_forward + norms) + 2 * d + d * v

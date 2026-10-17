@@ -89,3 +89,7 @@ Build-a-LLM.pdf
 site/public/
 site/resources/
 site/.hugo_build.lock
+
+# ---- downloaded GPT-2 weights (chapter 5.5) ----
+assets/gpt2/*.safetensors
+assets/checkpoints/

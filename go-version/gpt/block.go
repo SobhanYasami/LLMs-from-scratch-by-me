@@ -30,6 +30,9 @@ func NewTransformerBlock(cfg Config) *TransformerBlock {
 		OutWeight: attention.NewMatrix(d, d), OutBias: make([]float32, d),
 		NumHeads: cfg.NHeads, HeadDim: d / cfg.NHeads,
 	}
+	if cfg.QKVBias {
+		att.QKVBias = [][]float32{make([]float32, d), make([]float32, d), make([]float32, d)}
+	}
 	return &TransformerBlock{att, NewFeedForward(d), NewLayerNorm(d), NewLayerNorm(d)}
 }
 

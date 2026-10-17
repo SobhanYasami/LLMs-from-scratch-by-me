@@ -23,8 +23,8 @@ order: 10
 <tr><td>Rust</td><td><code>cd rust-version &amp;&amp; cargo run</code></td></tr>
 <tr><td>C</td><td><code>cd C-version &amp;&amp; make run</code></td></tr>
 <tr><td>Zig</td><td><code>cd Zig-version &amp;&amp; zig build run</code></td></tr></table>
-<p>Add an argument to run one chapter: <code>ch02</code>, <code>ch03</code> or <code>ch04</code> (and <code>ch04-124m</code> for the real 124M-parameter GPT).</p>
-<p>All five print identical output for the tokenizers, BPE, data sampling, attention and the GPT model of chapter 4. (Chapter 2 embeddings differ because each language draws its own random weights there, but the shapes match.)</p>
+<p>Add an argument to run one chapter: <code>ch02</code>, <code>ch03</code>, <code>ch04</code> or <code>ch05</code> (and <code>ch04-124m</code> for the real 124M-parameter GPT, <code>ch05-gpt2</code> for OpenAI's pretrained GPT-2).</p>
+<p>All five print identical output for the tokenizers, BPE, data sampling, attention, the GPT model of chapter 4 and its training (chapter 5). (Chapter 2 embeddings differ because each language draws its own random weights there, but the shapes match.)</p>
 <h2>Why five languages?</h2>
 <p>Seeing the same idea in a high-level and in a low-level language shows what is essential and what is language plumbing. Python hides memory and uses a tensor library; C and Zig make every allocation visible; Go and Rust sit in between. When a concept is hard to see in one, read it in another.</p>
 <h2>Sources and credit</h2>

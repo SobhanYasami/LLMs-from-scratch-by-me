@@ -216,3 +216,80 @@ embedding:
   zig:
   - src/tokenization/embedding.zig
   - src/tokenization/rng.zig
+train_loss:
+  python:
+  - train/loss.py
+  go:
+  - train/loss.go
+  rust:
+  - src/train/loss.rs
+  c:
+  - train/loss.h
+  - train/loss.c
+  zig:
+  - src/train/loss.zig
+train_loop:
+  python:
+  - train/trainer.py
+  go:
+  - train/grad.go
+  - train/adamw.go
+  rust:
+  - src/train/grad.rs
+  - src/train/adamw.rs
+  c:
+  - train/grad.h
+  - train/grad.c
+  - train/adamw.h
+  - train/adamw.c
+  zig:
+  - src/train/grad.zig
+  - src/train/adamw.zig
+train_sample:
+  python:
+  - train/sample.py
+  go:
+  - train/sample.go
+  rust:
+  - src/train/sample.rs
+  c:
+  - train/sample.h
+  - train/sample.c
+  zig:
+  - src/train/sample.zig
+train_checkpoint:
+  python:
+  - train/checkpoint.py
+  go:
+  - train/checkpoint.go
+  rust:
+  - src/train/checkpoint.rs
+  c:
+  - train/checkpoint.h
+  - train/checkpoint.c
+  zig:
+  - src/train/checkpoint.zig
+train_openai:
+  python:
+  - train/openai.py
+  go:
+  - train/openai.go
+  rust:
+  - src/train/openai.rs
+  c:
+  - train/openai.h
+  - train/openai.c
+  zig:
+  - src/train/openai.zig
+ch05_demo:
+  python:
+  - ch05.py
+  go:
+  - cmd/ch05.go
+  rust:
+  - src/ch05.rs
+  c:
+  - ch05.h
+  - ch05.c
+  zig:
+  - src/ch05.zig

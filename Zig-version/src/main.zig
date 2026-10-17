@@ -15,6 +15,7 @@ const std = @import("std");
 const tk = @import("tokenization/root.zig");
 const ch03 = @import("ch03.zig");
 const ch04 = @import("ch04.zig");
+const ch05 = @import("ch05.zig");
 
 /// Run from Zig-version/, like go-version resolves ../assets.
 const data_path = "../assets/the-verdict.txt";
@@ -207,6 +208,7 @@ pub fn main() !void {
         try runChapter2(gpa, out);
         try ch03.run(gpa, out);
         try ch04.run(gpa, out);
+        try ch05.run(gpa, out);
         return;
     }
     for (args[1..]) |chapter| {
@@ -218,8 +220,12 @@ pub fn main() !void {
             try ch04.run(gpa, out);
         } else if (std.mem.eql(u8, chapter, "ch04-124m")) {
             try ch04.run124m(gpa, out);
+        } else if (std.mem.eql(u8, chapter, "ch05")) {
+            try ch05.run(gpa, out);
+        } else if (std.mem.eql(u8, chapter, "ch05-gpt2")) {
+            try ch05.runGpt2(gpa, out);
         } else {
-            std.debug.print("unknown chapter '{s}'; use ch02, ch03, ch04 or ch04-124m\n", .{chapter});
+            std.debug.print("unknown chapter '{s}'; use ch02, ch03, ch04, ch04-124m, ch05 or ch05-gpt2\n", .{chapter});
             std.process.exit(1);
         }
     }

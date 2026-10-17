@@ -23,6 +23,10 @@ typedef struct {
     Matrix w_query, w_key, w_value, out_weight;
     Matrix out_bias; /* 1 x d_out */
     size_t num_heads, head_dim;
+    /* Biases of the query, key and value projections (1 x d_out each): unused (has_qkv_bias = 0)
+     * in chapters 3 and 4, set for OpenAI's GPT-2 weights (5.5). */
+    int has_qkv_bias;
+    Matrix qkv_bias[3];
 } MultiHeadAttention;
 
 /* Uniform [0, 1) weights (query, key, value, out_proj) and a zero bias.

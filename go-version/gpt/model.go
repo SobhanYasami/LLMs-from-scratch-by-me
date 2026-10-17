@@ -55,9 +55,6 @@ type Model struct {
 }
 
 func NewModel(cfg Config) *Model {
-	if cfg.QKVBias {
-		panic("this implementation has no query/key/value bias (chapter 6 adds it)")
-	}
 	m := &Model{Cfg: cfg,
 		TokEmb:    attention.NewMatrix(cfg.VocabSize, cfg.EmbDim),
 		PosEmb:    attention.NewMatrix(cfg.ContextLength, cfg.EmbDim),
@@ -92,8 +89,8 @@ func NewInitializedModel(cfg Config, seed uint64) *Model {
 	return m
 }
 
-// Forward takes token IDs [T] and returns logits [T, vocab].
-func (m *Model) Forward(ids []int) Matrix {
+// Embed is token embedding + position embedding: what the model feeds its first block.
+func (m *Model) Embed(ids []int) Matrix {
 	x := attention.NewMatrix(len(ids), m.Cfg.EmbDim)
 	for t, id := range ids {
 		tok, pos, row := m.TokEmb.Row(id), m.PosEmb.Row(t), x.Row(t)
@@ -101,10 +98,41 @@ func (m *Model) Forward(ids []int) Matrix {
 			row[j] = tok[j] + pos[j]
 		}
 	}
+	return x
+}
+
+// Forward takes token IDs [T] and returns logits [T, vocab].
+func (m *Model) Forward(ids []int) Matrix {
+	x := m.Embed(ids)
 	for _, b := range m.Blocks {
 		x = b.Forward(x)
 	}
 	return attention.MatMul(m.FinalNorm.Forward(x), m.OutHead)
+}
+
+// Tensors lists every weight as a flat slice (they share memory with the model), in the canonical
+// order shared by all languages (see train/checkpoint.go): token emb, position emb, then per block
+// wq, wk, wv, [bq, bk, bv], wo, bo, ln1 scale, ln1 shift, ff1 w, ff1 b, ff2 w, ff2 b, ln2 scale,
+// ln2 shift; then the final norm scale and shift and the output head.
+func (m *Model) Tensors() [][]float32 {
+	t := [][]float32{m.TokEmb.Data, m.PosEmb.Data}
+	for _, b := range m.Blocks {
+		a := b.Att
+		t = append(t, a.WQuery.Data, a.WKey.Data, a.WValue.Data)
+		t = append(t, a.QKVBias...)
+		t = append(t, a.OutWeight.Data, a.OutBias, b.Norm1.Scale, b.Norm1.Shift,
+			b.FF.Expand.W.Data, b.FF.Expand.B, b.FF.Shrink.W.Data, b.FF.Shrink.B, b.Norm2.Scale, b.Norm2.Shift)
+	}
+	return append(t, m.FinalNorm.Scale, m.FinalNorm.Shift, m.OutHead.Data)
+}
+
+// ZerosLike is a model of the same shape with every number 0 (gradients and optimizer state live in one).
+func (m *Model) ZerosLike() *Model {
+	z := NewModel(m.Cfg)
+	for _, t := range z.Tensors() {
+		clear(t)
+	}
+	return z
 }
 
 // CountParameters adds up every weight the model holds.
@@ -113,6 +141,9 @@ func (m *Model) CountParameters() int {
 	for _, b := range m.Blocks {
 		a := b.Att
 		n += len(a.WQuery.Data) + len(a.WKey.Data) + len(a.WValue.Data) + len(a.OutWeight.Data) + len(a.OutBias)
+		for _, qb := range a.QKVBias {
+			n += len(qb)
+		}
 		n += len(b.FF.Expand.W.Data) + len(b.FF.Expand.B) + len(b.FF.Shrink.W.Data) + len(b.FF.Shrink.B)
 		n += 2 * (len(b.Norm1.Scale) + len(b.Norm2.Scale))
 	}
@@ -123,6 +154,9 @@ func (m *Model) CountParameters() int {
 func ParameterCount(cfg Config) int {
 	v, c, d, n := cfg.VocabSize, cfg.ContextLength, cfg.EmbDim, cfg.NLayers
 	attention := 4*d*d + d // wq, wk, wv, wo and the output bias
+	if cfg.QKVBias {
+		attention += 3 * d // the query, key and value biases
+	}
 	feedForward := d*4*d + 4*d + 4*d*d + d
 	norms := 2 * 2 * d // two layer norms per block, scale + shift each
 	return v*d + c*d + n*(attention+feedForward+norms) + 2*d + d*v

@@ -25,7 +25,7 @@ typedef struct {
     LayerNorm norm1, norm2;
 } TransformerBlock;
 
-TransformerBlock transformer_block_new(Arena *a, size_t emb_dim, size_t n_heads);
+TransformerBlock transformer_block_new(Arena *a, size_t emb_dim, size_t n_heads, int qkv_bias);
 Matrix transformer_block_forward(Arena *a, const TransformerBlock *b, Matrix x);
 
 #endif

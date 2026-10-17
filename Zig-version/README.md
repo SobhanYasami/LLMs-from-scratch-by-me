@@ -14,6 +14,8 @@ Zig-version/
     ├── attention/               # chapter 3: matrix, simple, self_attention, causal, multihead
     ├── ch04.zig                 # chapter 4 demos (GPT model)
     ├── gpt/                     # chapter 4: layers, shortcut, block, model
+    ├── ch05.zig                 # chapter 5 demos (pretraining)
+    ├── train/                   # chapter 5: loss, grad, adamw, sample, checkpoint, openai
     └── tokenization/
         ├── root.zig             # public API of the module
         ├── preprocess.zig       # step 1 (book 2.2): splitText, detokenize
@@ -45,6 +47,11 @@ Written against a Zig 0.15/0.16-dev toolchain (the `std.ArrayList` unmanaged API
 ## Chapter 4: the GPT model
 
 `zig build run -- ch04` runs the chapter 4 demos (`zig build run -Doptimize=ReleaseFast -- ch04-124m` builds the real 124M model; Debug mode is far too slow for it). `src/gpt/` has `layers.zig` (layer norm, GELU, Linear, feed forward), `shortcut.zig` (the 4.4 gradient demo with a hand-written backward pass), `block.zig` (reuses chapter 3's `MultiHeadAttention`) and `model.zig` (`Config`, `GptModel`, `parameterCount`, `generateTextSimple`); the demo is `src/ch04.zig`. `zig build test` checks the book's 163,009,536 parameters. Output is identical to Python's.
+
+
+## Chapter 5: pretraining
+
+`zig build run -Doptimize=ReleaseFast -- ch05` trains the tiny GPT for two epochs, then runs the decoding, checkpoint and loading demos (Debug mode is far too slow for training); `... -- ch05-gpt2` loads OpenAI's GPT-2 weights (download first, see `src/train/openai.zig`). `src/train/` has `loss.zig`, `grad.zig` (the backward pass written by hand: no autograd in Zig) with `adamw.zig`, `sample.zig`, `checkpoint.zig` and `openai.zig`; the demo is `src/ch05.zig`. Each forward/backward pass gets its own scratch arena. Output is identical to Go, Rust and C; Python/torch agrees until late in training.
 
 ## Python <-> Zig notes
 

@@ -187,6 +187,10 @@ With `stride < max_length` windows overlap (more samples, more overfitting risk)
 
 `python-version/.venv/bin/python python-version/main.py ch04` runs the chapter 4 demos; `ch04-124m` builds the real 124M-parameter model. Modules: `layers` (layer norm, GELU, feed forward; 4.2, 4.3), `shortcut` (4.4), `block` (4.5), `model` (config, `GPTModel`, parameter count, `generate_text_simple`; 4.6, 4.7). The block reuses the chapter 3 `MultiHeadAttention`. Weights come from the shared seeded generator (`Rng.normal`, vectorised with numpy) so every language builds the same untrained model; numbers in 4.2 to 4.4 and the parameter counts match the book. Concepts and walkthroughs are on the docs site.
 
+## Chapter 5: pretraining (`train/`, `ch05.py`)
+
+`python-version/.venv/bin/python python-version/main.py ch05` trains the tiny GPT of chapter 4 for two epochs on *The Verdict*, then runs the decoding, checkpoint and loading demos; `ch05-gpt2` loads OpenAI's GPT-2 weights (download first, see `train/openai.py`). Modules: `loss` (cross entropy, perplexity; 5.1), `trainer` (the training loop with torch's autograd and `AdamW`; 5.2), `sample` (temperature, top-k; 5.3), `checkpoint` (a plain file format all five languages read; 5.4), `openai` (a small safetensors reader and the weight mapping; 5.5). The attention gained an optional query/key/value bias for OpenAI's weights. Concepts and walkthroughs are on the docs site.
+
 ## Concepts checklist
 
 - [ ] Why a model needs integers, not text

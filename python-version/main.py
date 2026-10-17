@@ -164,8 +164,8 @@ def run_chapter2() -> None:
 
 
 def main() -> None:
-    """``main.py [ch02|ch03|ch04|ch04-124m]``: run one chapter's demos, or all three when no argument is given."""
-    chapters = sys.argv[1:] or ["ch02", "ch03", "ch04"]
+    """``main.py [ch02|ch03|ch04|ch04-124m|ch05|ch05-gpt2]``: run one chapter's demos, or all of them when no argument is given."""
+    chapters = sys.argv[1:] or ["ch02", "ch03", "ch04", "ch05"]
     for chapter in chapters:
         if chapter == "ch02":
             run_chapter2()
@@ -181,8 +181,16 @@ def main() -> None:
             import ch04
 
             ch04.run_124m()
+        elif chapter == "ch05":
+            import ch05
+
+            ch05.run()
+        elif chapter == "ch05-gpt2":
+            import ch05
+
+            ch05.run_gpt2()
         else:
-            sys.exit(f"unknown chapter {chapter!r}; use ch02, ch03, ch04 or ch04-124m")
+            sys.exit(f"unknown chapter {chapter!r}; use ch02, ch03, ch04, ch04-124m, ch05 or ch05-gpt2")
 
 
 if __name__ == "__main__":

@@ -57,11 +57,11 @@ enableGitInfo = false
   [[module.mounts]]
     source = "../python-version"
     target = "assets/src/python-version"
-    files = ["/*.py", "/attention/*.py", "/tokenization/*.py", "/gpt/*.py"]
+    files = ["/*.py", "/attention/*.py", "/tokenization/*.py", "/gpt/*.py", "/train/*.py"]
   [[module.mounts]]
     source = "../go-version"
     target = "assets/src/go-version"
-    files = ["/cmd/*.go", "/attention/*.go", "/tokenization/*.go", "/gpt/*.go"]
+    files = ["/cmd/*.go", "/attention/*.go", "/tokenization/*.go", "/gpt/*.go", "/train/*.go"]
   [[module.mounts]]
     source = "../rust-version/src"
     target = "assets/src/rust-version/src"
@@ -69,7 +69,7 @@ enableGitInfo = false
   [[module.mounts]]
     source = "../C-version"
     target = "assets/src/C-version"
-    files = ["/*.c", "/*.h", "/attention/*", "/tokenization/*", "/gpt/*"]
+    files = ["/*.c", "/*.h", "/attention/*", "/tokenization/*", "/gpt/*", "/train/*"]
   [[module.mounts]]
     source = "../Zig-version/src"
     target = "assets/src/Zig-version/src"

@@ -56,6 +56,7 @@ decoded: Hello, I am Pros Pros sea sea Pros sea</pre>
 <li>Make the context size 5 (smaller than the text): what does the <i>crop</i> step do once the text is longer?</li>
 </ol>
 <details class="qa"><summary>Answers</summary>1) Often yes: greedy always takes the same token for the same context, and once the context repeats, the output repeats. 2) For an untrained model the scores are within a hair of each other; for a trained one the top token usually stands out. 3) The model sees only the last 5 tokens; older ones are forgotten.</details>
+<p><a href="ch05-1-loss.html">On to chapter 5: measuring the loss and training the model &rarr;</a></p>
 <h2>Chapter summary</h2>
 <ul>
 <li>Layer normalization keeps each token's numbers at mean 0 and variance 1.</li>

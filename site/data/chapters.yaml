@@ -173,7 +173,12 @@
     en: Loss, the training loop, decoding strategies (temperature, top-k), saving weights and loading OpenAI's pretrained weights.
     fa: تابع زیان، حلقهٔ آموزش، راهبردهای رمزگشایی (دما، top-k)، ذخیرهٔ وزن‌ها و بارگذاری وزن‌های از پیش آموزش‌دیدهٔ OpenAI.
   code: true
-  langs: []
+  langs:
+  - python
+  - go
+  - rust
+  - c
+  - zig
   sections:
   - id: '5.1'
     title:

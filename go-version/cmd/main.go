@@ -198,7 +198,7 @@ func runChapter2() {
 func main() {
 	chapters := os.Args[1:]
 	if len(chapters) == 0 {
-		chapters = []string{"ch02", "ch03", "ch04"}
+		chapters = []string{"ch02", "ch03", "ch04", "ch05"}
 	}
 	for _, c := range chapters {
 		switch c {
@@ -210,8 +210,12 @@ func main() {
 			runChapter4()
 		case "ch04-124m":
 			run124M()
+		case "ch05":
+			runChapter5()
+		case "ch05-gpt2":
+			runGPT2()
 		default:
-			fmt.Fprintf(os.Stderr, "unknown chapter %q; use ch02, ch03, ch04 or ch04-124m\n", c)
+			fmt.Fprintf(os.Stderr, "unknown chapter %q; use ch02, ch03, ch04, ch04-124m, ch05 or ch05-gpt2\n", c)
 			os.Exit(1)
 		}
 	}

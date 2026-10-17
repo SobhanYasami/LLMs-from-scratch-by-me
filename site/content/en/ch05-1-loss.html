@@ -1,0 +1,62 @@
+---
+title: "5.1: Evaluating generative text models"
+nav: 5.1 Measuring the loss
+chapter: "5"
+order: 10
+sections: ["5.1"]
+code: train_loss
+---
+<div class="aim"><b>Aim.</b> Turn "this text looks wrong" into one number the computer can lower: the cross entropy loss. Then measure it on the whole training and validation text.</div>
+<p>Chapter 4 ended with a model that writes gibberish. Before we can fix that, we need a way to say <i>how</i> wrong it is. The training loop of 5.2 will push that number down.</p>
+<h2>The idea in four steps</h2>
+<div class="flow">
+<div><b>1. Probabilities</b>softmax of the scores for every position</div><span>&rarr;</span>
+<div><b>2. Pick the target's</b>the probability given to the token that really came next</div><span>&rarr;</span>
+<div class="hot"><b>3. Log, average</b>log of each, mean over all positions</div><span>&rarr;</span>
+<div><b>4. Minus sign</b>so that smaller is better: the loss</div>
+</div>
+<p>Take the two short texts <i>"every effort moves"</i> and <i>"I really like"</i>. The model must predict the next token at each of the three positions. The correct answers (the <b>targets</b>) are the inputs shifted by one, exactly like the training pairs of chapter 2:</p>
+<pre class="out">inputs : [[16833, 3626, 6100], [40, 1107, 588]]
+targets: [[3626, 6100, 345], [588, 428, 11311]]
+probas shape: (2, 3, 50257)  &lt;- [batch, tokens, vocab_size]
+probability of the target, text 1: [0.000023, 0.000021, 0.000021]
+probability of the target, text 2: [0.000017, 0.000018, 0.000022]</pre>
+<p>For each of the 6 positions the model gives the right token a probability of about 0.00002. That is simply <b>1 / 50,257</b>: an untrained model spreads its bet evenly over the whole vocabulary. Training must push these six numbers towards 1.</p>
+<h2>From probabilities to the loss</h2>
+<pre class="out">log probabilities: [-10.6883, -10.7928, -10.7790, -11.0050, -10.9337, -10.7274]
+average log probability: -10.8210
+negative average (the loss): 10.8210
+cross_entropy of the whole batch at once: 10.8210</pre>
+<ul>
+<li><b>Why the logarithm?</b> A probability of 0.00002 is awkward to work with; its log is -10.8. Logs turn products of probabilities into sums, and they punish a confident wrong answer very hard: log(0.00002) is far below log(0.2).</li>
+<li><b>Average</b> the six log probabilities: -10.82. We want this to get closer to 0 (probability 1).</li>
+<li><b>Flip the sign</b> because the habit in machine learning is to <i>minimise</i> a loss. The result, 10.82, is the <b>cross entropy loss</b>. The library function <code>cross_entropy</code> does all four steps at once and gives the same number.</li>
+</ul>
+<div class="tip"><b>Landmarks.</b> A model that guesses uniformly has loss ln(50,257) = <b>10.825</b>. A model that always puts probability 1 on the right token has loss <b>0</b>. Everything in between is progress.</div>
+<h2>Perplexity</h2>
+<p><b>Perplexity</b> is the loss turned back into "how many tokens is the model torn between?": <code>exp(loss)</code>.</p>
+<pre class="out">perplexity: 50063  (a model that guesses uniformly is torn between 50,257 tokens)</pre>
+<p>An untrained model is confused among all 50,257 tokens. A good one is confused among a handful.</p>
+<h2>The whole story: training and validation loss</h2>
+<p>We train on <i>The Verdict</i> from chapter 2: 5,145 tokens, which is tiny on purpose so the code runs in seconds. The text is cut in two: the first <b>90%</b> to train on, the last <b>10%</b> to <b>validate</b> on, text the model never trains on. The validation loss tells us whether the model learns language or just memorises its training text.</p>
+<pre class="out">training batches: 72 of 4 x 16 tokens, validation batches: 9
+untrained: training loss 10.831, validation loss 10.830  (a uniform guess gives ln(50257) = 10.825)</pre>
+<ul>
+<li>Each text is tokenized and cut into windows of 16 tokens (chapter 2.6), and 4 windows form a batch: 72 training batches, 9 validation batches.</li>
+<li>The loss of a data loader is the average loss over its batches. Both start near 10.83, the uniform guess.</li>
+<li>The book uses a 256-token context and batches of 2. We use 16 so that all five languages can train in seconds. The order is fixed (no shuffling) so that every language sees the same batches.</li>
+</ul>
+<h2>Code</h2>
+<p>Cross entropy, perplexity and the two helpers that average the loss over a batch and over a data loader.</p>
+{{code}}
+<h2>Exercises</h2>
+<ol>
+<li>Compute the loss by hand for a model that gives the right token probability 0.5 at every position. Then probability 0.01.</li>
+<li>What loss would a model have if it gave probability 1/2 to the right token and spread the rest evenly?</li>
+<li>Why do we validate on text the model never trains on?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) -ln(0.5) = 0.693; -ln(0.01) = 4.605. 2) Also 0.693: only the probability of the right token matters. 3) Training loss alone can be driven to 0 by memorising the text; the validation loss shows how well the model does on text it has not seen.</details>
+<h2>Check yourself</h2>
+<details class="qa"><summary>What does cross entropy look at?</summary>Only the probability the model gave to the token that actually came next, averaged (as a negative log) over all positions.</details>
+<details class="qa"><summary>What is the loss of an untrained model with a 50,257 token vocabulary?</summary>About ln(50,257) = 10.82.</details>
+<details class="qa"><summary>What is perplexity?</summary>exp(loss): the effective number of tokens the model is undecided between.</details>

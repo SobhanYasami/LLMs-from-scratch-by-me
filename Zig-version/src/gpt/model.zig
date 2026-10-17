@@ -73,9 +73,8 @@ pub const GptModel = struct {
     out_head: Matrix, // [D, vocab]
 
     pub fn init(gpa: std.mem.Allocator, cfg: Config) !GptModel {
-        std.debug.assert(!cfg.qkv_bias); // no query/key/value bias here (chapter 6 adds it)
         const blocks = try gpa.alloc(block_mod.TransformerBlock, cfg.n_layers);
-        for (blocks) |*b| b.* = try block_mod.TransformerBlock.init(gpa, cfg.emb_dim, cfg.n_heads);
+        for (blocks) |*b| b.* = try block_mod.TransformerBlock.init(gpa, cfg.emb_dim, cfg.n_heads, cfg.qkv_bias);
         return .{
             .cfg = cfg,
             .tok_emb = try Matrix.init(gpa, cfg.vocab_size, cfg.emb_dim),
@@ -128,12 +127,39 @@ pub const GptModel = struct {
         return (try self.final_norm.forward(gpa, x)).matmul(gpa, self.out_head);
     }
 
+    /// Every weight as a flat slice (they share memory with the model), in the canonical order
+    /// shared by all languages (see train/checkpoint.zig): token emb, position emb, then per block
+    /// wq, wk, wv, [bq, bk, bv], wo, bo, ln1 scale, ln1 shift, ff1 w, ff1 b, ff2 w, ff2 b, ln2 scale,
+    /// ln2 shift; then the final norm scale and shift and the output head.
+    pub fn tensors(self: GptModel, gpa: std.mem.Allocator) ![][]f32 {
+        var list = std.ArrayList([]f32).empty;
+        try list.append(gpa, self.tok_emb.data);
+        try list.append(gpa, self.pos_emb.data);
+        for (self.blocks) |b| {
+            const a = b.att;
+            try list.appendSlice(gpa, &.{ a.w_query.data, a.w_key.data, a.w_value.data });
+            if (a.qkv_bias) |qb| try list.appendSlice(gpa, &.{ qb[0].data, qb[1].data, qb[2].data });
+            try list.appendSlice(gpa, &.{ a.out_weight.data, a.out_bias.data, b.norm1.scale, b.norm1.shift });
+            try list.appendSlice(gpa, &.{ b.ff.expand.w.data, b.ff.expand.b, b.ff.shrink.w.data, b.ff.shrink.b, b.norm2.scale, b.norm2.shift });
+        }
+        try list.appendSlice(gpa, &.{ self.final_norm.scale, self.final_norm.shift, self.out_head.data });
+        return list.items;
+    }
+
+    /// A model of the same shape with every number 0 (gradients and optimizer state live in one).
+    pub fn zerosLike(self: GptModel, gpa: std.mem.Allocator) !GptModel {
+        const z = try init(gpa, self.cfg);
+        for (try z.tensors(gpa)) |t| @memset(t, 0);
+        return z;
+    }
+
     /// Add up every weight the model holds.
     pub fn countParameters(self: GptModel) usize {
         var n = self.tok_emb.data.len + self.pos_emb.data.len + self.out_head.data.len + 2 * self.final_norm.scale.len;
         for (self.blocks) |b| {
             const a = b.att;
             n += a.w_query.data.len + a.w_key.data.len + a.w_value.data.len + a.out_weight.data.len + a.out_bias.data.len;
+            if (a.qkv_bias) |qb| n += qb[0].data.len + qb[1].data.len + qb[2].data.len;
             n += b.ff.expand.w.data.len + b.ff.expand.b.len + b.ff.shrink.w.data.len + b.ff.shrink.b.len;
             n += 2 * (b.norm1.scale.len + b.norm2.scale.len);
         }
@@ -147,7 +173,7 @@ pub fn parameterCount(cfg: Config) usize {
     const c = cfg.context_length;
     const d = cfg.emb_dim;
     const n = cfg.n_layers;
-    const attention = 4 * d * d + d; // wq, wk, wv, wo and the output bias
+    const attention = 4 * d * d + d + (if (cfg.qkv_bias) 3 * d else 0); // wq, wk, wv, wo, the output bias (+ qkv biases)
     const feed_forward = d * 4 * d + 4 * d + 4 * d * d + d;
     const norms = 2 * 2 * d; // two layer norms per block, scale + shift each
     return v * d + c * d + n * (attention + feed_forward + norms) + 2 * d + d * v;

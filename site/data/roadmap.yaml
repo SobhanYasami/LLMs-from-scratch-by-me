@@ -21,10 +21,11 @@ stages:
     goal: {en: "Teach the untrained model language by predicting the next word on lots of text.", fa: "با پیش‌بینی کلمهٔ بعدی روی متن فراوان، به مدل آموزش‌ندیده زبان یاد بده."}
     chapters: {en: "Chapter 5", fa: "فصل ۵"}
     steps:
-      - {ref: "5.1", ch: "5", page: ch05-1-evaluating, title: {en: "Measure the loss", fa: "اندازه‌گیری زیان"}, detail: {en: "A number that says how wrong the next-word guesses are.", fa: "عددی که می‌گوید حدس‌های کلمهٔ بعدی چقدر غلط‌اند."}}
-      - {ref: "5.2", ch: "5", page: ch05-2-training, title: {en: "The training loop", fa: "حلقهٔ آموزش"}, detail: {en: "Predict, measure, nudge the weights, repeat.", fa: "پیش‌بینی کن، بسنج، وزن‌ها را کمی تغییر بده، تکرار کن."}}
+      - {ref: "5.1", ch: "5", page: ch05-1-loss, title: {en: "Measure the loss", fa: "اندازه‌گیری زیان"}, detail: {en: "A number that says how wrong the next-word guesses are.", fa: "عددی که می‌گوید حدس‌های کلمهٔ بعدی چقدر غلط‌اند."}}
+      - {ref: "5.2", ch: "5", page: ch05-2-training, title: {en: "The training loop", fa: "حلقهٔ آموزش"}, detail: {en: "Predict, measure, find every weight's gradient, nudge the weights, repeat.", fa: "پیش‌بینی کن، بسنج، گرادیان هر وزن را پیدا کن، وزن‌ها را کمی تغییر بده، تکرار کن."}}
       - {ref: "5.3", ch: "5", page: ch05-3-decoding, title: {en: "Decoding strategies", fa: "راهبردهای رمزگشایی"}, detail: {en: "Temperature and top-k for text that is not always the same.", fa: "دما و top-k برای متنی که همیشه یکسان نباشد."}}
-      - {ref: "5.4-5.5", ch: "5", page: ch05-5-pretrained, title: {en: "Save, load, reuse OpenAI weights", fa: "ذخیره، بارگذاری، استفاده از وزن‌های OpenAI"}, detail: {en: "Skip the expensive part: start from published GPT-2 weights.", fa: "از بخش گران بگذر: از وزن‌های منتشرشدهٔ GPT-2 شروع کن."}}
+      - {ref: "5.4", ch: "5", page: ch05-4-save-load, title: {en: "Save and load", fa: "ذخیره و بارگذاری"}, detail: {en: "Keep the weights (and the optimizer) so training can resume.", fa: "وزن‌ها (و بهینه‌ساز) را نگه دار تا آموزش ادامه یابد."}}
+      - {ref: "5.5", ch: "5", page: ch05-5-openai-weights, title: {en: "Load OpenAI's GPT-2", fa: "بارگذاری GPT-2 از OpenAI"}, detail: {en: "Skip the expensive part: start from published GPT-2 weights.", fa: "از بخش گران بگذر: از وزن‌های منتشرشدهٔ GPT-2 شروع کن."}}
   - id: adapt
     label: {en: "Stage 3", fa: "مرحله ۳"}
     title: {en: "Adapt it", fa: "سازگارسازی"}
@@ -49,5 +50,5 @@ anatomy:
   final:     {ref: "4.2", page: ch04-2-layer-norm, title: {en: "Final layer norm", fa: "نرمال‌سازی نهایی"}}
   head:      {ref: "4.6", page: ch04-6-gpt-model, title: {en: "Output head: a score for every word", fa: "سر خروجی: امتیاز برای هر کلمه"}, note: {en: "logits [T, 50257]", fa: "لاجیت [T, 50257]"}}
   pick:      {ref: "4.7", page: ch04-7-generate, title: {en: "Pick the next token, append, repeat", fa: "توکن بعدی را بردار، اضافه کن، تکرار کن"}, note: {en: "text generation", fa: "تولید متن"}}
-  train:     {future: true, ref: "5", page: chapter-5, title: {en: "Pretraining adjusts every weight above", fa: "پیش‌آموزش همهٔ وزن‌های بالا را تنظیم می‌کند"}}
+  train:     {ref: "5.2", page: ch05-2-training, title: {en: "Pretraining adjusts every weight above", fa: "پیش‌آموزش همهٔ وزن‌های بالا را تنظیم می‌کند"}}
   tune:      {future: true, ref: "6-7", page: chapter-6, title: {en: "Finetuning adapts it to a task", fa: "فاین‌تیون آن را با یک وظیفه سازگار می‌کند"}}

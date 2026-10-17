@@ -35,6 +35,9 @@ impl TransformerBlock {
             w_value: Matrix::new(d, d),
             out_weight: Matrix::new(d, d),
             out_bias: vec![0.0; d],
+            qkv_bias: cfg
+                .qkv_bias
+                .then(|| [vec![0.0; d], vec![0.0; d], vec![0.0; d]]),
             num_heads: cfg.n_heads,
             head_dim: d / cfg.n_heads,
         };

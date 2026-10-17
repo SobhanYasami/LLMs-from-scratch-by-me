@@ -25,9 +25,9 @@ class TransformerBlock(nn.Module):
     def __init__(self, cfg: dict):
         super().__init__()
         d = cfg["emb_dim"]
-        assert not cfg["qkv_bias"], "this implementation has no query/key/value bias (chapter 6 adds it)"
         zeros = lambda *shape: torch.zeros(*shape)  # noqa: E731 - real values come from init_weights
-        self.att = MultiHeadAttention(zeros(d, d), zeros(d, d), zeros(d, d), zeros(d, d), zeros(d), cfg["n_heads"], cfg["context_length"])
+        self.att = MultiHeadAttention(zeros(d, d), zeros(d, d), zeros(d, d), zeros(d, d), zeros(d), cfg["n_heads"], cfg["context_length"],
+                                  qkv_bias=(zeros(d), zeros(d), zeros(d)) if cfg["qkv_bias"] else None)
         self.ff = FeedForward(d)
         self.norm1 = LayerNorm(d)
         self.norm2 = LayerNorm(d)

@@ -1,0 +1,57 @@
+---
+title: "5.5: Loading pretrained weights from OpenAI"
+nav: 5.5 OpenAI's GPT-2
+chapter: "5"
+order: 50
+sections: ["5.5"]
+code: train_openai
+---
+<div class="aim"><b>Aim.</b> Skip the expensive pretraining: load OpenAI's published GPT-2 weights into our model and watch it write real sentences.</div>
+<p>Pretraining a GPT-2 costs tens of thousands of dollars in compute. OpenAI released the result, so we can start from there. The architecture is exactly the one we built in chapter 4, so loading the weights is a matter of putting each number in the right place.</p>
+<h2>Get the weights</h2>
+<p>One file, about 500 MB. It is ignored by git:</p>
+<pre class="out">curl -L -o assets/gpt2/model.safetensors \
+  https://huggingface.co/openai-community/gpt2/resolve/main/model.safetensors</pre>
+<p>The book downloads TensorFlow checkpoints and needs TensorFlow to read them. The same weights exist in the <b>safetensors</b> format, which is so plain that no library is needed:</p>
+<table><tr><th>Bytes</th><th>Content</th></tr>
+<tr><td>first 8</td><td>the length N of the header, as a little-endian integer</td></tr>
+<tr><td>next N</td><td>a JSON header that lists every tensor: its name, shape and where its numbers sit in the file</td></tr>
+<tr><td>the rest</td><td>all the tensors as raw 32-bit floats</td></tr></table>
+<p>Our five languages each read it in about 30 lines. A header entry looks like <code>"h.0.attn.c_attn.weight":{"dtype":"F32","shape":[768,2304],"data_offsets":[a,b]}</code>.</p>
+<h2>Matching OpenAI's names to ours</h2>
+<p>Four differences have to be bridged:</p>
+<table><tr><th>OpenAI</th><th>Ours</th></tr>
+<tr><td><code>wte</code>, <code>wpe</code></td><td>token embedding, position embedding</td></tr>
+<tr><td><code>h.i.attn.c_attn</code>: one matrix [768, 2304] with query, key and value side by side</td><td>three matrices W_query, W_key, W_value [768, 768]: split the columns in three</td></tr>
+<tr><td>the query/key/value projections have <b>biases</b></td><td>the config option <code>qkv_bias = True</code> (off in our own models)</td></tr>
+<tr><td><code>h.i.attn.c_proj</code>, <code>h.i.mlp.c_fc</code>, <code>h.i.mlp.c_proj</code></td><td>the attention output projection and the two feed forward layers</td></tr>
+<tr><td><code>h.i.ln_1</code>, <code>ln_2</code>, <code>ln_f</code></td><td>norm1, norm2 of block i and the final layer norm</td></tr>
+<tr><td>no separate output matrix</td><td><b>weight tying</b>: the output head is the token embedding again, so we copy <code>wte</code> into it (transposed)</td></tr></table>
+<p>Matrices in the file are [in, out], like our own. (The book's PyTorch layers want [out, in], so its loader transposes; ours does not have to, except for the tied head.) If a shape does not fit, the loader stops with an error, which is how mistakes show up.</p>
+<div class="tip">GPT-2 uses attention biases and the model has <b>163,037,184</b> parameters with them: 163,009,536 (chapter 4) plus 12 blocks x 3 x 768 = 27,648.</div>
+<h2>It speaks</h2>
+<p>Run it with the same sampling settings as the book (top-k 50, temperature 1.5) and with greedy decoding:</p>
+<pre class="out">loaded GPT-2 small: 163,037,184 parameters (with the attention biases)
+generated: 'Every effort moves you across mountains," she wrote in 1912.   So far, that hasn't worked. The country spent nearly 2.3'
+greedy   : 'Every effort moves you forward.  The first step is to understand the importance of your work.  The second step is to understand the'
+exercise 5.5: loss of the pretrained model on The Verdict (validation part, 2 batches of 2 x 64 tokens): 3.791</pre>
+<ul>
+<li>Real sentences, from the same code that wrote gibberish in chapter 4. All five languages print exactly this text. If one number were in the wrong place, the text would collapse into noise: that is the test that the loading is right.</li>
+<li>Exercise 5.5: the pretrained model has a loss of <b>3.79</b> on text from <i>The Verdict</i> that it has never seen (our tiny model had 7). Perplexity: exp(3.79) = 44, as if choosing among 44 words at each step instead of 50,257.</li>
+</ul>
+<p>It takes about 4 seconds in Python (torch has fast matrix code) and 20 to 60 seconds in the others (build Rust with <code>--release</code> and Zig with <code>-Doptimize=ReleaseFast</code>): 25 tokens, each a full pass over the growing text.</p>
+<h2>Bigger GPT-2 models</h2>
+<p>Exercise 5.6 suggests the larger models. They differ only in configuration (<code>emb_dim</code> 1024, 1280, 1600 and 24, 36, 48 blocks); see the table on page 4.6. OpenAI published them as separate files (<code>gpt2-medium</code> and so on); the loader works unchanged once you pass the matching configuration. They need 1.5 to 6 GB of memory.</p>
+<h2>Code</h2>
+{{code}}
+<h2>Exercises</h2>
+<ol>
+<li>Generate with temperature 0.7 and top-k 20. Is the text more or less sensible than with 1.5 and 50?</li>
+<li>What happens to the text if you forget to copy the weights into the output head?</li>
+<li>Compute the loss of the pretrained model on the training part of the story too. Is it lower or higher than the validation part?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) More sensible and more repetitive. 2) The head stays at its random values, so the scores are random and the text is gibberish again. 3) Expect a similar number: GPT-2 never saw this story, so the training and validation parts are equally new to it.</details>
+<h2>Check yourself</h2>
+<details class="qa"><summary>Why did OpenAI's attention need <code>qkv_bias = True</code>?</summary>Their projections have biases; our own models leave them out, so we add the option to match the weights.</details>
+<details class="qa"><summary>What is weight tying?</summary>Using the token embedding matrix as the output head too, so one set of numbers serves both.</details>
+<details class="qa"><summary>How do we know the weights were loaded correctly?</summary>The model writes coherent text; a single misplaced tensor would give noise.</details>

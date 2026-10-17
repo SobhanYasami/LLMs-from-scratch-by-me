@@ -20,19 +20,32 @@ type MultiHeadAttention struct {
 	WQuery, WKey, WValue Matrix
 	OutWeight            Matrix
 	OutBias              []float32
-	NumHeads, HeadDim    int
+	// QKVBias holds the biases of the query, key and value projections: nil in chapters 3 and 4,
+	// three slices for OpenAI's GPT-2 weights (5.5).
+	QKVBias           [][]float32
+	NumHeads, HeadDim int
 }
 
 // NewRandomMultiHead draws uniform [0, 1) weights (query, key, value,
 // out_proj) and a zero bias. dOut must divide evenly by numHeads.
 func NewRandomMultiHead(dIn, dOut, numHeads int, rng *Rng) *MultiHeadAttention {
 	wq, wk, wv := rng.Rand(dIn, dOut), rng.Rand(dIn, dOut), rng.Rand(dIn, dOut)
-	return &MultiHeadAttention{wq, wk, wv, rng.Rand(dOut, dOut), make([]float32, dOut), numHeads, dOut / numHeads}
+	return &MultiHeadAttention{WQuery: wq, WKey: wk, WValue: wv, OutWeight: rng.Rand(dOut, dOut), OutBias: make([]float32, dOut), NumHeads: numHeads, HeadDim: dOut / numHeads}
 }
 
 // Forward takes x [T, d_in] and returns [T, d_out].
 func (m *MultiHeadAttention) Forward(x Matrix) Matrix {
 	q, k, v := MatMul(x, m.WQuery), MatMul(x, m.WKey), MatMul(x, m.WValue)
+	if m.QKVBias != nil {
+		for n, proj := range []Matrix{q, k, v} {
+			for i := 0; i < proj.Rows; i++ {
+				row := proj.Row(i)
+				for j := range row {
+					row[j] += m.QKVBias[n][j]
+				}
+			}
+		}
+	}
 	context := NewMatrix(x.Rows, m.NumHeads*m.HeadDim)
 	for h := 0; h < m.NumHeads; h++ {
 		lo, hi := h*m.HeadDim, (h+1)*m.HeadDim // this head's column slice

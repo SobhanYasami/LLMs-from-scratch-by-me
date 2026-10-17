@@ -13,6 +13,8 @@ C-version/
 ├── attention/               # chapter 3: matrix, simple, self_attention, causal, multihead
 ├── ch04.[ch]                # chapter 4 demos (GPT model)
 ├── gpt/                     # chapter 4: layers, shortcut, block, model
+├── ch05.[ch]                # chapter 5 demos (pretraining)
+├── train/                   # chapter 5: loss, grad, adamw, sample, checkpoint, openai
 └── tokenization/
     ├── preprocess.[ch]      # step 1 (book 2.2): split_text, detokenize
     ├── vocab.[ch]           # step 2 (2.3): build_vocab
@@ -43,6 +45,11 @@ Needs a C11 compiler (`cc`/`gcc`/`clang`) and `make`. No other dependencies.
 ## Chapter 4: the GPT model
 
 `make run ARGS=ch04` runs the chapter 4 demos (`make run ARGS=ch04-124m` builds the real 124M model). `gpt/` has `layers.[ch]` (layer norm, GELU, Linear, feed forward), `shortcut.[ch]` (the 4.4 gradient demo with a hand-written backward pass), `block.[ch]` (reuses chapter 3's `MultiHeadAttention`) and `model.[ch]` (config, `GptModel`, `gpt_parameter_count`, `generate_text_simple`); the demo is `ch04.[ch]`. The model's weights live in one `Arena`; each forward pass takes an `arena_mark` and `arena_reset`s afterwards, so temporaries vanish at once. Output is identical to Python's.
+
+
+## Chapter 5: pretraining
+
+`make run ARGS=ch05` trains the tiny GPT for two epochs, then runs the decoding, checkpoint and loading demos; `make run ARGS=ch05-gpt2` loads OpenAI's GPT-2 weights (download first, see `train/openai.h`). `train/` has `loss.[ch]`, `grad.[ch]` (the backward pass written by hand: no autograd in C) with `adamw.[ch]`, `sample.[ch]`, `checkpoint.[ch]` and `openai.[ch]`; the demo is `ch05.[ch]`. Every training step takes an `arena_mark` and `arena_reset`s afterwards. Output is identical to Go, Rust and Zig; Python/torch agrees until late in training.
 
 ## Python <-> C notes
 

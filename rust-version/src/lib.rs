@@ -3,3 +3,4 @@
 pub mod attention;
 pub mod gpt;
 pub mod tokenization;
+pub mod train;

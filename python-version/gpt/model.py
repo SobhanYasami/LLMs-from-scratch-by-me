@@ -95,7 +95,7 @@ def count_parameters(model: nn.Module) -> int:
 def parameter_count(cfg: dict) -> int:
     """Parameters of a GPTModel, by arithmetic only (no model is built)."""
     v, c, d, n = cfg["vocab_size"], cfg["context_length"], cfg["emb_dim"], cfg["n_layers"]
-    attention = 4 * d * d + d  # wq, wk, wv, wo and the output bias
+    attention = 4 * d * d + d + (3 * d if cfg["qkv_bias"] else 0)  # wq, wk, wv, wo, the output bias (+ qkv biases)
     feed_forward = d * 4 * d + 4 * d + 4 * d * d + d
     norms = 2 * 2 * d  # two layer norms per block, scale + shift each
     return v * d + c * d + n * (attention + feed_forward + norms) + 2 * d + d * v

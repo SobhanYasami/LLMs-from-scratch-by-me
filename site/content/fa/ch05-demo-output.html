@@ -1,0 +1,72 @@
+---
+title: "تکمیلی: دموی فصل ۵ و خروجی مورد انتظار"
+nav: خروجی دموی فصل ۵
+chapter: "5"
+order: 120
+extra: true
+code: ch05_demo
+---
+<div class="aim"><b>هدف.</b> کل فصل ۵ را یک‌جا اجرا کنید و خروجی خودتان را با متن مورد انتظار، در هر یک از پنج زبان، مقایسه کنید.</div>
+<h2>اجرا</h2>
+<table><tr><th>زبان</th><th>دموی آموزش (حدود ۱۰ تا ۴۰ ثانیه)</th><th>GPT-2 از OpenAI (5.5، دانلود لازم)</th></tr>
+<tr><td>Python</td><td><code>python-version/.venv/bin/python python-version/main.py ch05</code></td><td><code>... main.py ch05-gpt2</code></td></tr>
+<tr><td>Go</td><td><code>cd go-version &amp;&amp; go run ./cmd ch05</code></td><td><code>go run ./cmd ch05-gpt2</code></td></tr>
+<tr><td>Rust</td><td><code>cd rust-version &amp;&amp; cargo run --release -- ch05</code></td><td><code>cargo run --release -- ch05-gpt2</code></td></tr>
+<tr><td>C</td><td><code>cd C-version &amp;&amp; make run ARGS=ch05</code></td><td><code>make run ARGS=ch05-gpt2</code></td></tr>
+<tr><td>Zig</td><td><code>cd Zig-version &amp;&amp; zig build run -Doptimize=ReleaseFast -- ch05</code></td><td><code>zig build run -Doptimize=ReleaseFast -- ch05-gpt2</code></td></tr></table>
+<p>از درون پوشهٔ همان زبان اجرا کنید، مثل فصل‌های دیگر. <b>در حالت release بسازید</b> (Rust، Zig): آموزش حساب فراوان است. بدون آرگومان هر برنامه همهٔ فصل‌ها را اجرا می‌کند، از جمله این یکی.</p>
+<h2>چه چیزی را مقایسه کنیم</h2>
+<ul>
+<li><b>Go، Rust، C و Zig متن یکسان، نویسه به نویسه، چاپ می‌کنند.</b> همان حساب را با همان ترتیب اجرا می‌کنند. مدل‌های ذخیره‌شده‌شان حتی بایت‌به‌بایت یکی است.</li>
+<li><b>Python (torch)</b> تا حدود گام ۱۰۰ یکی است، سپس در رقم‌های آخر خطوط آموزش دیرهنگام و در نتیجه در نمونه‌های تولیدشده فرق می‌کند (بخش‌های 5.2 و 5.3 پس از epoch اول، و «3 more steps» در 5.4). هر چه به آموزش دیرهنگام وابسته نیست یکی است: 5.1، دموهای ۹ کلمه‌ای 5.3، و 5.5.</li>
+<li>هر پنج زبان <b>دقیقاً یک خروجی 5.5</b> چاپ می‌کنند (متن تولیدشده و زیان)، شاهدی که وزن‌ها همه‌جا درست بارگذاری شده.</li>
+</ul>
+<h2>خروجی مورد انتظار: دموی آموزش (Go، Rust، C، Zig)</h2>
+<pre class="out">== 5.1 evaluating generative text models ==
+inputs : [[16833, 3626, 6100], [40, 1107, 588]]
+targets: [[3626, 6100, 345], [588, 428, 11311]]
+probas shape: (2, 3, 50257)  &lt;- [batch, tokens, vocab_size]
+probability of the target, text 1: [0.000023, 0.000021, 0.000021]
+probability of the target, text 2: [0.000017, 0.000018, 0.000022]
+log probabilities: [-10.6883, -10.7928, -10.7790, -11.0050, -10.9337, -10.7274]
+average log probability: -10.8210
+negative average (the loss): 10.8210
+cross_entropy of the whole batch at once: 10.8210
+perplexity: 50063  (a model that guesses uniformly is torn between 50,257 tokens)
+training batches: 72 of 4 x 16 tokens, validation batches: 9
+untrained: training loss 10.831, validation loss 10.830  (a uniform guess gives ln(50257) = 10.825)
+== 5.2 training an LLM ==
+Ep 1 (Step 000000): Train loss 10.684, Val loss 10.819
+Ep 1 (Step 000024): Train loss 7.602, Val loss 8.703
+Ep 1 (Step 000048): Train loss 5.949, Val loss 7.422
+Every effort moves you,,,,,,,,,,,,,,,,,,,,
+Ep 2 (Step 000072): Train loss 6.158, Val loss 6.966
+Ep 2 (Step 000096): Train loss 5.784, Val loss 7.066
+Ep 2 (Step 000120): Train loss 5.983, Val loss 6.953
+Every effort moves you............,,,,,,,,
+== 5.3 decoding strategies ==
+next-token probabilities: [0.0609, 0.0016, 0.0001, 0.5721, 0.0034, 0.0001, 0.0001, 0.3576, 0.0040]
+greedy pick: forward
+temperature 1: P(pizza) = 0.0001  1000 draws: 51 x closer, 2 x every, 594 x forward, 3 x inches, 344 x toward, 6 x you
+temperature 0.1: P(pizza) = 0.0000  1000 draws: 990 x forward, 10 x toward
+temperature 5: P(pizza) = 0.0430  1000 draws: 155 x closer, 77 x every, 42 x effort, 247 x forward, 97 x inches, 41 x moves, 45 x pizza, 225 x toward, 71 x you
+top-3 logits: [6.75, 6.28, 4.51] at positions [3, 7, 0]
+after masking with -inf: ['4.51', '-inf', '-inf', '6.75', '-inf', '-inf', '-inf', '6.28', '-inf']
+top-3 probabilities: [0.0615, 0.0000, 0.0000, 0.5775, 0.0000, 0.0000, 0.0000, 0.3610, 0.0000]
+greedy   : 'Every effort moves you............,,,'
+top-k 25, temperature 1.4: 'Every effort moves you it my't with he it him of that. you meI. me'
+temperature 0 equals greedy: true
+== 5.4 saving and loading ==
+saved model and optimizer state: 38,906,920 bytes
+largest logit difference between the two models: 0.000000
+3 more steps, continued: losses [5.898, 6.165, 6.076]
+3 more steps, restored : losses [5.898, 6.165, 6.076]
+same losses: true</pre>
+<h2>خروجی مورد انتظار: GPT-2 از OpenAI (هر پنج زبان)</h2>
+<pre class="out">== 5.5 loading pretrained weights from OpenAI ==
+loaded GPT-2 small: 163,037,184 parameters (with the attention biases)
+generated: 'Every effort moves you across mountains," she wrote in 1912.   So far, that hasn't worked. The country spent nearly 2.3'
+greedy   : 'Every effort moves you forward.  The first step is to understand the importance of your work.  The second step is to understand the'
+exercise 5.5: loss of the pretrained model on The Verdict (validation part, 2 batches of 2 x 64 tokens): 3.791</pre>
+<h2>کد اجراکننده</h2>
+{{code}}

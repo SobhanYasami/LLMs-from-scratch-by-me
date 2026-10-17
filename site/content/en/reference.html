@@ -29,6 +29,13 @@ order: 10
 <tr><td>4.6 model</td><td><code>GPTModel</code></td><td><code>NewModel</code>, <code>Model.Forward</code></td><td><code>GptModel::new</code>, <code>forward</code></td><td><code>gpt_model_new</code>, <code>gpt_forward</code></td><td><code>GptModel.init</code>, <code>forward</code></td></tr>
 <tr><td>4.6 parameters</td><td><code>parameter_count</code></td><td><code>ParameterCount</code></td><td><code>parameter_count</code></td><td><code>gpt_parameter_count</code></td><td><code>parameterCount</code></td></tr>
 <tr><td>4.7 generate</td><td><code>generate_text_simple</code></td><td><code>GenerateTextSimple</code></td><td><code>generate_text_simple</code></td><td><code>generate_text_simple</code></td><td><code>generateTextSimple</code></td></tr>
+<tr><td>5.1 loss</td><td><code>cross_entropy</code></td><td><code>CrossEntropySum</code></td><td><code>cross_entropy_sum</code></td><td><code>cross_entropy_sum</code></td><td><code>crossEntropySum</code></td></tr>
+<tr><td>5.2 backward</td><td><code>loss.backward()</code></td><td><code>LossAndGrads</code></td><td><code>loss_and_grads</code></td><td><code>loss_and_grads</code></td><td><code>lossAndGrads</code></td></tr>
+<tr><td>5.2 optimizer</td><td><code>torch.optim.AdamW</code></td><td><code>AdamW.StepWith</code></td><td><code>AdamW::step</code></td><td><code>adamw_step</code></td><td><code>AdamW.step</code></td></tr>
+<tr><td>5.3 sampling</td><td><code>generate</code></td><td><code>Generate</code></td><td><code>generate</code></td><td><code>generate</code></td><td><code>generate</code></td></tr>
+<tr><td>5.3 draw</td><td><code>sample_index</code></td><td><code>SampleIndex</code></td><td><code>sample_index</code></td><td><code>sample_index</code></td><td><code>sampleIndex</code></td></tr>
+<tr><td>5.4 save / load</td><td><code>save_checkpoint</code> / <code>load_checkpoint</code></td><td><code>SaveCheckpoint</code> / <code>LoadCheckpoint</code></td><td><code>save_checkpoint</code> / <code>load_checkpoint</code></td><td><code>checkpoint_save</code> / <code>checkpoint_load</code></td><td><code>checkpoint.save</code> / <code>load</code></td></tr>
+<tr><td>5.5 OpenAI weights</td><td><code>load_gpt2_weights</code></td><td><code>LoadGPT2Weights</code></td><td><code>load_gpt2_weights</code></td><td><code>load_gpt2_weights</code></td><td><code>loadGpt2Weights</code></td></tr>
 <tr><td>2.7-2.8 embeddings</td><td><code>InputEmbedding</code> (torch)</td><td><code>NewInputEmbedding</code></td><td><code>InputEmbedding::new</code></td><td><code>input_embedding_new</code></td><td><code>InputEmbedding.init</code></td></tr>
 </table>
 <h2>Layout, same idea in each language</h2>
@@ -50,7 +57,13 @@ order: 10
     layers             4.2, 4.3 (layer norm, GELU, Linear, feed forward)
     shortcut           4.4
     block              4.5
-    model              4.1, 4.6, 4.7 (config, GPT model, generate)</pre>
+    model              4.1, 4.6, 4.7 (config, GPT model, generate)
+  train/               chapter 5
+    loss               5.1 (cross entropy, perplexity)
+    grad, adamw        5.2 (backward pass, optimizer; Python: trainer)
+    sample             5.3 (temperature, top-k, generate)
+    checkpoint         5.4 (save and load)
+    openai             5.5 (GPT-2 weights from safetensors)</pre>
 <p>Source comments say "Step 1-5". Map to the book: Step 1 = 2.2, Step 2 = 2.3, Step 3 = 2.3-2.4, Step 4 = 2.6, Step 5 = 2.7-2.8.</p>
 <h2>Key numbers for chapter 2</h2>
 <table>
@@ -63,6 +76,8 @@ order: 10
 <tr><td>Attention example</td><td>6 tokens, d_in 3, d_out 2, 2 heads</td></tr>
 <tr><td>GPT-2 small (chapter 4)</td><td>emb 768, 12 heads, 12 blocks, 163,009,536 parameters (124,412,160 weight-tied)</td></tr>
 <tr><td>Tiny GPT used by the demo</td><td>emb 32, 4 heads, 2 blocks, 3,242,240 parameters</td></tr>
+<tr><td>Training demo (chapter 5)</td><td>batch 4 x 16 tokens, 72 batches per epoch, 2 epochs, AdamW lr 0.003, weight decay 0.1</td></tr>
+<tr><td>GPT-2 small with OpenAI's weights</td><td>163,037,184 parameters (with attention biases), loss 3.791 on 2 x 2 x 64 tokens of The Verdict</td></tr>
 </table>
 <h2>Adding the next chapter</h2>
 <p>Add a sibling module in each language (for example <code>attention</code>), in the book's order, with the same names and a demo in each <code>main</code>. The docs side is in <a href="contributing.html">Contributing</a>.</p>

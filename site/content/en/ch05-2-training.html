@@ -1,0 +1,66 @@
+---
+title: "5.2: Training an LLM"
+nav: 5.2 The training loop
+chapter: "5"
+order: 20
+sections: ["5.2"]
+code: train_loop
+---
+<div class="aim"><b>Aim.</b> Write the training loop that turns the random model into one that has learned something, and see how each language finds the gradients (torch does it for you; the others do it by hand).</div>
+<h2>The loop</h2>
+<p>Training repeats five moves for every batch:</p>
+<div class="flow">
+<div><b>1. Zero</b>forget the old gradients</div><span>&rarr;</span>
+<div><b>2. Forward</b>run the model, measure the loss</div><span>&rarr;</span>
+<div class="hot"><b>3. Backward</b>how should every weight change to lower the loss?</div><span>&rarr;</span>
+<div class="hot"><b>4. Update</b>nudge every weight a little (AdamW)</div><span>&rarr;</span>
+<div><b>5. Report</b>now and then, show the loss and a sample</div>
+</div>
+<pre class="out">for each epoch:
+    for each batch of the training data:
+        zero the gradients
+        loss = cross_entropy(model(inputs), targets)
+        backward pass  -> a gradient for every weight
+        optimizer step -> every weight moves a little
+        every few steps: print training and validation loss</pre>
+<p>An <b>epoch</b> is one pass over all training batches. We run 2 epochs of 72 batches: 144 steps.</p>
+<h2>What the numbers do</h2>
+<p>Run it and watch the loss fall:</p>
+<pre class="out">Ep 1 (Step 000000): Train loss 10.684, Val loss 10.819
+Ep 1 (Step 000024): Train loss 7.602, Val loss 8.703
+Ep 1 (Step 000048): Train loss 5.949, Val loss 7.422
+Every effort moves you,,,,,,,,,,,,,,,,,,,,
+Ep 2 (Step 000072): Train loss 6.158, Val loss 6.966
+Ep 2 (Step 000096): Train loss 5.784, Val loss 7.066
+Ep 2 (Step 000120): Train loss 5.983, Val loss 6.953
+Every effort moves you............,,,,,,,,</pre>
+<ul>
+<li>The loss starts at the uniform-guess level, 10.8, and in 144 steps drops to about 6. The model has learned which tokens are common (commas, periods, "the") and puts most of its probability there.</li>
+<li>That is also what its text shows: after epoch 1 it repeats the most common token, a comma. This matches what the book sees at the start of its much longer training.</li>
+<li>The <b>validation loss stays above the training loss</b>: the model does better on text it trains on. With more steps and a bigger model this gap becomes overfitting: the book's model ends at training loss 0.4 and validation loss 6.4, having memorised the story.</li>
+<li>Our model has 3 million parameters and sees 9,000 tokens. It cannot learn grammar in that. It shows the <i>mechanics</i>; the real model comes from OpenAI's weights in 5.5.</li>
+</ul>
+<h2>Step 3 in torch, and in the other four languages</h2>
+<p>The backward pass computes the <b>gradient</b> of the loss for every weight: if I make this weight a little bigger, does the loss go up or down, and how fast? The gradient is what the optimizer needs.</p>
+<div class="cmp">
+<div><h3>Python</h3><code>loss.backward()</code><br>torch's <b>autograd</b> recorded every operation of the forward pass and replays it backwards.</div>
+<div><h3>Go, Rust, C, Zig</h3>No autograd. <code>grad.*</code> runs the forward pass again <b>while remembering</b> what every layer saw, then walks the layers backwards applying the chain rule. About 200 lines per language; the rules are on <a href="backprop-by-hand.html">the extra page</a>.</div>
+</div>
+<div class="tip"><b>How do we know the hand-written backward pass is right?</b> Three checks. (1) On the same model and batch, the gradient of every tensor matches torch's autograd (sums of absolute values agree to 5 digits; the Rust test pins them). (2) A finite-difference test in Go nudges a weight and compares the change of the loss with the gradient. (3) The first 30 training losses of Rust and torch agree to about 1e-6.</div>
+<h2>The optimizer: AdamW</h2>
+<p>Plain gradient descent moves every weight by <code>learning_rate x gradient</code>. <b>AdamW</b> is smarter: for each weight it keeps two running averages, the average gradient (which way to go) and the average squared gradient (how noisy it is), and divides one by the other. Weights with steady gradients move at a steady pace; noisy ones move carefully. It also shrinks every weight a tiny bit each step (<i>weight decay</i>) to keep them small. The book uses a learning rate of 0.0004 for its big model; our tiny one uses 0.003. Weight decay is 0.1 in both. The arithmetic is exactly <code>torch.optim.AdamW</code>; <a href="adamw-by-hand.html">a worked example</a> shows it for one weight.</p>
+<div class="tip"><b>Same answer in four languages.</b> Go, Rust, C and Zig print <i>identical</i> numbers, down to the bytes of the saved model (5.4). Python (torch) agrees to three decimals for the first ~100 steps and then drifts slightly: torch adds up the numbers of a matrix product in a different order, and training amplifies such tiny differences. Both are right.</div>
+<h2>Code</h2>
+<p>Python shows the training loop itself. The other languages show the backward pass (<code>grad</code>) and the optimizer (<code>adamw</code>); their training loop is in the demo runner.</p>
+{{code}}
+<h2>Exercises</h2>
+<ol>
+<li>Train for 4 epochs instead of 2 (<code>EPOCHS</code> in the demo). What do the training and validation losses do?</li>
+<li>Set the learning rate to 0.03 and then to 0.00003. What happens, and why?</li>
+<li>Why does the loop call <code>zero_grads</code> before every step?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) The training loss keeps falling while the validation loss stalls or rises: the model starts to memorise. 2) Too large: the loss jumps around or blows up; too small: it barely moves in 144 steps. 3) Gradients are <i>added</i> into their buffers; without zeroing, each step would include the gradients of all earlier steps.</details>
+<h2>Check yourself</h2>
+<details class="qa"><summary>What is an epoch?</summary>One pass over all training batches.</details>
+<details class="qa"><summary>What does the backward pass produce?</summary>For every weight, its gradient: how the loss changes if that weight changes.</details>
+<details class="qa"><summary>Why is the validation loss higher than the training loss?</summary>The model is fitted to the training text, so it does better on it than on text it has never seen.</details>

@@ -1,0 +1,32 @@
+---
+title: "Extra: AdamW by hand"
+nav: AdamW by hand
+chapter: "5"
+order: 110
+extra: true
+---
+<div class="aim"><b>Aim.</b> Follow the AdamW update for a single weight over a few steps, and see the surprising thing it does with the size of the gradient.</div>
+<p>One weight, starting at 1.0, learning rate 0.001, weight decay 0.1, the usual b1 = 0.9, b2 = 0.999, and a gradient that stays at 0.1 for three steps and then flips to -0.1.</p>
+<div class="tbl"><table><tr><th>step</th><th>gradient g</th><th>m (average g)</th><th>v (average g<sup>2</sup>)</th><th>m_hat</th><th>v_hat</th><th>weight</th></tr>
+<tr><td>1</td><td>0.1</td><td>0.01</td><td>0.00001</td><td>0.1</td><td>0.01</td><td>0.998900</td></tr>
+<tr><td>2</td><td>0.1</td><td>0.019</td><td>0.00001999</td><td>0.1</td><td>0.01</td><td>0.997800</td></tr>
+<tr><td>3</td><td>0.1</td><td>0.0271</td><td>0.00002997</td><td>0.1</td><td>0.01</td><td>0.996700</td></tr>
+<tr><td>4</td><td>-0.1</td><td>0.01439</td><td>0.00003994</td><td>0.0418</td><td>0.01</td><td>0.996182</td></tr></table></div>
+<h2>Reading the table</h2>
+<ul>
+<li><b>m</b> is a running average of the gradient: <code>m = 0.9 m + 0.1 g</code>. It remembers the direction.</li>
+<li><b>v</b> is a running average of the squared gradient: <code>v = 0.999 v + 0.001 g<sup>2</sup></code>. It remembers how big the gradients are.</li>
+<li><b>Bias correction.</b> Both start at 0, so at first they are too small. Dividing by <code>1 - b<sup>t</sup></code> fixes that: m_hat and v_hat are 0.1 and 0.01, the true values, from step 1.</li>
+<li><b>The update</b> is <code>lr x m_hat / (sqrt(v_hat) + eps)</code> = 0.001 x 0.1 / 0.1 = 0.001. Plus weight decay: first the weight shrinks by the factor <code>1 - lr x wd</code> = 0.9999. Together: 1.0 x 0.9999 - 0.001 = 0.9989.</li>
+<li><b>Step 4</b>: the gradient flips to -0.1. The average m (the direction) has not turned yet, it has only shrunk to 0.0418 after correction; the step gets smaller, and next steps will reverse. This is momentum: one noisy gradient does not throw the weight around.</li>
+</ul>
+<h2>The surprise: the size of the gradient hardly matters</h2>
+<p>Redo steps 1 to 3 with a gradient of <b>100</b> instead of 0.1: the weight goes 0.998900, 0.997800, 0.996700, exactly the same. Why? The update divides m_hat by sqrt(v_hat), and both scale with g, so the ratio is about 1 whatever g is. Adam moves each weight by roughly <b>the learning rate per step</b>, in the direction of its steady gradient. That is why one learning rate works for weights whose gradients differ by factors of a thousand, for instance the layers that suffer from the vanishing gradient of 4.4. Plain gradient descent would move them a thousand times apart.</p>
+<h2>Where it lives</h2>
+<p>The arithmetic is the file <code>adamw.*</code> (about 25 lines): the update above for every number of every tensor, with the same order of operations as <code>torch.optim.AdamW</code> so the results agree to the last digits.</p>
+<h2>Try it</h2>
+<ol>
+<li>What would the weight be after step 1 with weight decay 0?</li>
+<li>If the gradient is exactly 0 for a weight for many steps, what does AdamW still do to it?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) 1.0 - 0.001 = 0.999. 2) Weight decay keeps shrinking it by 0.01% per step (at lr 0.001, wd 0.1), and the old momentum m carries it on for a while, fading by 10% each step.</details>

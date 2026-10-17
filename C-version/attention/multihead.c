@@ -13,11 +13,18 @@ MultiHeadAttention multihead_random(Arena *a, size_t d_in, size_t d_out, size_t 
     m.out_bias = matrix_new(a, 1, d_out);
     m.num_heads = num_heads;
     m.head_dim = d_out / num_heads;
+    m.has_qkv_bias = 0;
     return m;
 }
 
 Matrix multihead_forward(Arena *a, const MultiHeadAttention *m, Matrix x) {
     Matrix q = matmul(a, x, m->w_query), k = matmul(a, x, m->w_key), v = matmul(a, x, m->w_value);
+    if (m->has_qkv_bias) {
+        Matrix *proj[3] = {&q, &k, &v};
+        for (int n = 0; n < 3; n++)
+            for (size_t i = 0; i < proj[n]->rows; i++)
+                for (size_t j = 0; j < proj[n]->cols; j++) proj[n]->data[i * proj[n]->cols + j] += m->qkv_bias[n].data[j];
+    }
     Matrix context = matrix_new(a, x.rows, m->num_heads * m->head_dim);
     for (size_t h = 0; h < m->num_heads; h++) {
         size_t lo = h * m->head_dim, hi = lo + m->head_dim; /* this head's column slice */

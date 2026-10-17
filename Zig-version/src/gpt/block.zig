@@ -27,7 +27,7 @@ pub const TransformerBlock = struct {
     norm1: layers.LayerNorm,
     norm2: layers.LayerNorm,
 
-    pub fn init(gpa: std.mem.Allocator, emb_dim: usize, n_heads: usize) !TransformerBlock {
+    pub fn init(gpa: std.mem.Allocator, emb_dim: usize, n_heads: usize, qkv_bias: bool) !TransformerBlock {
         return .{
             .att = .{
                 .w_query = try Matrix.init(gpa, emb_dim, emb_dim),
@@ -37,6 +37,7 @@ pub const TransformerBlock = struct {
                 .out_bias = try Matrix.init(gpa, 1, emb_dim),
                 .num_heads = n_heads,
                 .head_dim = emb_dim / n_heads,
+                .qkv_bias = if (qkv_bias) .{ try Matrix.init(gpa, 1, emb_dim), try Matrix.init(gpa, 1, emb_dim), try Matrix.init(gpa, 1, emb_dim) } else null,
             },
             .ff = try layers.FeedForward.init(gpa, emb_dim),
             .norm1 = try layers.LayerNorm.init(gpa, emb_dim),

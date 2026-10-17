@@ -29,6 +29,9 @@ pub const MultiHeadAttention = struct {
     out_bias: Matrix, // 1 x d_out
     num_heads: usize,
     head_dim: usize,
+    /// Biases of the query, key and value projections (1 x d_out each): null in chapters 3 and 4,
+    /// set for OpenAI's GPT-2 weights (5.5).
+    qkv_bias: ?[3]Matrix = null,
 
     /// Uniform [0, 1) weights (query, key, value, out_proj) and a zero bias.
     /// `d_out` must divide evenly by `num_heads`.
@@ -53,6 +56,13 @@ pub const MultiHeadAttention = struct {
         const q = try x.matmul(gpa, self.w_query);
         const k = try x.matmul(gpa, self.w_key);
         const v = try x.matmul(gpa, self.w_value);
+        if (self.qkv_bias) |biases| {
+            for ([_]Matrix{ q, k, v }, biases) |proj, bias| {
+                for (0..proj.rows) |i| {
+                    for (proj.row(i), bias.data) |*e, b| e.* += b;
+                }
+            }
+        }
         const context = try Matrix.init(gpa, x.rows, self.num_heads * self.head_dim);
         for (0..self.num_heads) |h| {
             const lo = h * self.head_dim; // this head's column slice

@@ -1,0 +1,51 @@
+---
+title: "Extra: backpropagation by hand"
+nav: Backprop by hand
+chapter: "5"
+order: 100
+extra: true
+---
+<div class="aim"><b>Aim.</b> Understand the backward pass of the training loop one rule at a time, with small numbers, so the 200 lines of <code>grad.*</code> read as a list of simple facts.</div>
+<p>The loss is a long chain of small functions: look up embeddings, normalise, multiply by matrices, softmax, and so on. The <b>chain rule</b> says: to know how the loss changes when an early number changes, multiply how each link of the chain changes. Backpropagation does that efficiently by going <b>from the loss backwards</b>, carrying along "how the loss changes with this layer's output" (call it <code>dy</code>) and turning it into "how it changes with the layer's input" (<code>dx</code>) and with its weights.</p>
+<h2>1. Loss and softmax</h2>
+<p>The loss at one position is <code>-log p(target)</code> where p is the softmax of the scores. Its gradient with respect to the scores is wonderfully simple:</p>
+<pre class="out">d loss / d score_j  =  p_j - (1 if j is the target else 0)</pre>
+<p>Example with three scores <code>[2.0, 1.0, 0.1]</code> and the first one correct: softmax gives p = [0.659, 0.242, 0.099], the loss is -ln 0.659 = 0.417, and the gradient is <b>[-0.341, 0.242, 0.099]</b>. Read it: raise the correct score (negative gradient means "going up lowers the loss") and lower the others, the more probable a wrong one is, the harder. We divide by the number of positions N because the loss is a mean.</p>
+<h2>2. A linear layer: y = x W + b</h2>
+<table><tr><th>Wanted</th><th>Rule</th><th>In words</th></tr>
+<tr><td>gradient of W</td><td><code>x<sup>T</sup> dy</code></td><td>each weight sees (its input) times (the error at its output)</td></tr>
+<tr><td>gradient of b</td><td>sum of <code>dy</code> over the tokens</td><td>a bias is added to every token</td></tr>
+<tr><td>gradient handed back</td><td><code>dy W<sup>T</sup></code></td><td>each input gets the errors of the outputs it fed, weighted by W</td></tr></table>
+<p>Tiny case: x = [2, 3], W = [[1], [-1]], b = 0, so y = 2 - 3 = -1. If dy = 0.5: dW = [[2 x 0.5], [3 x 0.5]] = [[1.0], [1.5]] and dx = [0.5 x 1, 0.5 x -1] = [0.5, -0.5].</p>
+<h2>3. GELU</h2>
+<p>An elementwise function: <code>dx = dy x gelu'(x)</code>, where gelu' is its slope. The program uses the formula derived from the tanh approximation of 4.3.</p>
+<h2>4. Shortcut: y = x + f(x)</h2>
+<p>Gradients <b>add</b>: <code>dx = dy + (gradient through f)</code>. The first term is the gradient taking the shortcut, untouched. That is why shortcuts cure vanishing gradients (4.4): the backward pass has a path where nothing shrinks. In the code: <code>add_into(dx, dx_mid)</code>, twice per block.</p>
+<h2>5. Layer norm</h2>
+<p>With <code>xhat = (x - mean) / sqrt(var + eps)</code> and <code>y = scale * xhat + shift</code>:</p>
+<pre class="out">dscale = sum of dy * xhat       dshift = sum of dy
+dxhat  = dy * scale
+dx     = inv * ( dxhat - mean(dxhat) - xhat * mean(dxhat * xhat) )      inv = 1 / sqrt(var + eps)</pre>
+<p>The two subtracted terms exist because the mean and the variance of the row depend on every element of it: changing one input shifts them all, and the correction removes the part of the gradient that would only move the mean or the spread.</p>
+<h2>6. Attention</h2>
+<p>For each head, with P the attention weights (after softmax) and V the values, the forward pass was <code>S = Q K<sup>T</sup> / sqrt(d)</code>, <code>P = softmax(S)</code>, <code>context = P V</code>. Backwards:</p>
+<pre class="out">dP = dcontext V^T          dV = P^T dcontext
+dS = P * ( dP - rowsum(dP * P) )          (softmax backward)
+dQ = dS K / sqrt(d)        dK = dS^T Q / sqrt(d)</pre>
+<p>Positions hidden by the causal mask have P = 0, so their dS is 0: the future gets no gradient, just as it gets no attention. The softmax rule has the same "minus the weighted average" shape as layer norm's.</p>
+<h2>7. Embeddings</h2>
+<p>A lookup has no arithmetic to undo: the gradient of a token's row is the sum of the gradients <code>dx</code> of every position where that token appeared. A token that is not in the batch gets zero gradient, so most rows of the 50,257-row table stay untouched in each step.</p>
+<h2>How the code is organised</h2>
+<ol>
+<li><b>Forward with a cache</b>: run every layer and keep the matrices the backward rules need (inputs, normalised values, attention weights, the pre-GELU values).</li>
+<li><b>Loss</b> and <code>dlogits</code> (rule 1).</li>
+<li><b>Output head</b> and final norm, then the <b>blocks from last to first</b>: feed forward (rules 2, 3, 2), shortcut, layer norm, attention (rules 2, 6, 2 three times), shortcut, layer norm.</li>
+<li><b>Embeddings</b> (rule 7).</li>
+</ol>
+<p>Gradients <i>add into</i> a model-shaped container; that is why the loop zeroes it before each step. And because the container is shaped like the model, the optimizer and the checkpoint code treat weights, gradients and optimizer state in exactly the same way.</p>
+<h2>Try it</h2>
+<ol>
+<li>Verify rule 1 numerically: change the first score of <code>[2.0, 1.0, 0.1]</code> by 0.001 and see how the loss changes. Is it close to -0.341 x 0.001?</li>
+<li>Why do the weights of a linear layer get <i>small</i> gradients when its input is close to 0?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) The loss drops from 0.41703 to 0.41669, a change of -0.000341: yes, -0.341 x 0.001. 2) The gradient of a weight is (input) x (error): an input of 0 makes it 0.</details>

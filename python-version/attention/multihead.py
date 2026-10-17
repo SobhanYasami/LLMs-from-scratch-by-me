@@ -24,7 +24,8 @@ from .rng import Rng
 
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, w_query, w_key, w_value, out_weight, out_bias, num_heads: int, context_length: int):
+    def __init__(self, w_query, w_key, w_value, out_weight, out_bias, num_heads: int, context_length: int, qkv_bias=None):
+        """``qkv_bias`` is None (chapters 3 and 4) or a (b_query, b_key, b_value) tuple (OpenAI's GPT-2 weights, 5.5)."""
         super().__init__()
         d_out = w_query.shape[1]
         assert d_out % num_heads == 0, "d_out must be divisible by num_heads"
@@ -33,6 +34,7 @@ class MultiHeadAttention(nn.Module):
         self.W_query, self.W_key, self.W_value = (nn.Parameter(w) for w in (w_query, w_key, w_value))
         self.out_weight = nn.Parameter(out_weight)
         self.out_bias = nn.Parameter(out_bias)
+        self.qkv_bias = nn.ParameterList(nn.Parameter(b) for b in qkv_bias) if qkv_bias is not None else None
         self.register_buffer("mask", torch.triu(torch.ones(context_length, context_length), diagonal=1).bool())
 
     @classmethod
@@ -45,10 +47,12 @@ class MultiHeadAttention(nn.Module):
         """``x`` is [batch, T, d_in]; returns [batch, T, d_out]."""
         b, t, _ = x.shape
         # [b, T, d_out] -> [b, T, heads, head_dim] -> [b, heads, T, head_dim]
-        def split(m):
-            return (x @ m).view(b, t, self.num_heads, self.head_dim).transpose(1, 2)
+        def split(m, bias):
+            y = x @ m if bias is None else x @ m + bias
+            return y.view(b, t, self.num_heads, self.head_dim).transpose(1, 2)
 
-        q, k, v = split(self.W_query), split(self.W_key), split(self.W_value)
+        biases = self.qkv_bias if self.qkv_bias is not None else (None, None, None)
+        q, k, v = split(self.W_query, biases[0]), split(self.W_key, biases[1]), split(self.W_value, biases[2])
         scores = (q @ k.transpose(-2, -1)).masked_fill(self.mask[:t, :t], -math.inf)
         weights = torch.softmax(scores / math.sqrt(self.head_dim), dim=-1)
         context = (weights @ v).transpose(1, 2).reshape(b, t, -1)  # glue the heads back together

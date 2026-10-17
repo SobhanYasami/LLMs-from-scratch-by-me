@@ -61,6 +61,16 @@ GptModel gpt_model_new(Arena *a, GptConfig cfg);
 void gpt_model_init(GptModel *m, unsigned long long seed);
 size_t gpt_count_parameters(const GptModel *m);
 
+/* Every weight as a flat array, in the canonical order shared by all languages (see
+ * train/checkpoint.h): token emb, position emb, then per block wq, wk, wv, [bq, bk, bv], wo, bo,
+ * ln1 scale, ln1 shift, ff1 w, ff1 b, ff2 w, ff2 b, ln2 scale, ln2 shift; then the final norm
+ * scale and shift and the output head. Fills data[i] and len[i]; returns how many there are
+ * (at most GPT_MAX_TENSORS). The arrays share memory with the model. */
+#define GPT_MAX_TENSORS 1024
+size_t gpt_tensors(const GptModel *m, float **data, size_t *len);
+/* A model of the same shape with every number 0 (gradients and optimizer state live in one). */
+GptModel gpt_model_zeros_like(Arena *a, const GptModel *m);
+
 Matrix gpt_embed(Arena *a, const GptModel *m, const int *ids, size_t n);   /* token + position */
 Matrix gpt_forward(Arena *a, const GptModel *m, const int *ids, size_t n); /* logits [n, vocab] */
 

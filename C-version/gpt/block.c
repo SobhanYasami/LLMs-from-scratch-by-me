@@ -1,9 +1,13 @@
 #include "block.h"
 
-TransformerBlock transformer_block_new(Arena *a, size_t d, size_t n_heads) {
+TransformerBlock transformer_block_new(Arena *a, size_t d, size_t n_heads, int qkv_bias) {
     TransformerBlock b;
     b.att = (MultiHeadAttention){matrix_new(a, d, d), matrix_new(a, d, d), matrix_new(a, d, d), matrix_new(a, d, d),
-                                 matrix_new(a, 1, d), n_heads, d / n_heads};
+                                 matrix_new(a, 1, d), n_heads, d / n_heads, 0, {{0}}};
+    if (qkv_bias) {
+        b.att.has_qkv_bias = 1;
+        for (int i = 0; i < 3; i++) b.att.qkv_bias[i] = matrix_new(a, 1, d);
+    }
     b.ff = feedforward_new(a, d);
     b.norm1 = layernorm_new(a, d);
     b.norm2 = layernorm_new(a, d);
