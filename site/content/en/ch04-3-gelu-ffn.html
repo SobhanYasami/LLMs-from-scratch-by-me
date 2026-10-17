@@ -1,0 +1,54 @@
+---
+title: '4.3: A feed forward network with GELU activations'
+nav: 4.3 GELU & feed forward
+chapter: '4'
+order: 30
+sections:
+- '4.3'
+code: gpt_layers
+---
+<div class="aim"><b>Aim.</b> Meet GELU, the smooth activation GPT uses instead of ReLU, and the feed forward block that processes every token on its own.</div>
+<h2>GELU in one picture of numbers</h2>
+<p>A neural layer is a matrix multiply followed by a non-linear <b>activation function</b>; without it, a stack of layers collapses into one big matrix multiply. ReLU is the classic: <code>max(0, x)</code>. GPT uses <b>GELU</b>, which behaves like ReLU for large inputs but is smooth near zero and lets a little of negative inputs through.</p>
+<pre class="out">x   : [-3.0000, -2.0000, -1.0000, 0.0000, 1.0000, 2.0000, 3.0000]
+GELU: [-0.0036, -0.0454, -0.1588, 0.0000, 0.8412, 1.9546, 2.9964]
+ReLU: [0.0000, 0.0000, 0.0000, 0.0000, 1.0000, 2.0000, 3.0000]</pre>
+<ul>
+<li>For big positive x, GELU(x) is almost x (2.9964 for 3).</li>
+<li>For big negative x, it is almost 0, but not exactly: -0.0454 for -2, -0.1588 for -1. ReLU gives a flat 0 there.</li>
+<li>There is no sharp corner at 0, so the slope changes gradually. That makes optimization a little easier, and a unit that is "off" can still learn.</li>
+</ul>
+<p>The exact definition is <code>x * Phi(x)</code>, where Phi is the probability that a standard bell-curve number is below x. Computing Phi is slow, so GPT-2 was trained with this cheap approximation, and so do we:</p>
+<pre class="out">GELU(x) = 0.5 * x * (1 + tanh( sqrt(2/pi) * (x + 0.044715 * x^3) ))</pre>
+<h2>The feed forward block</h2>
+<p>Every transformer block has two parts. Attention (chapter 3) mixes information <i>between</i> tokens. The <b>feed forward network</b> then works on each token <i>separately</i>, the same small network for every position.</p>
+<div class="flow">
+<div><b>[T, D]</b>input</div><span>&rarr;</span>
+<div><b>Linear D &rarr; 4D</b>expand</div><span>&rarr;</span>
+<div class="hot"><b>GELU</b></div><span>&rarr;</span>
+<div><b>Linear 4D &rarr; D</b>shrink</div><span>&rarr;</span>
+<div><b>[T, D]</b>output</div>
+</div>
+<ul>
+<li>The first layer <b>widens</b> each token's vector four times (768 to 3,072 in GPT-2 small), giving the model a roomier space to compute in.</li>
+<li>GELU adds the non-linearity.</li>
+<li>The second layer <b>shrinks</b> it back, so the output has the same shape as the input and the block can be stacked.</li>
+</ul>
+<pre class="out">feed forward: input (2, 3, 32) -> output (2, 3, 32) (hidden layer is 4 x 32 = 128 wide)</pre>
+<div class="tip">The feed forward network holds about <b>two thirds of the parameters</b> of a block. For GPT-2 small: 4,722,432 parameters in the feed forward part against 2,360,064 in attention (exercise 4.1 on page 4.6).</div>
+<h2>A <code>Linear</code> layer in this repo</h2>
+<p>A linear layer computes <code>x @ W + b</code>. We store W as [in, out], so the same <code>matmul</code> from chapter 3 does the work. PyTorch's <code>nn.Linear</code> stores the transpose [out, in]; that is the only difference, and the Python model handles it when it copies weights.</p>
+<h2>Code</h2>
+<p>The same file as 4.2. Now read <code>gelu</code>, <code>Linear</code> and <code>FeedForward</code>.</p>
+<!--code-->
+<h2>Exercises</h2>
+<ol>
+<li>Compute GELU(0.5) with the formula by hand, then check it with the code. Is it above or below 0.5?</li>
+<li>Where does GELU differ from ReLU the most: near 0, or far from 0?</li>
+<li>How many parameters does the feed forward block have for D = 32? (Count weights and biases of both layers.)</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) About 0.3457, below 0.5: GELU shrinks small positive numbers a little. 2) Near 0, where ReLU has its corner; far from 0 they agree. 3) 32x128 + 128 + 128x32 + 32 = 8,352.</details>
+<h2>Check yourself</h2>
+<details class="qa"><summary>Why a non-linear activation at all?</summary>Without it, stacked linear layers are equivalent to a single linear layer, so depth would add nothing.</details>
+<details class="qa"><summary>What does the feed forward block do to a token's vector size?</summary>Expands it 4x, applies GELU, then shrinks it back, so input and output have the same size.</details>
+<details class="qa"><summary>Does the feed forward block mix information between tokens?</summary>No. Each token is processed alone; attention does the mixing.</details>

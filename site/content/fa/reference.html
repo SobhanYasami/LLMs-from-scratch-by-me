@@ -1,0 +1,80 @@
+---
+title: 'مرجع کد: یک جدول، پنج زبان'
+nav: مرجع کد
+chapter: reference
+order: 10
+---
+<p class="lede">هر بخش عمومی، کنار هم. نام‌ها از قرارداد هر زبان پیروی می‌کنند.</p>
+<table>
+<tr><th>کتاب</th><th>Python</th><th>Go</th><th>Rust</th><th>C</th><th>Zig</th></tr>
+<tr><td>2.2 تقسیم</td><td><code>split_text</code></td><td><code>SplitText</code></td><td><code>split_text</code></td><td><code>split_text</code></td><td><code>splitText</code></td></tr>
+<tr><td>2.3 اتصال</td><td><code>detokenize</code></td><td><code>Detokenize</code></td><td><code>detokenize</code></td><td><code>detokenize</code></td><td><code>detokenize</code></td></tr>
+<tr><td>2.3 واژگان</td><td><code>build_vocab(tokens)</code></td><td><code>BuildVocab(tokens)</code></td><td><code>build_vocab(&amp;tokens)</code></td><td><code>build_vocab</code></td><td><code>Vocab.build</code></td></tr>
+<tr><td>2.3-2.4 توکن‌سازها</td><td><code>SimpleTokenizerV1/V2</code></td><td><code>NewSimpleTokenizerV1/V2</code></td><td><code>SimpleTokenizerV1/V2::new</code></td><td><code>simple_tokenizer_v1/v2</code></td><td><code>SimpleTokenizer.v1/v2</code></td></tr>
+<tr><td>2.3 encode / decode</td><td><code>KeyError</code> پرتاب می‌کند</td><td><code>error</code> برمی‌گرداند</td><td><code>Result</code> برمی‌گرداند</td><td><code>NULL</code> + پیام برمی‌گرداند</td><td>اجتماع خطا</td></tr>
+<tr><td>2.4 توکن‌های ویژه</td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>EndOfText</code>, <code>Unknown</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td><td><code>END_OF_TEXT</code>, <code>UNK_TOKEN</code></td></tr>
+<tr><td>2.5 BPE</td><td><code>tiktoken.get_encoding("gpt2")</code></td><td><code>tiktoken.GetEncoding("r50k_base")</code></td><td><code>tiktoken_rs::r50k_base()</code></td><td><code>bpe_load</code> / <code>bpe_encode</code></td><td><code>Bpe.init</code> / <code>encode</code></td></tr>
+<tr><td>2.6 پنجره‌ها</td><td><code>GPTDatasetV1</code></td><td><code>NewGPTDataset</code></td><td><code>GptDataset::new</code></td><td><code>gpt_dataset_new</code></td><td><code>GptDataset.init</code></td></tr>
+<tr><td>2.6 دسته‌ها</td><td><code>create_dataloader_v1</code></td><td><code>NewDataLoader(...).Epoch()</code></td><td><code>DataLoader::new(...).epoch()</code></td><td><code>dataloader_new</code> + <code>_batch</code></td><td><code>DataLoader.init</code> + <code>batch</code></td></tr>
+<tr><td>3.3 توجه ساده</td><td><code>simple_attention</code></td><td><code>SimpleAttention</code></td><td><code>simple_attention</code></td><td><code>simple_attention</code></td><td><code>simpleAttention</code></td></tr>
+<tr><td>3.4 خودتوجهی</td><td><code>SelfAttention</code></td><td><code>SelfAttention</code></td><td><code>SelfAttention</code></td><td><code>self_attention_forward</code></td><td><code>SelfAttention.forward</code></td></tr>
+<tr><td>3.5 علّی</td><td><code>CausalAttention</code></td><td><code>CausalAttention</code></td><td><code>CausalAttention</code></td><td><code>causal_forward</code></td><td><code>CausalAttention.forward</code></td></tr>
+<tr><td>3.5 dropout</td><td><code>dropout</code></td><td><code>Dropout</code></td><td><code>Matrix::dropout</code></td><td><code>dropout</code></td><td><code>Matrix.dropout</code></td></tr>
+<tr><td>3.6 چندسَری</td><td><code>MultiHeadAttention</code></td><td><code>MultiHeadAttention</code></td><td><code>MultiHeadAttention</code></td><td><code>multihead_forward</code></td><td><code>MultiHeadAttention.forward</code></td></tr>
+<tr><td>4.2 نرمال‌سازی لایه</td><td><code>LayerNorm</code></td><td><code>LayerNorm.Forward</code></td><td><code>LayerNorm::forward</code></td><td><code>layernorm_forward</code></td><td><code>LayerNorm.forward</code></td></tr>
+<tr><td>4.3 GELU</td><td><code>GELU</code></td><td><code>GELU</code></td><td><code>gelu</code></td><td><code>gelu</code></td><td><code>gelu</code></td></tr>
+<tr><td>4.3 پیش‌خور</td><td><code>FeedForward</code></td><td><code>FeedForward</code></td><td><code>FeedForward</code></td><td><code>feedforward_forward</code></td><td><code>FeedForward.forward</code></td></tr>
+<tr><td>4.4 دموی میان‌بر</td><td><code>ExampleDeepNeuralNetwork</code></td><td><code>ExampleDeepNeuralNetwork</code></td><td><code>ExampleDeepNeuralNetwork</code></td><td><code>example_gradient_means</code></td><td><code>ExampleDeepNeuralNetwork.gradientMeans</code></td></tr>
+<tr><td>4.5 بلوک</td><td><code>TransformerBlock</code></td><td><code>TransformerBlock</code></td><td><code>TransformerBlock</code></td><td><code>transformer_block_forward</code></td><td><code>TransformerBlock.forward</code></td></tr>
+<tr><td>4.6 مدل</td><td><code>GPTModel</code></td><td><code>NewModel</code>, <code>Model.Forward</code></td><td><code>GptModel::new</code>, <code>forward</code></td><td><code>gpt_model_new</code>, <code>gpt_forward</code></td><td><code>GptModel.init</code>, <code>forward</code></td></tr>
+<tr><td>4.6 پارامترها</td><td><code>parameter_count</code></td><td><code>ParameterCount</code></td><td><code>parameter_count</code></td><td><code>gpt_parameter_count</code></td><td><code>parameterCount</code></td></tr>
+<tr><td>4.7 تولید</td><td><code>generate_text_simple</code></td><td><code>GenerateTextSimple</code></td><td><code>generate_text_simple</code></td><td><code>generate_text_simple</code></td><td><code>generateTextSimple</code></td></tr>
+<tr><td>2.7-2.8 امبدینگ‌ها</td><td><code>InputEmbedding</code> (torch)</td><td><code>NewInputEmbedding</code></td><td><code>InputEmbedding::new</code></td><td><code>input_embedding_new</code></td><td><code>InputEmbedding.init</code></td></tr>
+</table>
+<h2>چیدمان، همان ایده در هر زبان</h2>
+<pre class="out">&lt;lang&gt;/
+  README.md
+  main                 demo runner
+  tokenization/
+    preprocess         2.2
+    vocab              2.3
+    simple             2.3-2.4
+    dataset            2.6 (+ dataloader)
+    embedding          2.7-2.8
+  attention/           chapter 3
+    simple             3.3
+    self_attention     3.4
+    causal             3.5 (+ rng, dropout)
+    multihead          3.6
+  gpt/                 chapter 4
+    layers             4.2, 4.3 (layer norm, GELU, Linear, feed forward)
+    shortcut           4.4
+    block              4.5
+    model              4.1, 4.6, 4.7 (config, GPT model, generate)</pre>
+<p>کامنت‌های کد می‌گویند «Step 1-5». تطبیق با کتاب: Step 1 = 2.2، Step 2 = 2.3، Step 3 = 2.3-2.4، Step 4 = 2.6، Step 5 = 2.7-2.8.</p>
+<h2>عددهای کلیدی فصل ۲</h2>
+<table>
+<tr><th>مورد</th><th>مقدار</th></tr>
+<tr><td>نویسه‌ها در <i>The Verdict</i></td><td>20,479</td></tr>
+<tr><td>توکن‌های سطح‌کلمه / واژگان</td><td>4,649 / 1,159 (+2 ویژه = 1,161)</td></tr>
+<tr><td>توکن‌های BPE در داستان</td><td>5,145</td></tr>
+<tr><td>واژگان BPE در GPT-2، شناسهٔ <code>&lt;|endoftext|&gt;</code></td><td>50,257, 50256</td></tr>
+<tr><td>دستهٔ دمو</td><td>۸ پنجره x ۴ توکن، ۲۵۶ بُعد</td></tr>
+<tr><td>مثال توجه</td><td>۶ توکن، d_in برابر 3، d_out برابر 2، ۲ سَر</td></tr>
+<tr><td>GPT-2 کوچک (فصل ۴)</td><td>امبدینگ 768، ۱۲ سَر، ۱۲ بلوک، 163,009,536 پارامتر (124,412,160 با weight tying)</td></tr>
+<tr><td>GPT کوچک دمو</td><td>امبدینگ 32، ۴ سَر، ۲ بلوک، 3,242,240 پارامتر</td></tr>
+</table>
+<h2>افزودن فصل بعد</h2>
+<p>در هر زبان یک ماژول هم‌ردیف اضافه کنید (برای مثال <code>attention</code>)، به ترتیب کتاب، با همان نام‌ها و یک دمو در هر <code>main</code>. بخش مستندات در <a href="contributing.html">مشارکت</a> آمده است.</p>
+<h2>تفاوت زبان‌ها</h2>
+<table>
+<tr><th>موضوع</th><th>Python</th><th>Go</th><th>Rust</th><th>C</th><th>Zig</th></tr>
+<tr><td>تقسیم با نگه‌داشتن جداکننده</td><td><code>re.split</code></td><td>دستی</td><td>دستی</td><td>اسکن بایت</td><td>اسکن بایت (slice، بدون کپی)</td></tr>
+<tr><td>استفادهٔ مجدد نسخهٔ ۲ از ۱</td><td>ارث‌بری</td><td>تعبیهٔ struct</td><td>بسته‌بندی</td><td>یک پرچم</td><td>یک پرچم</td></tr>
+<tr><td>تانسورها</td><td>torch</td><td>slice های تودرتو</td><td><code>Vec</code> تودرتو</td><td><code>float[]</code> تخت</td><td><code>[]f32</code> تخت</td></tr>
+<tr><td>BPE در GPT-2</td><td><code>tiktoken</code></td><td><code>tiktoken-go</code> + بارگذار آفلاین</td><td><code>tiktoken-rs</code></td><td>رمزگذار خودی</td><td>رمزگذار خودی</td></tr>
+<tr><td>گذر برگشتی (دموی 4.4)</td><td>autograd در torch</td><td>دستی، <code>float64</code></td><td>دستی، <code>f64</code></td><td>دستی، <code>double</code></td><td>دستی، <code>f64</code></td></tr>
+<tr><td>وزن‌های تصادفی</td><td><code>torch</code></td><td><code>math/rand</code></td><td>splitmix64 داخلی</td><td>splitmix64</td><td>splitmix64</td></tr>
+<tr><td>ماتریس</td><td>تانسور torch</td><td>struct به نام <code>Matrix</code>، <code>[]float32</code></td><td>struct به نام <code>Matrix</code>، <code>Vec&lt;f32&gt;</code></td><td><code>Matrix</code> از یک <code>Arena</code></td><td><code>Matrix</code>، تخصیص‌دهنده از بیرون</td></tr>
+<tr><td>حافظه</td><td>زباله‌روبی‌شده</td><td>زباله‌روبی‌شده</td><td>مالکیت</td><td><code>malloc/free</code> دستی</td><td>تخصیص‌دهنده‌های صریح</td></tr>
+</table>

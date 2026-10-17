@@ -1,0 +1,2 @@
+{{ $lang := site.Language.Lang }}
+<div class="cards">{{ range hugo.Data.chapters }}{{ $st := partial "chstatus.html" . }}<a class="card" href="chapter-{{ .num }}.html"><b>{{ partial "chlabel.html" . }}</b><span>{{ index .title $lang }}</span>{{ partial "chip.html" $st.status }}</a>{{ end }}</div>

@@ -1,0 +1,34 @@
+---
+title: 'Extra: an embedding layer is a matrix multiply in disguise'
+nav: Embedding vs matmul
+chapter: '2'
+order: 110
+extra: true
+---
+<div class="aim"><b>Aim.</b> See that "look up row i" and "multiply a one-hot vector by a matrix" give the same answer, and why lookup is the one we use.</div>
+<p>Section 2.7 says an embedding layer is a lookup table. Here is the other view, which explains why it can be <i>trained</i> like any other layer.</p>
+<h2>One-hot times matrix</h2>
+<p>Take a vocabulary of 6 tokens and embeddings of size 3. The weight matrix W has 6 rows and 3 columns. For token ID 3, build a <b>one-hot vector</b>: all zeros except a 1 at position 3.</p>
+<pre class="out">one-hot(3) = [0, 0, 0, 1, 0, 0]
+
+            | w00 w01 w02 |  row 0
+            | w10 w11 w12 |  row 1
+            | w20 w21 w22 |  row 2
+[0 0 0 1 0 0] x | w30 w31 w32 |  row 3   -->  [w30 w31 w32]
+            | w40 w41 w42 |  row 4
+            | w50 w51 w52 |  row 5</pre>
+<p>Every other row is multiplied by 0 and vanishes. The result is exactly row 3. So an embedding layer equals a fully connected layer (no bias) fed with one-hot inputs.</p>
+<h2>Why use a lookup instead</h2>
+<table><tr><th></th><th>One-hot + matmul</th><th>Lookup</th></tr>
+<tr><td>Work per token</td><td>vocab_size x dim multiplications, almost all by zero</td><td>copy dim numbers</td></tr>
+<tr><td>Memory</td><td>a vocab_size-long vector per token</td><td>just the ID</td></tr>
+<tr><td>Same result</td><td colspan="2">yes, identical numbers</td></tr></table>
+<p>With the real GPT-2 vocabulary of 50,257 tokens, the one-hot route would waste about 50,000 multiplications per token. In the code you have seen it directly: <code>embedding_forward</code> in C is a <code>memcpy</code> of one row.</p>
+<h2>Why it still matters</h2>
+<p>Because it <i>is</i> a matrix multiply, gradients flow back to the rows that were used, and only those rows get updated. That is how embeddings become meaningful during training (chapter 5) even though we only ever look them up.</p>
+<h2>Try it</h2>
+<ol>
+<li>Use the 6x3 example in section 2.7. Write the one-hot vector for ID 5 and multiply by hand. Does it match the row?</li>
+<li>In your favourite of the five languages, implement the matmul version and check it equals the lookup on a small matrix.</li>
+</ol>
+<p>Raschka's repo has a runnable version: <a href="https://github.com/rasbt/LLMs-from-scratch/tree/main/ch02/03_bonus_embedding-vs-matmul">03_bonus_embedding-vs-matmul</a>.</p>

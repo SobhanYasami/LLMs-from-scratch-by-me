@@ -1,0 +1,2 @@
+{{- $k := "s_progress" -}}{{- if eq . "ready" -}}{{- $k = "s_ready" -}}{{- else if eq . "planned" -}}{{- $k = "s_planned" -}}{{- end -}}
+<span class="chip {{ replace . " " "-" }}">{{ i18n $k }}</span>

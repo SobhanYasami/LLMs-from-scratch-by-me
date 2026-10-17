@@ -1,0 +1,34 @@
+{{- /* Renders a content page: title, meta line, body with generated parts, edit link, pager. */ -}}
+{{- $c := .Content -}}
+{{- $lang := site.Language.Lang -}}
+{{- /* ids + table of contents from the h2 headings */ -}}
+{{- $toc := slice -}}
+{{- range $i, $h := findRE `(?s)<h2[^>]*>.*?</h2>` $c -}}
+  {{- $inner := replaceRE `(?s)<h2[^>]*>(.*?)</h2>` "$1" $h -}}
+  {{- $c = replace $c $h (printf `<h2 id="s%d">%s</h2>` (add $i 1) $inner) 1 -}}
+  {{- $toc = $toc | append (dict "id" (printf "s%d" (add $i 1)) "t" ($inner | plainify)) -}}
+{{- end -}}
+{{- if ge (len $toc) 3 -}}
+  {{- $html := printf `<aside class="toc" aria-label="%s"><h4>%s</h4>` (i18n "toc") (i18n "toc") -}}
+  {{- range $toc -}}{{- $html = printf `%s<a href="#%s">%s</a>` $html .id .t -}}{{- end -}}
+  {{- $.Scratch.Set "toc" (printf "%s</aside>" $html | safeHTML) -}}
+{{- end -}}
+{{- /* generated parts */ -}}
+{{- if .Params.code -}}{{- $c = replace $c "<!--code-->" (partial "tabs.html" (dict "uid" .File.ContentBaseName "key" .Params.code) | string) -}}{{- end -}}
+{{- $c = replace $c "<!--cards-->" (partial "cards.html" . | string) -}}
+{{- $c = replace $c "<!--progress-->" (partial "progress.html" . | string) -}}
+{{- $c = replace $c "<!--matrix-->" (partial "matrix.html" . | string) -}}
+{{- $c = replaceRE `(?s)(<table.*?</table>)` `<div class="tbl">$1</div>` $c -}}
+{{- /* h1 with the section number kept in reading order for right-to-left text */ -}}
+{{- $h1 := .Title -}}
+{{- if eq site.Language.Direction "rtl" -}}{{- $h1 = replaceRE `^([\d.,\-\s\x{0648}]+:)` `<bdi dir="ltr">$1</bdi>` (.Title | htmlEscape) -}}{{- else -}}{{- $h1 = .Title | htmlEscape -}}{{- end -}}
+<h1>{{ $h1 | safeHTML }}</h1>
+{{- $bits := slice -}}
+{{- if and .Params.sections (not .Params.extra) -}}{{- $bits = $bits | append (printf `%s <span dir="ltr">%s</span>` (i18n "book_section") (delimit .Params.sections ", ")) -}}{{- end -}}
+{{- if .Params.code -}}{{- $have := slice -}}{{- $spec := index hugo.Data.code .Params.code -}}{{- range hugo.Data.languages -}}{{- if index $spec .key -}}{{- $have = $have | append .label -}}{{- end -}}{{- end -}}{{- $bits = $bits | append (printf "%s %s" (i18n "code_in") (delimit $have ", ")) -}}{{- end -}}
+{{- if .Params.extra -}}{{- $bits = $bits | append (i18n "extra") -}}{{- end -}}
+{{- if $bits }}<p class="meta">{{ delimit $bits " · " | safeHTML }}</p>{{ end }}
+<div>{{ $c | safeHTML }}</div>
+{{- $src := printf "%s/blob/main/site/content/%s/%s" site.Params.thisRepo $lang (cond .IsHome "_index.html" (printf "%s.html" .File.ContentBaseName)) }}
+<p class="edit"><a href="{{ $src }}">{{ i18n "edit" }}</a></p>
+{{ partial "pager.html" . }}

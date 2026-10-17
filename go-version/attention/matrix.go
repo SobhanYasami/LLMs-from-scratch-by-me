@@ -38,15 +38,19 @@ func (m Matrix) Set(i, j int, v float32) { m.Data[i*m.Cols+j] = v }
 func (m Matrix) Row(i int) []float32     { return m.Data[i*m.Cols : (i+1)*m.Cols] }
 
 // MatMul returns a x b ([n,k] x [k,m] -> [n,m]).
+// Tip: the loops run i, k, j so both matrices are read row by row, which is
+// much faster on big matrices. Each output element is still summed over k in
+// order, so the numbers are the same as with the textbook i, j, k order.
 func MatMul(a, b Matrix) Matrix {
 	out := NewMatrix(a.Rows, b.Cols)
 	for i := 0; i < a.Rows; i++ {
-		for j := 0; j < b.Cols; j++ {
-			var sum float32
-			for k := 0; k < a.Cols; k++ {
-				sum += a.At(i, k) * b.At(k, j)
+		outRow := out.Row(i)
+		for k := 0; k < a.Cols; k++ {
+			aik := a.At(i, k)
+			bRow := b.Row(k)
+			for j, bkj := range bRow {
+				outRow[j] += aik * bkj
 			}
-			out.Set(i, j, sum)
 		}
 	}
 	return out

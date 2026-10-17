@@ -1,0 +1,11 @@
+{{- /* Every page of this language in reading order: start, chapters (+ extras), reference. */ -}}
+{{- $chs := hugo.Data.chapters -}}
+{{- $out := slice (dict "k" 10 "p" site.Home) -}}
+{{- range site.RegularPages -}}
+  {{- $c := string .Params.chapter -}}
+  {{- $base := 0 -}}
+  {{- if eq $c "reference" -}}{{- $base = 1000000 -}}
+  {{- else if ne $c "start" -}}{{- range $i, $ch := $chs -}}{{- if eq (string $ch.num) $c -}}{{- $base = mul (add $i 1) 1000 -}}{{- end -}}{{- end -}}{{- end -}}
+  {{- $out = $out | append (dict "k" (add $base (int .Params.order)) "p" .) -}}
+{{- end -}}
+{{- return sort $out "k" -}}

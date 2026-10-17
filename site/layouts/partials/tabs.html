@@ -1,0 +1,15 @@
+{{- $uid := .uid -}}
+{{- $spec := index hugo.Data.code .key -}}
+<div class="tabs"><div class="tabbar" role="tablist" dir="ltr">
+{{- range hugo.Data.languages }}<button role="tab" type="button" id="t-{{ $uid }}-{{ .key }}" aria-controls="p-{{ $uid }}-{{ .key }}" data-lang="{{ .key }}">{{ .label }}</button>{{ end -}}
+</div>
+{{- range hugo.Data.languages }}{{ $l := . }}
+<div class="pane" role="tabpanel" id="p-{{ $uid }}-{{ .key }}" aria-labelledby="t-{{ $uid }}-{{ .key }}" data-lang="{{ .key }}">
+{{- $files := index $spec .key -}}
+{{- if $files }}{{ range $files }}{{ $path := printf "%s/%s" $l.dir . }}
+{{- with resources.Get (printf "src/%s" $path) -}}
+<div class="file" dir="ltr">{{ $path }}</div><div class="codewrap" dir="ltr">{{ highlight .Content $l.lexer "" }}</div>
+{{- else }}{{ errorf "code tab: source file %s not found" $path }}{{ end -}}
+{{ end }}{{ else }}<p class="muted pad">{{ i18n "not_impl" }}</p>{{ end -}}
+</div>
+{{- end }}</div>

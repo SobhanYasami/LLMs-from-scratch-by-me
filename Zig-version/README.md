@@ -12,6 +12,8 @@ Zig-version/
     ├── main.zig                 # demo runner (same demos as python main.py)
     ├── ch03.zig                 # chapter 3 demos (attention)
     ├── attention/               # chapter 3: matrix, simple, self_attention, causal, multihead
+    ├── ch04.zig                 # chapter 4 demos (GPT model)
+    ├── gpt/                     # chapter 4: layers, shortcut, block, model
     └── tokenization/
         ├── root.zig             # public API of the module
         ├── preprocess.zig       # step 1 (book 2.2): splitText, detokenize
@@ -38,6 +40,11 @@ Written against a Zig 0.15/0.16-dev toolchain (the `std.ArrayList` unmanaged API
 ## Chapter 3: attention
 
 `zig build run -- ch03` runs the attention demos (`zig build run` runs every chapter). `src/attention/` has `matrix`, `simple`, `self_attention`, `causal` and `multihead`; the demo is `src/ch03.zig`. Output is identical to Python's.
+
+
+## Chapter 4: the GPT model
+
+`zig build run -- ch04` runs the chapter 4 demos (`zig build run -Doptimize=ReleaseFast -- ch04-124m` builds the real 124M model; Debug mode is far too slow for it). `src/gpt/` has `layers.zig` (layer norm, GELU, Linear, feed forward), `shortcut.zig` (the 4.4 gradient demo with a hand-written backward pass), `block.zig` (reuses chapter 3's `MultiHeadAttention`) and `model.zig` (`Config`, `GptModel`, `parameterCount`, `generateTextSimple`); the demo is `src/ch04.zig`. `zig build test` checks the book's 163,009,536 parameters. Output is identical to Python's.
 
 ## Python <-> Zig notes
 

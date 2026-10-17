@@ -183,6 +183,10 @@ With `stride < max_length` windows overlap (more samples, more overfitting risk)
 
 `python-version/.venv/bin/python python-version/main.py ch03` runs the attention demos. Modules: `simple` (3.3), `self_attention` (3.4), `causal` (3.5, with the seeded `rng` for dropout), `multihead` (3.6). Concepts and walkthroughs are on the docs site. The numbers in 3.3 and 3.4 match the book.
 
+## Chapter 4: the GPT model (`gpt/`, `ch04.py`)
+
+`python-version/.venv/bin/python python-version/main.py ch04` runs the chapter 4 demos; `ch04-124m` builds the real 124M-parameter model. Modules: `layers` (layer norm, GELU, feed forward; 4.2, 4.3), `shortcut` (4.4), `block` (4.5), `model` (config, `GPTModel`, parameter count, `generate_text_simple`; 4.6, 4.7). The block reuses the chapter 3 `MultiHeadAttention`. Weights come from the shared seeded generator (`Rng.normal`, vectorised with numpy) so every language builds the same untrained model; numbers in 4.2 to 4.4 and the parameter counts match the book. Concepts and walkthroughs are on the docs site.
+
 ## Concepts checklist
 
 - [ ] Why a model needs integers, not text

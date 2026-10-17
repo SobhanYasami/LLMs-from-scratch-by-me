@@ -1,0 +1,247 @@
+- num: '1'
+  title:
+    en: Understanding large language models
+    fa: شناخت مدل‌های زبانی بزرگ
+  summary:
+    en: What an LLM is, how it is trained, and what a GPT looks like. No code.
+    fa: LLM چیست، چگونه آموزش می‌بیند و یک GPT چه شکلی دارد. بدون کد.
+  code: false
+  langs: []
+  sections:
+  - id: '1.1'
+    title:
+      en: What is an LLM?
+      fa: LLM چیست؟
+  - id: '1.2'
+    title:
+      en: Applications of LLMs
+      fa: کاربردهای LLM
+  - id: '1.3'
+    title:
+      en: Stages of building and using LLMs
+      fa: مراحل ساخت و استفاده از LLM
+  - id: '1.4'
+    title:
+      en: Using LLMs for different tasks
+      fa: استفاده از LLM برای وظایف گوناگون
+  - id: '1.5'
+    title:
+      en: Utilizing large datasets
+      fa: بهره‌گیری از مجموعه‌داده‌های بزرگ
+  - id: '1.6'
+    title:
+      en: A closer look at the GPT architecture
+      fa: نگاهی دقیق‌تر به معماری GPT
+  - id: '1.7'
+    title:
+      en: Building a large language model
+      fa: ساختن یک مدل زبانی بزرگ
+- num: '2'
+  title:
+    en: Working with text data
+    fa: کار با داده‌های متنی
+  summary:
+    en: 'Turn raw text into model input: tokens, IDs, byte pair encoding, training pairs and embeddings.'
+    fa: 'تبدیل متن خام به ورودی مدل: توکن‌ها، شناسه‌ها، رمزگذاری جفت‌بایت، جفت‌های آموزشی و امبدینگ‌ها.'
+  code: true
+  langs:
+  - python
+  - go
+  - rust
+  - c
+  - zig
+  sections:
+  - id: '2.1'
+    title:
+      en: Understanding word embeddings
+      fa: درک امبدینگ کلمه
+  - id: '2.2'
+    title:
+      en: Tokenizing text
+      fa: توکن‌سازی متن
+  - id: '2.3'
+    title:
+      en: Converting tokens into token IDs
+      fa: تبدیل توکن‌ها به شناسه
+  - id: '2.4'
+    title:
+      en: Adding special context tokens
+      fa: افزودن توکن‌های ویژهٔ زمینه
+  - id: '2.5'
+    title:
+      en: Byte pair encoding
+      fa: رمزگذاری جفت‌بایت
+  - id: '2.6'
+    title:
+      en: Data sampling with a sliding window
+      fa: نمونه‌برداری از داده با پنجرهٔ لغزان
+  - id: '2.7'
+    title:
+      en: Creating token embeddings
+      fa: ساخت امبدینگ توکن
+  - id: '2.8'
+    title:
+      en: Encoding word positions
+      fa: کدگذاری جایگاه کلمات
+- num: '3'
+  title:
+    en: Coding attention mechanisms
+    fa: کدنویسی سازوکارهای توجه
+  summary:
+    en: Why attention exists, then self-attention, causal masking, dropout and multi-head attention.
+    fa: چرا توجه (attention) لازم شد؛ سپس خودتوجهی، ماسک علّی، دراپ‌اوت و توجه چندسَری.
+  code: true
+  langs:
+  - python
+  - go
+  - rust
+  - c
+  - zig
+  sections:
+  - id: '3.1'
+    title:
+      en: The problem with modeling long sequences
+      fa: مشکل مدل‌سازی دنباله‌های بلند
+  - id: '3.2'
+    title:
+      en: Capturing data dependencies with attention mechanisms
+      fa: گرفتن وابستگی‌های داده با سازوکار توجه
+  - id: '3.3'
+    title:
+      en: Attending to different parts of the input with self-attention
+      fa: توجه به بخش‌های مختلف ورودی با خودتوجهی
+  - id: '3.4'
+    title:
+      en: Implementing self-attention with trainable weights
+      fa: پیاده‌سازی خودتوجهی با وزن‌های آموزش‌پذیر
+  - id: '3.5'
+    title:
+      en: Hiding future words with causal attention
+      fa: پنهان کردن کلمات آینده با توجه علّی
+  - id: '3.6'
+    title:
+      en: Extending single-head attention to multi-head attention
+      fa: گسترش توجه تک‌سَر به توجه چندسَری
+- num: '4'
+  title:
+    en: Implementing a GPT model from scratch
+    fa: پیاده‌سازی مدل GPT از صفر
+  summary:
+    en: Layer normalization, feed-forward networks, shortcut connections, the transformer block, the full GPT model and text generation.
+    fa: نرمال‌سازی لایه، شبکهٔ پیش‌خور، اتصال میان‌بر، بلوک ترنسفورمر، مدل کامل GPT و تولید متن.
+  code: true
+  langs:
+  - python
+  - go
+  - rust
+  - c
+  - zig
+  sections:
+  - id: '4.1'
+    title:
+      en: Coding an LLM architecture
+      fa: کدنویسی معماری LLM
+  - id: '4.2'
+    title:
+      en: Normalizing activations with layer normalization
+      fa: نرمال‌سازی فعال‌سازی‌ها با نرمال‌سازی لایه
+  - id: '4.3'
+    title:
+      en: Implementing a feed forward network with GELU activations
+      fa: پیاده‌سازی شبکهٔ پیش‌خور با فعال‌ساز GELU
+  - id: '4.4'
+    title:
+      en: Adding shortcut connections
+      fa: افزودن اتصال‌های میان‌بر
+  - id: '4.5'
+    title:
+      en: Connecting attention and linear layers in a transformer block
+      fa: اتصال توجه و لایه‌های خطی در بلوک ترنسفورمر
+  - id: '4.6'
+    title:
+      en: Coding the GPT model
+      fa: کدنویسی مدل GPT
+  - id: '4.7'
+    title:
+      en: Generating text
+      fa: تولید متن
+- num: '5'
+  title:
+    en: Pretraining on unlabeled data
+    fa: پیش‌آموزش روی داده‌های بدون برچسب
+  summary:
+    en: Loss, the training loop, decoding strategies (temperature, top-k), saving weights and loading OpenAI's pretrained weights.
+    fa: تابع زیان، حلقهٔ آموزش، راهبردهای رمزگشایی (دما، top-k)، ذخیرهٔ وزن‌ها و بارگذاری وزن‌های از پیش آموزش‌دیدهٔ OpenAI.
+  code: true
+  langs: []
+  sections:
+  - id: '5.1'
+    title:
+      en: Evaluating generative text models
+      fa: ارزیابی مدل‌های مولد متن
+  - id: '5.2'
+    title:
+      en: Training an LLM
+      fa: آموزش یک LLM
+  - id: '5.3'
+    title:
+      en: Decoding strategies to control randomness
+      fa: راهبردهای رمزگشایی برای کنترل تصادفی بودن
+  - id: '5.4'
+    title:
+      en: Loading and saving model weights in PyTorch
+      fa: بارگذاری و ذخیرهٔ وزن‌های مدل در PyTorch
+  - id: '5.5'
+    title:
+      en: Loading pretrained weights from OpenAI
+      fa: بارگذاری وزن‌های از پیش آموزش‌دیدهٔ OpenAI
+- num: '6'
+  title:
+    en: Finetuning for text classification
+    fa: فاین‌تیون برای دسته‌بندی متن
+  summary:
+    en: 'Adapt the pretrained GPT into a spam classifier: prepare a labelled dataset, add a classification head, finetune and evaluate.'
+    fa: 'تبدیل GPT از پیش آموزش‌دیده به دسته‌بند هرزنامه: آماده‌سازی داده برچسب‌دار، افزودن سرِ دسته‌بندی، فاین‌تیون و ارزیابی.'
+  code: true
+  langs: []
+  sections: []
+- num: '7'
+  title:
+    en: Finetuning to follow instructions
+    fa: فاین‌تیون برای پیروی از دستورها
+  summary:
+    en: Instruction datasets, batching with padding, finetuning, and evaluating the answers.
+    fa: مجموعه‌داده‌های دستوری، دسته‌بندی با پدینگ، فاین‌تیون و ارزیابی پاسخ‌ها.
+  code: true
+  langs: []
+  sections: []
+- num: A
+  title:
+    en: Companion material
+    fa: مطالب همراه
+  summary:
+    en: 'A: PyTorch primer. B: references. C: exercise solutions. D: training-loop extras (warmup, cosine decay, clipping). E: LoRA finetuning.'
+    fa: 'الف: آشنایی با PyTorch. ب: منابع. ج: پاسخ تمرین‌ها. د: افزودنی‌های حلقهٔ آموزش (گرم‌کردن، کاهش کسینوسی، برش گرادیان). ه: فاین‌تیون با LoRA.'
+  code: false
+  langs: []
+  sections:
+  - id: A
+    title:
+      en: Introduction to PyTorch
+      fa: آشنایی با PyTorch
+  - id: B
+    title:
+      en: References and further reading
+      fa: منابع و مطالعهٔ بیشتر
+  - id: C
+    title:
+      en: Exercise solutions
+      fa: پاسخ تمرین‌ها
+  - id: D
+    title:
+      en: Adding bells and whistles to the training loop
+      fa: افزودن امکانات به حلقهٔ آموزش
+  - id: E
+    title:
+      en: Parameter-efficient finetuning with LoRA
+      fa: فاین‌تیون کم‌پارامتر با LoRA

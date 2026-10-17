@@ -11,6 +11,8 @@ C-version/
 ├── main.c                   # demo runner (same demos as python main.py)
 ├── ch03.[ch]                # chapter 3 demos (attention)
 ├── attention/               # chapter 3: matrix, simple, self_attention, causal, multihead
+├── ch04.[ch]                # chapter 4 demos (GPT model)
+├── gpt/                     # chapter 4: layers, shortcut, block, model
 └── tokenization/
     ├── preprocess.[ch]      # step 1 (book 2.2): split_text, detokenize
     ├── vocab.[ch]           # step 2 (2.3): build_vocab
@@ -36,6 +38,11 @@ Needs a C11 compiler (`cc`/`gcc`/`clang`) and `make`. No other dependencies.
 ## Chapter 3: attention
 
 `make run ARGS=ch03` runs the attention demos (`make run` runs every chapter). `attention/` has `matrix` (with a small `Arena` allocator so you free once, not per matrix), `simple`, `self_attention`, `causal` and `multihead`; the demo is `ch03.c`. Output is identical to Python's.
+
+
+## Chapter 4: the GPT model
+
+`make run ARGS=ch04` runs the chapter 4 demos (`make run ARGS=ch04-124m` builds the real 124M model). `gpt/` has `layers.[ch]` (layer norm, GELU, Linear, feed forward), `shortcut.[ch]` (the 4.4 gradient demo with a hand-written backward pass), `block.[ch]` (reuses chapter 3's `MultiHeadAttention`) and `model.[ch]` (config, `GptModel`, `gpt_parameter_count`, `generate_text_simple`); the demo is `ch04.[ch]`. The model's weights live in one `Arena`; each forward pass takes an `arena_mark` and `arena_reset`s afterwards, so temporaries vanish at once. Output is identical to Python's.
 
 ## Python <-> C notes
 

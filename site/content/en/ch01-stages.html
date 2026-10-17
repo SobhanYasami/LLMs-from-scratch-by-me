@@ -1,0 +1,35 @@
+---
+title: '1.3 and 1.5: Pretraining, finetuning and data'
+nav: 1.3, 1.5 Training stages & data
+chapter: '1'
+order: 20
+sections:
+- '1.3'
+- '1.5'
+---
+<div class="aim"><b>Aim.</b> Learn the two-stage recipe (pretrain, then finetune) and why training data scale matters.</div>
+<h2>Two stages</h2>
+<div class="flow">
+<div><b>Raw text</b>unlabelled, billions of words</div><span>&rarr;</span>
+<div class="hot"><b>Pretraining</b>next-word prediction</div><span>&rarr;</span>
+<div><b>Base / foundation model</b>completes text</div><span>&rarr;</span>
+<div class="hot"><b>Finetuning</b>small labelled dataset</div><span>&rarr;</span>
+<div><b>Assistant or classifier</b></div>
+</div>
+<ul>
+<li><b>Pretraining</b> gives broad language knowledge. The result is a <i>base</i> or <i>foundation</i> model (GPT-3 is the classic example). It completes half-written sentences and can learn a new task from a few examples.</li>
+<li><b>Finetuning</b> adapts it with labelled data. Two common kinds: <b>instruction finetuning</b> (instruction and answer pairs) and <b>classification finetuning</b> (texts and class labels, like spam / not spam).</li>
+</ul>
+<h2>Why so much data? (1.5)</h2>
+<p>GPT-3 was pretrained on a mix of web crawl, books and Wikipedia, roughly 300 billion tokens sampled from the pool below. A <b>token</b> is the unit of text a model reads, roughly a word or punctuation mark. Chapter 2 is all about producing tokens.</p>
+<table><tr><th>Dataset</th><th>What</th><th>Tokens</th><th>Share of training</th></tr>
+<tr><td>CommonCrawl (filtered)</td><td>web crawl</td><td>410 B</td><td>60%</td></tr>
+<tr><td>WebText2</td><td>web crawl</td><td>19 B</td><td>22%</td></tr>
+<tr><td>Books1</td><td>book corpus</td><td>12 B</td><td>8%</td></tr>
+<tr><td>Books2</td><td>book corpus</td><td>55 B</td><td>8%</td></tr>
+<tr><td>Wikipedia</td><td>high-quality text</td><td>3 B</td><td>3%</td></tr></table>
+<p>Pretraining is very expensive (GPT-3's estimated cloud cost was about $4.6 million). So this book trains a small model on a small text for learning, and shows how to load openly published weights instead of paying for pretraining.</p>
+<h2>Check yourself</h2>
+<details class="qa"><summary>Why is pretraining data called "raw"?</summary>It carries no labels, just ordinary text.</details>
+<details class="qa"><summary>Name the two popular kinds of finetuning.</summary>Instruction finetuning and classification finetuning.</details>
+<details class="qa"><summary>Why can open pretrained weights save you money?</summary>You skip the expensive pretraining stage and only finetune.</details>

@@ -1,0 +1,27 @@
+---
+title: '2.2: Tokenizing text'
+nav: 2.2 Tokenizing text
+chapter: '2'
+order: 20
+sections:
+- '2.2'
+code: preprocess
+---
+<div class="aim"><b>Aim.</b> A model cannot read text, only numbers. Before numbering anything, cut the text into pieces called <i>tokens</i>.</div>
+<p>A token here is a word or a punctuation mark. A regular expression finds the delimiters (punctuation, <code>--</code>, whitespace), and we <em>keep</em> the delimiters so punctuation becomes its own token. Whitespace pieces are then dropped.</p>
+<pre class="out">"Hello, world!"  -&gt;  ['Hello', ',', 'world', '!']</pre>
+<h2>How the book gets there</h2>
+<ol>
+<li>Split on whitespace only: <code>re.split(r'(\s)', text)</code> leaves punctuation glued to words (<code>'Hello,'</code>).</li>
+<li>Also split on <code>,</code> and <code>.</code>: now punctuation is separate, but empty strings and spaces remain.</li>
+<li>Filter with <code>item.strip()</code> to drop whitespace pieces.</li>
+<li>Add <code>? " ( ) _ !</code> and <code>--</code>. Result on the whole story: <b>4,649 tokens</b>.</li>
+</ol>
+<div class="tip">In Python, <code>re.split</code> keeps delimiters only when the pattern is in parentheses (a capture group). Go and Rust have no such feature, so they walk the matches by hand. C and Zig have no regex at all, so they scan byte by byte. Same result, more visible mechanism.</div>
+<div class="tip">We do not lowercase: capitalisation helps a model tell names from common nouns and learn sentence structure. We drop whitespace for brevity; for code (where indentation matters) you would keep it.</div>
+<h2>Code</h2>
+<!--code-->
+<h2>Detokenize is lossy</h2>
+<p>Decoding joins tokens with spaces, then removes the space before punctuation. Original spacing is not stored, so <code>detokenize(split(text))</code> only round-trips for simple text.</p>
+<h2>Exercises</h2>
+<ol><li>Feed a sentence with <code>--</code>. One token or two?</li><li>Remove the parentheses from the Python pattern. What happens to punctuation?</li></ol>

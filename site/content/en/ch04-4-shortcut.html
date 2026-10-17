@@ -1,0 +1,45 @@
+---
+title: '4.4: Adding shortcut connections'
+nav: 4.4 Shortcut connections
+chapter: '4'
+order: 40
+sections:
+- '4.4'
+code: gpt_shortcut
+---
+<div class="aim"><b>Aim.</b> See with real numbers why deep networks need shortcut connections: without them the first layers hardly learn, with them every layer does.</div>
+<h2>The idea: add the input back</h2>
+<div class="cmp">
+<div><h3>Plain layer</h3><code>x = layer(x)</code><br>The output replaces the input. Everything the layer does must be correct, and the gradient must pass through it.</div>
+<div><h3>With a shortcut</h3><code>x = x + layer(x)</code><br>The layer only learns a <i>correction</i> to its input. The input also has a direct path forward, and the gradient a direct path back.</div>
+</div>
+<p>A shortcut, also called a <b>skip</b> or <b>residual connection</b>, was invented for very deep image networks. GPT uses it twice in every transformer block (next page).</p>
+<h2>Why gradients vanish</h2>
+<p>Training adjusts each weight by its <b>gradient</b>: how much the loss changes when that weight changes. The gradient for an early layer is computed by passing it backwards through every later layer, multiplying a number at each step. If those numbers are mostly smaller than 1, the product shrinks layer by layer: the <b>vanishing gradient</b> problem. Early layers then get almost no learning signal.</p>
+<h2>Watch it happen</h2>
+<p>The demo builds a network with five layers (each Linear followed by GELU, sizes 3, 3, 3, 3, 3, then 1), feeds it <code>[1, 0, -1]</code> with target 0, and prints the <b>mean absolute gradient</b> of each layer's weights. The weights are the book's, so the numbers match the book.</p>
+<pre class="out">without shortcut: 0.000202  0.000120  0.000715  0.001399  0.005050   (layer 0 ... layer 4)
+with    shortcut: 0.221698  0.206941  0.328970  0.266573  1.325854   (layer 0 ... layer 4)</pre>
+<table><tr><th></th><th>layer 0</th><th>layer 1</th><th>layer 2</th><th>layer 3</th><th>layer 4</th></tr>
+<tr><td>no shortcut</td><td>0.000202</td><td>0.000120</td><td>0.000715</td><td>0.001399</td><td>0.005050</td></tr>
+<tr><td>shortcut</td><td>0.221698</td><td>0.206941</td><td>0.328970</td><td>0.266573</td><td>1.325854</td></tr></table>
+<ul>
+<li><b>Without</b> shortcuts the gradient falls by a factor of about <b>25</b> from the last layer to the first (0.00505 to 0.0002). The first layer learns 25 times slower than the last.</li>
+<li><b>With</b> shortcuts all layers sit between 0.2 and 0.3, and only the final layer is larger. Nothing vanishes. The last layer has no shortcut (it goes from 3 numbers to 1, so there is nothing of the same shape to add), which is why it stays largest.</li>
+</ul>
+<h2>Where do these numbers come from?</h2>
+<p>Python asks torch's autograd for them (<code>loss.backward()</code>). Go, Rust, C and Zig have no autograd, so each program does the <b>backward pass by hand</b>: start at the loss, and for each layer from the last to the first apply the chain rule (GELU's slope, then the weights). With a shortcut the gradient flowing down also gets the gradient from the skip path added. About 40 lines, and it reproduces torch's numbers to six decimals, which is a nice check that both are right.</p>
+<div class="tip">The two-line difference in the code is just this: <code>x = x + layer_output</code> if the shapes match and <code>use_shortcut</code> is on, otherwise <code>x = layer_output</code>.</div>
+<h2>Code</h2>
+<!--code-->
+<h2>Exercises</h2>
+<ol>
+<li>Run the demo and confirm the table. Which layer's gradient is largest without shortcuts, and why that one?</li>
+<li>Change the loss target from 0 to 1. Do the gradients still vanish without shortcuts?</li>
+<li>Add a sixth layer to the network. What do you expect to happen to layer 0's gradient without a shortcut?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) The last layer, layer 4: it is closest to the loss, so its gradient has been multiplied by fewest numbers. 2) Yes. The size changes, but the layer-to-layer shrinking comes from the chain of multiplications, not from the target. 3) It gets even smaller: one more factor below 1 in the chain.</details>
+<h2>Check yourself</h2>
+<details class="qa"><summary>What does a shortcut connection add to a layer's output?</summary>The layer's input.</details>
+<details class="qa"><summary>What is the vanishing gradient problem?</summary>Gradients shrink as they travel back through many layers, so early layers learn very slowly.</details>
+<details class="qa"><summary>Why does the last layer in the demo have no shortcut?</summary>Its input (3 numbers) and output (1 number) have different shapes, so they cannot be added.</details>

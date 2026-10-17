@@ -27,6 +27,11 @@ typedef struct {
 
 Arena arena_new(size_t capacity);
 void arena_free(Arena *a);
+void *arena_alloc(Arena *a, size_t bytes);
+/* Everything allocated after a mark can be given back at once with arena_reset:
+ * keep the model weights in the arena, then mark, run one forward pass, reset. */
+static inline size_t arena_mark(const Arena *a) { return a->used; }
+static inline void arena_reset(Arena *a, size_t mark) { a->used = mark; }
 
 typedef struct {
     size_t rows, cols;
@@ -36,6 +41,7 @@ typedef struct {
 Matrix matrix_new(Arena *a, size_t rows, size_t cols);                      /* zero-filled */
 Matrix matrix_from(Arena *a, size_t rows, size_t cols, const float *values); /* copy of values */
 Matrix matrix_rand(Arena *a, size_t rows, size_t cols, Rng *rng);           /* uniform [0, 1) */
+Matrix matrix_randn(Arena *a, size_t rows, size_t cols, float std, Rng *rng); /* Normal(0, std) */
 
 static inline float *matrix_row(Matrix m, size_t i) { return m.data + i * m.cols; }
 static inline float matrix_at(Matrix m, size_t i, size_t j) { return m.data[i * m.cols + j]; }

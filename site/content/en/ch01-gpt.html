@@ -1,0 +1,44 @@
+---
+title: '1.6-1.7: GPT architecture and the roadmap'
+nav: 1.6-1.7 GPT & the roadmap
+chapter: '1'
+order: 40
+sections:
+- '1.6'
+- '1.7'
+---
+<div class="aim"><b>Aim.</b> See why next-word prediction needs no labels, why GPT is just a decoder, and where this book is heading.</div>
+<h2>Self-supervised learning</h2>
+<p>Take any text. The input is the words so far; the <b>label is simply the next word</b>, which the text already contains. The data labels itself, so any pile of text can train the model. This is why chapter 2 builds exactly one thing: pairs of (input tokens, same tokens shifted by one).</p>
+<pre class="out">text:    The cat sat on the mat
+input:   The cat sat on
+target:      cat sat on the     (shifted by one)</pre>
+<h2>GPT is a decoder only</h2>
+<ul>
+<li>GPT = <b>G</b>enerative <b>P</b>retrained <b>T</b>ransformer, from OpenAI (2018). ChatGPT's first model was GPT-3 finetuned on instructions.</li>
+<li>It uses only the <b>decoder</b>: no encoder, strictly left to right.</li>
+<li>It is <b>autoregressive</b>: each new word is picked using the words before it, and then becomes part of the next input.</li>
+<li>Scale differs hugely: the original transformer stacked 6 blocks; GPT-3 has 96 layers and 175 billion parameters. Modern models such as Llama still use the same core ideas.</li>
+</ul>
+<h2>Emergent behaviour</h2>
+<p>GPT is only trained to predict the next word, yet it also translates, classifies and summarises. Nobody taught it those tasks explicitly. Abilities that appear without being trained for are called <b>emergent behaviour</b>, a result of scale and diverse data.</p>
+<h2>The roadmap (1.7)</h2>
+<div class="flow">
+<div class="hot"><b>Stage 1</b>Data preparation, attention, the model (ch. 2-4)</div><span>&rarr;</span>
+<div><b>Stage 2</b>Pretrain a small GPT, evaluate it, load open weights (ch. 5)</div><span>&rarr;</span>
+<div><b>Stage 3</b>Finetune to classify or follow instructions (ch. 6-7)</div>
+</div>
+<h2>Chapter 1 in six lines</h2>
+<ol>
+<li>LLMs predict the next word with deep neural networks.</li>
+<li>Pretrain on raw text, then finetune on labelled data.</li>
+<li>The transformer's key idea is attention.</li>
+<li>GPT-style models keep only the decoder.</li>
+<li>Next-word prediction gives surprising emergent skills.</li>
+<li>Finetuned custom models can beat general ones on their task.</li>
+</ol>
+<p><a href="ch02-overview.html">On to chapter 2: turning text into model input &rarr;</a></p>
+<h2>Check yourself</h2>
+<details class="qa"><summary>Why does GPT need no hand-made labels?</summary>The next word in the text is the label (self-supervised).</details>
+<details class="qa"><summary>What does "autoregressive" mean?</summary>Earlier outputs are fed back as inputs for later predictions.</details>
+<details class="qa"><summary>What is an emergent behaviour?</summary>A skill the model shows without being explicitly trained for it, such as translation.</details>

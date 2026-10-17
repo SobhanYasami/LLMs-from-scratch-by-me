@@ -1,0 +1,218 @@
+attn_simple:
+  python:
+  - attention/simple.py
+  go:
+  - attention/matrix.go
+  - attention/simple.go
+  rust:
+  - src/attention/matrix.rs
+  - src/attention/simple.rs
+  c:
+  - attention/matrix.h
+  - attention/matrix.c
+  - attention/simple.h
+  - attention/simple.c
+  zig:
+  - src/attention/matrix.zig
+  - src/attention/simple.zig
+attn_self:
+  python:
+  - attention/self_attention.py
+  go:
+  - attention/self_attention.go
+  rust:
+  - src/attention/self_attention.rs
+  c:
+  - attention/self_attention.h
+  - attention/self_attention.c
+  zig:
+  - src/attention/self_attention.zig
+attn_causal:
+  python:
+  - attention/causal.py
+  - attention/rng.py
+  go:
+  - attention/causal.go
+  - attention/rng.go
+  rust:
+  - src/attention/causal.rs
+  - src/tokenization/rng.rs
+  c:
+  - attention/causal.h
+  - attention/causal.c
+  - tokenization/rng.h
+  - tokenization/rng.c
+  zig:
+  - src/attention/causal.zig
+  - src/tokenization/rng.zig
+attn_multihead:
+  python:
+  - attention/multihead.py
+  go:
+  - attention/multihead.go
+  rust:
+  - src/attention/multihead.rs
+  c:
+  - attention/multihead.h
+  - attention/multihead.c
+  zig:
+  - src/attention/multihead.zig
+gpt_layers:
+  python:
+  - gpt/layers.py
+  go:
+  - gpt/layers.go
+  rust:
+  - src/gpt/layers.rs
+  c:
+  - gpt/layers.h
+  - gpt/layers.c
+  zig:
+  - src/gpt/layers.zig
+gpt_shortcut:
+  python:
+  - gpt/shortcut.py
+  go:
+  - gpt/shortcut.go
+  rust:
+  - src/gpt/shortcut.rs
+  c:
+  - gpt/shortcut.h
+  - gpt/shortcut.c
+  zig:
+  - src/gpt/shortcut.zig
+gpt_block:
+  python:
+  - gpt/block.py
+  go:
+  - gpt/block.go
+  rust:
+  - src/gpt/block.rs
+  c:
+  - gpt/block.h
+  - gpt/block.c
+  zig:
+  - src/gpt/block.zig
+gpt_model:
+  python:
+  - gpt/model.py
+  go:
+  - gpt/model.go
+  rust:
+  - src/gpt/model.rs
+  c:
+  - gpt/model.h
+  - gpt/model.c
+  zig:
+  - src/gpt/model.zig
+ch04_demo:
+  python:
+  - ch04.py
+  go:
+  - cmd/ch04.go
+  rust:
+  - src/ch04.rs
+  c:
+  - ch04.c
+  zig:
+  - src/ch04.zig
+ch03_demo:
+  python:
+  - ch03.py
+  go:
+  - cmd/ch03.go
+  rust:
+  - src/ch03.rs
+  c:
+  - ch03.c
+  zig:
+  - src/ch03.zig
+preprocess:
+  python:
+  - tokenization/preprocess.py
+  go:
+  - tokenization/preprocess.go
+  rust:
+  - src/tokenization/preprocess.rs
+  c:
+  - tokenization/preprocess.h
+  - tokenization/preprocess.c
+  zig:
+  - src/tokenization/preprocess.zig
+vocab_simple:
+  python:
+  - tokenization/vocab.py
+  - tokenization/simple.py
+  go:
+  - tokenization/vocab.go
+  - tokenization/simple.go
+  rust:
+  - src/tokenization/vocab.rs
+  - src/tokenization/simple.rs
+  c:
+  - tokenization/vocab.h
+  - tokenization/vocab.c
+  - tokenization/simple.h
+  - tokenization/simple.c
+  zig:
+  - src/tokenization/vocab.zig
+  - src/tokenization/simple.zig
+simple:
+  python:
+  - tokenization/simple.py
+  go:
+  - tokenization/simple.go
+  rust:
+  - src/tokenization/simple.rs
+  c:
+  - tokenization/simple.h
+  - tokenization/simple.c
+  zig:
+  - src/tokenization/simple.zig
+bpe:
+  python:
+  - main.py
+  go:
+  - cmd/main.go
+  rust:
+  - src/main.rs
+  c:
+  - main.c
+  - tokenization/bpe.h
+  - tokenization/bpe.c
+  zig:
+  - src/main.zig
+  - src/tokenization/bpe.zig
+sampling:
+  python:
+  - tokenization/dataset.py
+  go:
+  - tokenization/dataset.go
+  - tokenization/dataloader.go
+  rust:
+  - src/tokenization/dataset.rs
+  - src/tokenization/dataloader.rs
+  c:
+  - tokenization/dataset.h
+  - tokenization/dataset.c
+  - tokenization/dataloader.h
+  - tokenization/dataloader.c
+  zig:
+  - src/tokenization/dataset.zig
+  - src/tokenization/dataloader.zig
+embedding:
+  python:
+  - tokenization/embedding.py
+  go:
+  - tokenization/embedding.go
+  rust:
+  - src/tokenization/embedding.rs
+  - src/tokenization/rng.rs
+  c:
+  - tokenization/embedding.h
+  - tokenization/embedding.c
+  - tokenization/rng.h
+  - tokenization/rng.c
+  zig:
+  - src/tokenization/embedding.zig
+  - src/tokenization/rng.zig

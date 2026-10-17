@@ -13,6 +13,7 @@ use std::fs;
 use std::path::Path;
 
 mod ch03;
+mod ch04;
 
 use llm_from_scratch::tokenization::{
     DataLoader, END_OF_TEXT, GptDataset, InputEmbedding, SimpleTokenizerV1, SimpleTokenizerV2,
@@ -192,14 +193,16 @@ fn run_chapter2() {
 fn main() {
     let mut chapters: Vec<String> = std::env::args().skip(1).collect();
     if chapters.is_empty() {
-        chapters = vec!["ch02".into(), "ch03".into()];
+        chapters = vec!["ch02".into(), "ch03".into(), "ch04".into()];
     }
     for chapter in &chapters {
         match chapter.as_str() {
             "ch02" => run_chapter2(),
             "ch03" => ch03::run(),
+            "ch04" => ch04::run(),
+            "ch04-124m" => ch04::run_124m(),
             other => {
-                eprintln!("unknown chapter {other:?}; use ch02 or ch03");
+                eprintln!("unknown chapter {other:?}; use ch02, ch03, ch04 or ch04-124m");
                 std::process::exit(1);
             }
         }

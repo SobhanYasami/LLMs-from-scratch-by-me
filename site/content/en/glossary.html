@@ -1,0 +1,53 @@
+---
+title: Glossary
+nav: Glossary
+chapter: reference
+order: 30
+---
+<p class="lede">Terms used in the tutorial, with the chapter where each first matters. Add new terms as new chapters land.</p>
+<table>
+<tr><th>Term</th><th>Meaning</th><th>See</th></tr>
+<tr><td>Token</td><td>The unit of text a model reads: a word, part of a word, or a punctuation mark.</td><td><a href="ch02-2-tokenizing.html">2.2</a></td></tr>
+<tr><td>Token ID</td><td>The integer a token is mapped to by the vocabulary.</td><td><a href="ch02-3-token-ids.html">2.3</a></td></tr>
+<tr><td>Vocabulary</td><td>The table token &harr; ID. Its size is the number of distinct tokens.</td><td><a href="ch02-3-token-ids.html">2.3</a></td></tr>
+<tr><td>Special token</td><td>A token added on purpose, such as <code>&lt;|endoftext|&gt;</code> or <code>&lt;|unk|&gt;</code>.</td><td><a href="ch02-4-special-tokens.html">2.4</a></td></tr>
+<tr><td>BPE (byte pair encoding)</td><td>A sub-word tokenizer built by repeatedly merging the most frequent neighbouring pairs.</td><td><a href="ch02-5-bpe.html">2.5</a></td></tr>
+<tr><td>Rank (BPE)</td><td>The merge order of a token. Lower rank means merged earlier, more common.</td><td><a href="bpe-walkthrough.html">extra</a></td></tr>
+<tr><td>Context length / max_length</td><td>How many tokens the model sees at once.</td><td><a href="ch02-6-sampling.html">2.6</a></td></tr>
+<tr><td>Stride</td><td>How far the sliding window moves between training examples.</td><td><a href="ch02-6-sampling.html">2.6</a></td></tr>
+<tr><td>Batch</td><td>A group of examples processed together.</td><td><a href="ch02-6-sampling.html">2.6</a></td></tr>
+<tr><td>Embedding</td><td>A vector that stands for a token (or position). Learned during training.</td><td><a href="ch02-7-embeddings.html">2.7</a></td></tr>
+<tr><td>Positional embedding</td><td>A vector added to say where in the sequence a token sits.</td><td><a href="ch02-7-embeddings.html">2.8</a></td></tr>
+<tr><td>Next-token prediction</td><td>The training task: given the tokens so far, predict the next one.</td><td><a href="ch01-gpt.html">1.6</a></td></tr>
+<tr><td>Self-supervised learning</td><td>Learning where the labels come from the data itself (the next word).</td><td><a href="ch01-gpt.html">1.6</a></td></tr>
+<tr><td>Pretraining / finetuning</td><td>Broad training on raw text, then adaptation on labelled data.</td><td><a href="ch01-stages.html">1.3</a></td></tr>
+<tr><td>Transformer</td><td>The architecture built on attention; encoder, decoder, or both.</td><td><a href="ch01-transformer.html">1.4</a></td></tr>
+<tr><td>Zero-shot / few-shot</td><td>Doing a task with no examples, or a few examples in the prompt.</td><td><a href="ch01-transformer.html">1.4</a></td></tr>
+<tr><td>Autoregressive</td><td>Each output is fed back as input for the next prediction.</td><td><a href="ch01-gpt.html">1.6</a></td></tr>
+<tr><td>Emergent behaviour</td><td>A skill that shows up at scale without being trained for explicitly.</td><td><a href="ch01-gpt.html">1.6</a></td></tr>
+<tr><td>Attention</td><td>A way for each position to weigh and mix information from other positions.</td><td><a href="ch03-1-long-sequences.html">3.1</a></td></tr>
+<tr><td>Self-attention</td><td>Attention between positions of the same sequence.</td><td><a href="ch03-1-long-sequences.html">3.2</a></td></tr>
+<tr><td>Context vector</td><td>A token's embedding enriched with information from the other tokens.</td><td><a href="ch03-3-simple-attention.html">3.3</a></td></tr>
+<tr><td>Attention score</td><td>Raw similarity (dot product) between a query and a key.</td><td><a href="ch03-3-simple-attention.html">3.3</a></td></tr>
+<tr><td>Attention weight</td><td>Softmax of the scores: positive, rows sum to 1. Computed fresh for each input.</td><td><a href="ch03-3-simple-attention.html">3.3</a></td></tr>
+<tr><td>Softmax</td><td>Turns a list of numbers into positive weights that sum to 1.</td><td><a href="ch03-3-simple-attention.html">3.3</a></td></tr>
+<tr><td>Query / key / value</td><td>Three projections of each token: what it looks for, what it offers, what it hands over.</td><td><a href="ch03-4-self-attention.html">3.4</a></td></tr>
+<tr><td>Weight parameters</td><td>The learned matrices (W_query, W_key, W_value, ...). Not the same as attention weights.</td><td><a href="ch03-4-self-attention.html">3.4</a></td></tr>
+<tr><td>Scaled dot-product attention</td><td>Self-attention with scores divided by sqrt(d_k).</td><td><a href="scaling-sqrt-dk.html">extra</a></td></tr>
+<tr><td>Causal (masked) attention</td><td>Attention where a token cannot see later tokens.</td><td><a href="ch03-5-causal.html">3.5</a></td></tr>
+<tr><td>Dropout</td><td>Randomly zeroing values during training, scaling the rest, to reduce overfitting.</td><td><a href="ch03-5-causal.html">3.5</a></td></tr>
+<tr><td>Attention head</td><td>One independent query/key/value attention computation.</td><td><a href="ch03-6-multihead.html">3.6</a></td></tr>
+<tr><td>Multi-head attention</td><td>Several heads in parallel, concatenated and mixed by an output projection.</td><td><a href="ch03-6-multihead.html">3.6</a></td></tr>
+<tr><td>Layer normalization</td><td>Rescaling each token's vector to mean 0 and variance 1 (then a learned scale and shift).</td><td><a href="ch04-2-layer-norm.html">4.2</a></td></tr>
+<tr><td>eps</td><td>A tiny constant added to the variance so layer norm never divides by zero.</td><td><a href="ch04-2-layer-norm.html">4.2</a></td></tr>
+<tr><td>GELU</td><td>A smooth activation function, like ReLU but with a gentle curve near zero. Used in GPT.</td><td><a href="ch04-3-gelu-ffn.html">4.3</a></td></tr>
+<tr><td>Feed forward network</td><td>Per-token block: expand 4x, GELU, shrink back. No mixing between tokens.</td><td><a href="ch04-3-gelu-ffn.html">4.3</a></td></tr>
+<tr><td>Shortcut (residual) connection</td><td>Adding a layer's input to its output, so gradients keep a short path back.</td><td><a href="ch04-4-shortcut.html">4.4</a></td></tr>
+<tr><td>Vanishing gradient</td><td>Gradients shrinking as they travel back through many layers, so early layers barely learn.</td><td><a href="ch04-4-shortcut.html">4.4</a></td></tr>
+<tr><td>Transformer block</td><td>Layer norm, attention, shortcut, layer norm, feed forward, shortcut. Repeated N times in a GPT.</td><td><a href="ch04-5-transformer-block.html">4.5</a></td></tr>
+<tr><td>Pre-LayerNorm</td><td>Normalizing the input of each sub-layer instead of its output. The layout GPT-2 uses.</td><td><a href="ch04-5-transformer-block.html">4.5</a></td></tr>
+<tr><td>Logits</td><td>The model's raw scores for the next token, one per vocabulary entry.</td><td><a href="ch04-1-architecture.html">4.1</a></td></tr>
+<tr><td>Weight tying</td><td>Reusing the token embedding matrix as the output head, so its parameters count once.</td><td><a href="ch04-6-gpt-model.html">4.6</a></td></tr>
+<tr><td>Greedy decoding</td><td>Always picking the highest-scoring next token.</td><td><a href="ch04-7-generate.html">4.7</a></td></tr>
+<tr><td>KV cache</td><td>Remembering the keys and values of past tokens so each new token costs one step, not a full re-run.</td><td><a href="ch04-7-generate.html">4.7</a></td></tr>
+</table>

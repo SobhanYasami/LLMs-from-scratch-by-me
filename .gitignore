@@ -85,3 +85,7 @@ Thumbs.db
 graphify-out/
 
 Build-a-LLM.pdf
+# ---- Hugo site (site/) ----
+site/public/
+site/resources/
+site/.hugo_build.lock

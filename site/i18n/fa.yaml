@@ -1,0 +1,92 @@
+brand:
+  other: ساخت LLM از صفر
+site_title:
+  other: ساخت یک LLM از صفر
+chapter:
+  other: فصل
+appendices:
+  other: پیوست‌ها
+s_ready:
+  other: آماده
+s_progress:
+  other: در حال نگارش
+s_planned:
+  other: برنامه‌ریزی‌شده
+none_yet:
+  other: هنوز نیست
+h_start:
+  other: شروع
+h_reference:
+  other: مرجع
+h_source:
+  other: منبع
+this_repo:
+  other: این مخزن
+book_repo:
+  other: مخزن راشکا
+th_book:
+  other: کتاب
+th_section:
+  other: بخش
+th_status:
+  other: وضعیت
+th_topic:
+  other: موضوع
+th_written:
+  other: نوشته‌شده
+open:
+  other: باز کردن
+sections_word:
+  other: بخش
+companion:
+  other: کد همراه کتاب در مخزن راشکا
+code_label:
+  other: 'کد:'
+planned_note:
+  other: این بخش هنوز نوشته نشده است. فهرست زیر از روی کتاب است. برای افزودن آن، راهنمای <a href="contributing.html">مشارکت</a> را دنبال کنید؛ نقشهٔ راه و ناوبری خودکار به‌روز می‌شوند.
+sections_h:
+  other: بخش‌ها
+extras_h:
+  other: مطالب تکمیلی
+no_sections:
+  other: فهرست بخش‌ها هنوز تعیین نشده است. فهرست کامل را در کتاب ببینید.
+not_impl:
+  other: این زبان هنوز پیاده‌سازی نشده است.
+book_section:
+  other: بخش کتاب
+code_in:
+  other: کد به زبان
+extra:
+  other: تکمیلی
+edit:
+  other: ویرایش این صفحه در GitHub
+prev:
+  other: قبلی
+next:
+  other: بعدی
+skip:
+  other: پرش به محتوا
+menu:
+  other: منو
+theme:
+  other: تغییر پوسته
+filter:
+  other: جستجو در صفحه‌ها
+filter_ph:
+  other: جستجو در صفحه‌ها…
+no_match:
+  other: صفحه‌ای پیدا نشد.
+toc:
+  other: در این صفحه
+copy:
+  other: کپی
+copied:
+  other: کپی شد
+lang_switch:
+  other: تغییر زبان
+fallback:
+  other: این صفحه هنوز به فارسی ترجمه نشده است. متن انگلیسی اصلی در ادامه آمده است.
+untranslated:
+  other: EN
+roadmap_title:
+  other: نقشهٔ راه

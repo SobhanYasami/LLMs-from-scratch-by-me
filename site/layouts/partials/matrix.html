@@ -1,0 +1,5 @@
+{{ $lang := site.Language.Lang }}
+<table class="matrix"><tr><th></th><th>{{ i18n "th_topic" }}</th>{{ range hugo.Data.languages }}<th>{{ .label }}</th>{{ end }}</tr>
+{{ range hugo.Data.chapters }}{{ if .code }}{{ $ch := . }}
+<tr><td>{{ partial "chlabel.html" . }}</td><td>{{ index .title $lang }}</td>{{ range hugo.Data.languages }}{{ if in $ch.langs .key }}<td class="yes">&#10003;</td>{{ else }}<td class="no">&ndash;</td>{{ end }}{{ end }}</tr>
+{{ end }}{{ end }}</table>

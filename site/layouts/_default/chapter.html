@@ -1,0 +1,25 @@
+{{ define "main" }}
+{{ $lang := site.Language.Lang }}
+{{ $ch := false }}
+{{ range hugo.Data.chapters }}{{ if eq (string .num) (string $.Params.chapter) }}{{ $ch = . }}{{ end }}{{ end }}
+{{ $st := partial "chstatus.html" $ch }}
+<h1>{{ .Title }}</h1>
+<p class="lede">{{ index $ch.summary $lang }}</p>
+<p>{{ partial "chip.html" $st.status }} &nbsp; <a href="{{ site.Params.bookRepo }}/tree/main/{{ if eq $ch.num "A" }}appendix-A{{ else }}ch{{ printf "%02d" (int $ch.num) }}{{ end }}">{{ i18n "companion" }}</a></p>
+{{ if $ch.code }}<p><b>{{ i18n "code_label" }}</b> {{ if $ch.langs }}{{ range $ch.langs }}{{ $k := . }}{{ range hugo.Data.languages }}{{ if eq .key $k }}<span class="lang">{{ .label }}</span> {{ end }}{{ end }}{{ end }}{{ else }}<span class="muted">{{ i18n "none_yet" }}</span>{{ end }}</p>{{ end }}
+{{ if eq $st.status "planned" }}<div class="tip">{{ i18n "planned_note" | safeHTML }}</div>{{ end }}
+<h2>{{ i18n "sections_h" }}</h2>
+{{ if $ch.sections }}
+{{ $pages := where (where site.RegularPages "Params.chapter" (string $ch.num)) "Params.order" "gt" 0 }}
+<div class="tbl"><table><tr><th>{{ i18n "th_book" }}</th><th>{{ i18n "th_section" }}</th><th>{{ i18n "th_status" }}</th></tr>
+{{ range $ch.sections }}
+{{ $sid := .id }}{{ $page := false }}
+{{ range where $pages "Params.extra" "ne" true }}{{ if in (default slice .Params.sections) $sid }}{{ if not $page }}{{ $page = . }}{{ end }}{{ end }}{{ end }}
+<tr><td dir="ltr">{{ $sid }}</td><td>{{ index .title $lang }}</td><td>{{ if $page }}{{ partial "chip.html" "ready" }} <a href="{{ $page.RelPermalink }}">{{ i18n "open" }}</a>{{ else }}{{ partial "chip.html" "planned" }}{{ end }}</td></tr>
+{{ end }}
+</table></div>
+{{ else }}<p class="muted">{{ i18n "no_sections" }}</p>{{ end }}
+{{ $extras := where (where site.RegularPages "Params.chapter" (string $ch.num)) "Params.extra" true }}
+{{ if $extras }}<h2>{{ i18n "extras_h" }}</h2><ul>{{ range $extras.ByParam "order" }}<li><a href="{{ .RelPermalink }}">{{ .Params.nav }}</a></li>{{ end }}</ul>{{ end }}
+{{ partial "pager.html" . }}
+{{ end }}

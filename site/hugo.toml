@@ -1,0 +1,76 @@
+# Build an LLM from scratch: tutorial site.
+# Build:  hugo --minify      Preview:  hugo server      (run from site/)
+baseURL = "https://sobhanyasami.github.io/LLMs-from-scratch-by-me/"
+title = "Build an LLM from scratch"
+defaultContentLanguage = "en"
+enableRobotsTXT = true
+# Keep the old URLs (page.html, fa/page.html) so existing links still work.
+uglyURLs = true
+disablePathToLower = true
+disableKinds = ["taxonomy", "term", "RSS"]
+enableGitInfo = false
+
+[params]
+  thisRepo = "https://github.com/SobhanYasami/LLMs-from-scratch-by-me"
+  bookRepo = "https://github.com/rasbt/LLMs-from-scratch"
+
+[languages]
+  [languages.en]
+    label = "English"
+    locale = "en"
+    direction = "ltr"
+    weight = 1
+    contentDir = "content/en"
+  [languages.fa]
+    label = "فارسی"
+    locale = "fa"
+    direction = "rtl"
+    weight = 2
+    title = "ساخت یک LLM از صفر"
+    contentDir = "content/fa"
+
+# Pages are hand-written HTML files. Hugo blocks that by default because HTML content is not sanitised;
+# that is fine here because every page is reviewed in this repository.
+[security]
+  allowContent = ['! ^text/org$']
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+# Code blocks are highlighted at build time (no JavaScript). Colours live in assets/css/chroma.css.
+[markup.highlight]
+  noClasses = false
+
+# Pages are plain HTML; we make our own table of contents in the layout.
+[markup.tableOfContents]
+  startLevel = 2
+  endLevel = 2
+
+# --- Where things come from ------------------------------------------------
+# The code tabs show the real source files of this repository, so they never drift.
+# Each language folder is mounted read-only under assets/src/<folder>. (Mounting any assets
+# folder replaces the default one, so the site's own assets/ is listed again.)
+[module]
+  [[module.mounts]]
+    source = "assets"
+    target = "assets"
+  [[module.mounts]]
+    source = "../python-version"
+    target = "assets/src/python-version"
+    files = ["/*.py", "/attention/*.py", "/tokenization/*.py", "/gpt/*.py"]
+  [[module.mounts]]
+    source = "../go-version"
+    target = "assets/src/go-version"
+    files = ["/cmd/*.go", "/attention/*.go", "/tokenization/*.go", "/gpt/*.go"]
+  [[module.mounts]]
+    source = "../rust-version/src"
+    target = "assets/src/rust-version/src"
+    files = ["/**/*.rs"]
+  [[module.mounts]]
+    source = "../C-version"
+    target = "assets/src/C-version"
+    files = ["/*.c", "/*.h", "/attention/*", "/tokenization/*", "/gpt/*"]
+  [[module.mounts]]
+    source = "../Zig-version/src"
+    target = "assets/src/Zig-version/src"
+    files = ["/**/*.zig"]

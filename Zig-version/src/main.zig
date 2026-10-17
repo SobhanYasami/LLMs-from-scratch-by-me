@@ -3,7 +3,7 @@
 //! Run from Zig-version/:
 //!
 //!     zig build run              # all chapters
-//!     zig build run -- ch03      # one chapter
+//!     zig build run -- ch04      # one chapter
 //!
 //! Tip: read `main()` first, then jump into `tokenization/` following each demo.
 //!
@@ -14,6 +14,7 @@
 const std = @import("std");
 const tk = @import("tokenization/root.zig");
 const ch03 = @import("ch03.zig");
+const ch04 = @import("ch04.zig");
 
 /// Run from Zig-version/, like go-version resolves ../assets.
 const data_path = "../assets/the-verdict.txt";
@@ -205,6 +206,7 @@ pub fn main() !void {
     if (args.len == 1) {
         try runChapter2(gpa, out);
         try ch03.run(gpa, out);
+        try ch04.run(gpa, out);
         return;
     }
     for (args[1..]) |chapter| {
@@ -212,8 +214,12 @@ pub fn main() !void {
             try runChapter2(gpa, out);
         } else if (std.mem.eql(u8, chapter, "ch03")) {
             try ch03.run(gpa, out);
+        } else if (std.mem.eql(u8, chapter, "ch04")) {
+            try ch04.run(gpa, out);
+        } else if (std.mem.eql(u8, chapter, "ch04-124m")) {
+            try ch04.run124m(gpa, out);
         } else {
-            std.debug.print("unknown chapter '{s}'; use ch02 or ch03\n", .{chapter});
+            std.debug.print("unknown chapter '{s}'; use ch02, ch03, ch04 or ch04-124m\n", .{chapter});
             std.process.exit(1);
         }
     }

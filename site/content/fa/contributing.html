@@ -1,0 +1,72 @@
+---
+title: مشارکت و گسترش
+nav: مشارکت
+chapter: reference
+order: 20
+---
+<p class="lede">سایت با <a href="https://gohugo.io/">Hugo</a> ساخته می‌شود. یک صفحهٔ جدید یک فایل است؛ یک فصل جدید چند خط داده. ناوبری، نقشهٔ راه، نوار پیشرفت، صفحهٔ فصل‌ها و تب‌های کد از همین‌ها ساخته می‌شوند.</p>
+<h2>اجزا</h2>
+<p>همه‌چیز در <code>site/</code> است:</p>
+<table><tr><th>کجا</th><th>چه چیزی دارد</th></tr>
+<tr><td><code>site/content/en/*.html</code></td><td>یک فایل برای هر صفحه: یک بلوک front matter، سپس HTML. صفحهٔ خانه <code>_index.html</code> است.</td></tr>
+<tr><td><code>site/content/fa/*.html</code></td><td>ترجمه‌های فارسی، یک فایل برای هر صفحهٔ انگلیسی، با همان نام فایل.</td></tr>
+<tr><td><code>site/data/chapters.yaml</code></td><td>کل کتاب: فصل‌ها، بخش‌ها (عنوان انگلیسی و فارسی) و اینکه هر فصل را کدام زبان‌ها پیاده کرده‌اند.</td></tr>
+<tr><td><code>site/data/code.yaml</code>، <code>languages.yaml</code></td><td>اینکه هر تب کد کدام فایل‌های منبع را نشان می‌دهد و فهرست پیاده‌سازی‌ها.</td></tr>
+<tr><td><code>site/i18n/en.yaml</code>، <code>fa.yaml</code></td><td>متن‌های رابط کاربری (دکمه‌ها، برچسب‌ها) برای هر زبان.</td></tr>
+<tr><td><code>site/layouts/</code></td><td>قالب صفحه‌ها. به‌ندرت نیاز به ویرایش دارند.</td></tr>
+<tr><td><code>site/assets/css</code>، <code>assets/js</code></td><td>ظاهر و رفتار (تب‌های زبان، پوسته، منوی موبایل).</td></tr>
+<tr><td><code>site/hugo.toml</code></td><td>پیکربندی، از جمله اینکه تب‌های کد فایل‌های واقعی منبع را از کجا می‌خوانند.</td></tr></table>
+<h2>ساخت و پیش‌نمایش</h2>
+<p><a href="https://gohugo.io/installation/">Hugo</a> را نصب کنید (نسخهٔ extended، 0.158 یا جدیدتر)، سپس از <code>site/</code>:</p>
+<pre class="out">hugo server            # live preview at http://localhost:1313/, English and /fa/
+hugo --minify          # build the site into site/public/</pre>
+<p>هیچ فایل تولیدشده‌ای کامیت نمی‌شود. یک گردش‌کار GitHub Actions (<code>.github/workflows/hugo.yml</code>) با هر push روی <code>main</code> سایت را می‌سازد و روی GitHub Pages منتشر می‌کند (Settings، Pages، Source: <b>GitHub Actions</b>).</p>
+<h2>افزودن صفحه</h2>
+<ol>
+<li>فایل <code>site/content/en/ch03-3-self-attention.html</code> را بسازید که با این شروع شود:
+<pre class="out">---
+title: "3.3: A simple self-attention mechanism"
+nav: 3.3 Self-attention
+chapter: "3"
+sections: ["3.3"]
+order: 30
+code: attn_self
+---
+&lt;div class="aim"&gt;&lt;b&gt;Aim.&lt;/b&gt; ...&lt;/div&gt;
+...
+&lt;!--code--&gt;</pre></li>
+<li><code>chapter</code> شمارهٔ فصل به‌صورت رشته است (یا <code>A</code> برای پیوست‌ها، و <code>start</code> و <code>reference</code> برای گروه اول و آخر)؛ <code>sections</code> بخش‌های کتابی را که صفحه پوشش می‌دهد فهرست می‌کند (برای دو بخش <code>["2.7", "2.8"]</code>)؛ <code>order</code> صفحه‌ها را درون یک فصل مرتب می‌کند. <code>nav</code> نام کوتاه در منوی کناری است.</li>
+<li>کامنت <code>&lt;!--code--&gt;</code> را جایی بگذارید که تب‌های Python / Go / Rust / C / Zig باید بیایند و مدخل را در <code>code:</code> نام ببرید (در <code>data/code.yaml</code> تعریف می‌شود، پایین را ببینید).</li>
+<li>صفحهٔ فارسی را با همان نام فایل در <code>site/content/fa/</code> اضافه کنید.</li>
+<li><code>hugo server</code> را اجرا کنید. بخش در نقشهٔ راه خودبه‌خود از <i>برنامه‌ریزی‌شده</i> به <i>آماده</i> تغییر می‌کند. نشانگرهای دیگر در بدنهٔ صفحه: <code>&lt;!--cards--&gt;</code> (کارت فصل‌ها)، <code>&lt;!--progress--&gt;</code> و <code>&lt;!--matrix--&gt;</code> (جدول‌های نقشهٔ راه).</li>
+</ol>
+<h2>افزودن مطلب تکمیلی</h2>
+<p>مطلب تکمیلی از کتاب فراتر می‌رود. همان front matter را به کار ببرید، <code>extra: true</code> اضافه کنید و <code>sections</code> را نگذارید. زیر فصلش با علامت + و در صفحهٔ فصل ظاهر می‌شود.</p>
+<h2>افزودن کد برای یک فصل</h2>
+<ol>
+<li>همان ماژول را در پوشهٔ هر زبان با نام‌های یکسان بنویسید (چیدمان را در <a href="reference.html">صفحهٔ مرجع</a> ببینید). خروجی‌ها را میان زبان‌ها یکی کنید.</li>
+<li>در <code>site/data/code.yaml</code> مدخلی اضافه کنید و فایل‌هایی را که تب هر زبان نشان می‌دهد فهرست کنید، مثلاً <code>attn_self: {python: [attention/self_attention.py], go: [...], ...}</code>. زبانی که جا بیندازید «این زبان هنوز پیاده‌سازی نشده است» نشان می‌دهد. سایت فایل‌ها را هنگام ساخت مستقیم از مخزن می‌خواند، پس تب‌ها هرگز از کد جدا نمی‌افتند. (اگر پوشهٔ تازه‌ای اضافه کردید، آن را در <code>hugo.toml</code> mount کنید.)</li>
+<li><code>langs</code> فصل را در <code>data/chapters.yaml</code> روی زبان‌هایی که اکنون آن را پیاده کرده‌اند تنظیم کنید. ماتریس زبان‌ها در نقشهٔ راه به‌روز می‌شود.</li>
+</ol>
+<h2>افزودن زبان برنامه‌نویسی</h2>
+<ol>
+<li>پوشهٔ <code>Lang-version/</code> را با همان چیدمان و یک README بسازید و پوشهٔ منبعش را در <code>hugo.toml</code> mount کنید.</li>
+<li>آن را با نام هایلایتر دستورش (یک <a href="https://gohugo.io/content-management/syntax-highlighting/#list-of-chroma-highlighting-languages">lexer از Chroma</a>) به <code>site/data/languages.yaml</code> اضافه کنید. کد هنگام ساخت رنگ‌آمیزی می‌شود، بدون جاوااسکریپت.</li>
+<li>فایل‌هایش را به هر مدخل <code>code.yaml</code> و با رسیدن به فصل‌ها به <code>langs</code> آن‌ها اضافه کنید.</li>
+</ol>
+<h2>افزودن فصل</h2>
+<p>فصل‌های ۵ تا ۷ و پیوست‌ها از پیش در <code>data/chapters.yaml</code> به‌صورت برنامه‌ریزی‌شده طرح شده‌اند، هرکدام با یک فایل <code>chapter-N.md</code>. برای اصلاح یکی، فهرست <code>sections</code> آن را ویرایش کنید؛ برای نوشتنش، صفحه‌ها را مانند بالا اضافه کنید. فصل کاملاً جدید یک بلوک در <code>chapters.yaml</code> و یک فایل stub در هر دو زبان می‌خواهد.</p>
+<h2>افزودن ترجمه</h2>
+<p>سایت به انگلیسی و فارسی ساخته می‌شود. صفحهٔ ترجمه‌شده فایلی با <b>همان نام</b> در <code>site/content/fa/</code> است. صفحهٔ انگلیسی را کپی کنید، <code>title</code>، <code>nav</code> و متن را ترجمه کنید و کلیدهای دیگر front matter (<code>chapter</code>، <code>sections</code>، <code>order</code>، <code>code</code>، <code>extra</code>) را یکسان نگه دارید. بلوک‌های کد، بلوک‌های خروجی و نشانگر <code>&lt;!--code--&gt;</code> را تغییر ندهید.</p>
+<ul>
+<li>عنوان فصل‌ها، خلاصه‌ها و نام بخش‌ها از <code>data/chapters.yaml</code> می‌آید؛ دکمه‌ها و برچسب‌ها از <code>i18n/fa.yaml</code>. یک زبان جدید یعنی یک بلوک دیگر در <code>hugo.toml</code>، یک پوشهٔ <code>content/&lt;lang&gt;/</code> جدید، یک فایل <code>i18n/&lt;lang&gt;.yaml</code> و یک عنوان برای هر زبان در <code>chapters.yaml</code>.</li>
+<li>Hugo برای صفحه‌ای که در زبان دیگر نیست به انگلیسی برنمی‌گردد: آن صفحه آنجا نیست (و در منویش هم نیست). همهٔ صفحه‌های یک فصل را با هم ترجمه کنید.</li>
+</ul>
+<h2>راهنمای نوشتن</h2>
+<ul>
+<li>هر صفحه را با یک <b>هدف</b> شروع کنید: خواننده چه چیزی را خواهد فهمید.</li>
+<li>نخست به زبان ساده توضیح دهید، سپس کد نشان دهید. شمارهٔ بخش‌های کتاب را در عنوان‌ها نگه دارید.</li>
+<li>عددهای واقعی از اجراهای واقعی بهتر از عددهای ساختگی‌اند. اگر خروجی می‌چسبانید، نخست کد را اجرا کنید.</li>
+<li>فقط با کلمات خودتان. متن یا شکل‌های کتاب را کپی نکنید.</li>
+<li>با تمرین یا پرسش «خودآزمایی» تمام کنید و پاسخ‌ها را در بلوک <code>&lt;details class="qa"&gt;</code> پنهان کنید.</li>
+</ul>

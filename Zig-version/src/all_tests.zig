@@ -4,4 +4,5 @@
 test {
     _ = @import("tokenization/root.zig");
     _ = @import("attention/root.zig");
+    _ = @import("gpt/root.zig");
 }

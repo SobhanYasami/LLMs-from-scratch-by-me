@@ -29,6 +29,11 @@ go run ./cmd
 
 `go run ./cmd ch03` runs the attention demos (`go run ./cmd` runs every chapter). The `attention/` package has `matrix`, `rng`, `simple`, `self_attention`, `causal` and `multihead`; the demo is `cmd/ch03.go`. Output is identical to Python's.
 
+
+## Chapter 4: the GPT model
+
+`go run ./cmd ch04` runs the chapter 4 demos (`go run ./cmd ch04-124m` builds the real 124M model). The `gpt/` package has `layers.go` (layer norm, GELU, Linear, feed forward), `shortcut.go` (the 4.4 gradient demo, with a hand-written backward pass instead of autograd), `block.go` (transformer block, reusing chapter 3's `MultiHeadAttention`) and `model.go` (config, `Model`, `ParameterCount`, `GenerateTextSimple`); the demo is `cmd/ch04.go`. `go test ./gpt` checks the book's 163,009,536 parameters. Output is identical to Python's.
+
 ## Python <-> Go notes
 
 - `re.split` with a capturing group has no Go equivalent; `splitKeep` in `preprocess.go` walks the matches by hand.

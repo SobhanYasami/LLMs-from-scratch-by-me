@@ -3,7 +3,7 @@
 // Run from go-version/:
 //
 //	go run ./cmd         # all chapters
-//	go run ./cmd ch03    # one chapter
+//	go run ./cmd ch04    # one chapter
 //
 // Tip: read main() first, then jump into tokenization/ following each demo.
 //
@@ -198,7 +198,7 @@ func runChapter2() {
 func main() {
 	chapters := os.Args[1:]
 	if len(chapters) == 0 {
-		chapters = []string{"ch02", "ch03"}
+		chapters = []string{"ch02", "ch03", "ch04"}
 	}
 	for _, c := range chapters {
 		switch c {
@@ -206,8 +206,12 @@ func main() {
 			runChapter2()
 		case "ch03":
 			runChapter3()
+		case "ch04":
+			runChapter4()
+		case "ch04-124m":
+			run124M()
 		default:
-			fmt.Fprintf(os.Stderr, "unknown chapter %q; use ch02 or ch03\n", c)
+			fmt.Fprintf(os.Stderr, "unknown chapter %q; use ch02, ch03, ch04 or ch04-124m\n", c)
 			os.Exit(1)
 		}
 	}

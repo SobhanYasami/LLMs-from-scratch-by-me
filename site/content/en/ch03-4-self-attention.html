@@ -1,0 +1,51 @@
+---
+title: '3.4: Self-attention with trainable weights'
+nav: 3.4 Trainable weights
+chapter: '3'
+order: 30
+sections:
+- '3.4'
+code: attn_self
+---
+<div class="aim"><b>Aim.</b> Add three weight matrices so the model can learn what to look for, and see why scores are divided by the square root of the key dimension.</div>
+<p>This is the mechanism inside the original transformer and every GPT, called <b>scaled dot-product attention</b>. The structure is the same as 3.3. What changes: the vectors we compare are no longer the raw embeddings but <i>projections</i> of them.</p>
+<h2>Query, key, value</h2>
+<table><tr><th>Role</th><th>Computed as</th><th>Think of it as</th></tr>
+<tr><td>query</td><td><code>x @ W_query</code></td><td>"what am I looking for?" (a search query)</td></tr>
+<tr><td>key</td><td><code>x @ W_key</code></td><td>"what do I offer to searches?" (an index)</td></tr>
+<tr><td>value</td><td><code>x @ W_value</code></td><td>"what do I hand over if chosen?" (the stored content)</td></tr></table>
+<p>The names come from databases: you match a query against keys, then read the matching values. Here the model <i>learns</i> W_query, W_key and W_value during training.</p>
+<h2>Step by step, for token x2</h2>
+<p>We project 3-dimensional inputs down to <code>d_out = 2</code>. (In GPT-like models d_in and d_out are normally equal; different sizes just make the shapes easier to follow.) The weights below are the book's (<code>torch.manual_seed(123)</code>).</p>
+<pre class="out">query_2 = x2 @ W_query = [0.4306, 1.4551]
+keys   shape (6, 2)     values shape (6, 2)     (all tokens, projected)
+
+scores_2 = query_2 @ keys.T
+         = [1.2705, 1.8524, 1.8111, 1.0795, 0.5577, 1.5440]
+
+weights_2 = softmax(scores_2 / sqrt(d_k))      d_k = 2
+          = [0.1500, 0.2264, 0.2199, 0.1311, 0.0906, 0.1820]
+
+context_2 = weights_2 @ values = [0.3061, 0.8210]</pre>
+<p>Only the sources of the vectors changed: scores compare queries with keys (not inputs with inputs), and the context mixes <b>values</b> (not the raw inputs).</p>
+<h2>Why divide by sqrt(d_k)?</h2>
+<p>Dot products grow with the number of dimensions. Large scores push softmax toward a hard "one winner" distribution, where gradients nearly vanish and learning stalls. Dividing by the square root of the key dimension keeps the scores in a range where softmax stays soft. <a href="scaling-sqrt-dk.html">The extra on scaling</a> shows real numbers.</p>
+<h2>All tokens at once</h2>
+<pre class="out">all context vectors (6 x 2):
+  [0.2996, 0.8053]
+  [0.3061, 0.8210]   &lt;- row 2 equals context_2 above
+  [0.3058, 0.8203]
+  [0.2948, 0.7939]
+  [0.2927, 0.7891]
+  [0.2990, 0.8040]</pre>
+<div class="tip">Do not confuse <b>weight parameters</b> (W_query, W_key, W_value: learned, fixed after training) with <b>attention weights</b> (the softmax output: computed fresh for every input).</div>
+<h2>Code</h2>
+<!--code-->
+<h2>The book's two classes</h2>
+<p>The book codes this as <code>SelfAttention_v1</code> (raw <code>nn.Parameter(torch.rand(...))</code>) and <code>SelfAttention_v2</code> (<code>nn.Linear</code> without bias). They compute the same thing; v2 only has a better weight initialisation, which is why they print different numbers from different seeds. Our <code>SelfAttention</code> is v1-style with weights passed in, so every language can use identical numbers.</p>
+<h2>Exercises</h2>
+<ol>
+<li>Book exercise 3.1: copy the weights of a <code>SelfAttention_v2</code> into a v1 so both give the same output. (Hint: <code>nn.Linear</code> stores its weight matrix transposed.)</li>
+<li>Change <code>d_out</code> from 2 to 4 and watch the shapes. What does not change?</li>
+</ol>
+<details class="qa"><summary>Answer to 2</summary>The attention weights stay (6 x 6): they depend on the number of tokens, not on d_out. Only keys, values and the context vectors get wider.</details>

@@ -1,0 +1,66 @@
+---
+title: 'Extra: the chapter 4 demo and its expected output'
+nav: Chapter 4 demo output
+chapter: '4'
+order: 120
+code: ch04_demo
+extra: true
+---
+<div class="aim"><b>Aim.</b> Run all of chapter 4 in one go, and check your output against the expected text, in any of the five languages.</div>
+<h2>Run it</h2>
+<table><tr><th>Language</th><th>Command</th></tr>
+<tr><td>Python</td><td><code>python-version/.venv/bin/python python-version/main.py ch04</code></td></tr>
+<tr><td>Go</td><td><code>cd go-version &amp;&amp; go run ./cmd ch04</code></td></tr>
+<tr><td>Rust</td><td><code>cd rust-version &amp;&amp; cargo run -- ch04</code></td></tr>
+<tr><td>C</td><td><code>cd C-version &amp;&amp; make run ARGS=ch04</code></td></tr>
+<tr><td>Zig</td><td><code>cd Zig-version &amp;&amp; zig build run -- ch04</code></td></tr></table>
+<p>All five print the same text, character for character, and so does the 124M version (<code>ch04-124m</code>). Without an argument each program runs every chapter.</p>
+<h2>What to compare with the book</h2>
+<ul>
+<li><b>4.2, 4.3 and 4.4</b> reproduce the book's numbers: the layer-norm means and variances, the GELU curve, and the gradient table (the 4.4 weights are the book's <code>torch.manual_seed(123)</code> ones, written out in the code).</li>
+<li><b>4.6</b> reproduces the exact counts: 163,009,536 parameters, 124,412,160 with weight tying, 621.83 MB.</li>
+<li><b>4.1, 4.5 and 4.7</b> use random weights from this repo's shared generator, so they differ from the book's torch output but agree across the five languages. The generated words are gibberish by design.</li>
+</ul>
+<h2>Expected output</h2>
+<pre class="out">== 4.1 the big picture (tiny GPT: emb 32, 4 heads, 2 blocks) ==
+batch of token IDs, shape (2, 4): [[6109, 3626, 6100, 345], [6109, 1110, 6622, 257]]
+logits shape: (2, 4, 50257)  &lt;- [batch, tokens, vocab_size]
+logits[0][0], first 4 of 50257: [0.0360, 0.0326, 0.0130, -0.0198]
+== 4.2 layer normalization ==
+mean per row: [0.1324, 0.2170]
+variance per row: [0.0231, 0.0398]
+normalized, row 0: [0.6160, 1.4126, -0.8719, 0.5870, -0.8719, -0.8719]
+LayerNorm output mean: [0.0000, 0.0000]
+LayerNorm output variance (biased): [0.9995, 0.9997]
+== 4.3 GELU and the feed forward network ==
+x   : [-3.0000, -2.0000, -1.0000, 0.0000, 1.0000, 2.0000, 3.0000]
+GELU: [-0.0036, -0.0454, -0.1588, 0.0000, 0.8412, 1.9546, 2.9964]
+ReLU: [0.0000, 0.0000, 0.0000, 0.0000, 1.0000, 2.0000, 3.0000]
+feed forward: input (2, 3, 32) -&gt; output (2, 3, 32) (hidden layer is 4 x 32 = 128 wide)
+== 4.4 shortcut connections (mean |gradient| of each layer's weights) ==
+without shortcut: 0.000202  0.000120  0.000715  0.001399  0.005050   (layer 0 ... layer 4)
+with    shortcut: 0.221698  0.206941  0.328970  0.266573  1.325854   (layer 0 ... layer 4)
+== 4.5 the transformer block ==
+input shape: (2, 4, 32)  output shape: (2, 4, 32)
+input[0][0], first 4 numbers: [0.0038, 0.0152, 0.0213, -0.0097]
+output[0][0], first 4 numbers: [0.0137, 0.0182, 0.0086, -0.0207]
+== 4.6 model size ==
+tiny model: 3,242,240 parameters (arithmetic says 3,242,240)
+GPT-2 small, no model built: 163,009,536 parameters
+  minus the output head (weight tying in the original GPT-2): 124,412,160
+  float32 size: 621.83 MB
+exercise 4.1: feed forward 4,722,432 vs attention 2,360,064 parameters per block
+exercise 4.2: bigger models, same code, different configuration
+                           parameters    weight-tied  float32 MB
+  gpt2-small              163,009,536    124,412,160      621.83
+  gpt2-medium             406,212,608    354,749,440    1,549.58
+  gpt2-large              838,220,800    773,891,840    3,197.56
+  gpt2-xl               1,637,792,000  1,557,380,800    6,247.68
+== 4.7 generating text (tiny model) ==
+encoded: [15496, 11, 314, 716]
+output IDs: [15496, 11, 314, 716, 29873, 23577, 16126, 30619, 37917, 27703]
+output length: 10
+decoded: Hello, I amickauj Neithersort glandWindow
+(gibberish: the weights are random, nothing has been trained yet)</pre>
+<h2>The runner code</h2>
+<!--code-->

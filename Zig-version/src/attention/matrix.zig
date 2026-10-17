@@ -34,6 +34,13 @@ pub const Matrix = struct {
         return m;
     }
 
+    /// Normal(0, std) values.
+    pub fn randn(gpa: std.mem.Allocator, rows: usize, cols: usize, std_dev: f32, rng: *Rng) !Matrix {
+        const m = try init(gpa, rows, cols);
+        for (m.data) |*v| v.* = rng.normal() * std_dev;
+        return m;
+    }
+
     pub fn at(self: Matrix, i: usize, j: usize) f32 {
         return self.data[i * self.cols + j];
     }
@@ -43,13 +50,17 @@ pub const Matrix = struct {
     }
 
     /// self x other: [n,k] x [k,m] -> [n,m].
+    ///
+    /// Tip: the loops run i, k, j so both matrices are read row by row, which is
+    /// much faster on big matrices. Each output element is still summed over k in
+    /// order, so the numbers are the same as with the textbook i, j, k order.
     pub fn matmul(self: Matrix, gpa: std.mem.Allocator, other: Matrix) !Matrix {
         const out = try init(gpa, self.rows, other.cols);
         for (0..self.rows) |i| {
-            for (0..other.cols) |j| {
-                var sum: f32 = 0;
-                for (0..self.cols) |k| sum += self.at(i, k) * other.at(k, j);
-                out.data[i * out.cols + j] = sum;
+            const out_row = out.row(i);
+            for (0..self.cols) |k| {
+                const aik = self.at(i, k);
+                for (out_row, other.row(k)) |*o, bkj| o.* += aik * bkj;
             }
         }
         return out;

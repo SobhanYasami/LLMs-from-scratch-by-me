@@ -35,6 +35,11 @@ cargo test        # runs the split_text doctest
 
 `cargo run -- ch03` runs the attention demos (`cargo run` runs every chapter). `src/attention/` has `matrix`, `simple`, `self_attention`, `causal` and `multihead`; the demo is `src/ch03.rs`. The random generator is shared with chapter 2 (`tokenization::rng`). Output is identical to Python's.
 
+
+## Chapter 4: the GPT model
+
+`cargo run -- ch04` runs the chapter 4 demos (`cargo run --release -- ch04-124m` builds the real 124M model). `src/gpt/` has `layers` (layer norm, GELU, Linear, feed forward), `shortcut` (the 4.4 gradient demo with a hand-written backward pass), `block` (reuses chapter 3's `MultiHeadAttention`) and `model` (`Config`, `GptModel`, `parameter_count`, `generate_text_simple`); the demo is `src/ch04.rs`. `cargo test` checks the book's 163,009,536 parameters. Output is identical to Python's.
+
 ## Python <-> Rust notes
 
 - The `regex` crate has no capturing split; `split_text` walks `find_iter` matches by hand.

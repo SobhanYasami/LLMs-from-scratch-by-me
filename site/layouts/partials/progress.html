@@ -1,0 +1,5 @@
+{{ $lang := site.Language.Lang }}
+<table><tr><th></th><th>{{ i18n "th_topic" }}</th><th>{{ i18n "th_written" }}</th><th>{{ i18n "th_status" }}</th></tr>
+{{ range hugo.Data.chapters }}{{ $st := partial "chstatus.html" . }}{{ $pct := 0 }}{{ if $st.total }}{{ $pct = div (mul 100 $st.ready) $st.total }}{{ end }}
+<tr><td><a href="chapter-{{ .num }}.html">{{ partial "chlabel.html" . }}</a></td><td>{{ index .title $lang }}</td><td><div class="bar" role="progressbar" aria-valuenow="{{ $pct }}" aria-valuemin="0" aria-valuemax="100"><i style="width:{{ $pct }}%"></i></div><small>{{ if $st.total }}{{ $st.ready }}/{{ $st.total }} {{ i18n "sections_word" }}{{ else }}&ndash;{{ end }}</small></td><td>{{ partial "chip.html" $st.status }}</td></tr>
+{{ end }}</table>

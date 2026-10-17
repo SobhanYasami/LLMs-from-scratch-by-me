@@ -1,0 +1,40 @@
+---
+title: 'Extra: the chapter 3 demo and its expected output'
+nav: Chapter 3 demo output
+chapter: '3'
+order: 110
+code: ch03_demo
+extra: true
+---
+<div class="aim"><b>Aim.</b> Run all of chapter 3 in one go, and check your output against the expected numbers, in any of the five languages.</div>
+<h2>Run it</h2>
+<table><tr><th>Language</th><th>Command</th></tr>
+<tr><td>Python</td><td><code>python-version/.venv/bin/python python-version/main.py ch03</code></td></tr>
+<tr><td>Go</td><td><code>cd go-version &amp;&amp; go run ./cmd ch03</code></td></tr>
+<tr><td>Rust</td><td><code>cd rust-version &amp;&amp; cargo run -- ch03</code></td></tr>
+<tr><td>C</td><td><code>cd C-version &amp;&amp; make run ARGS=ch03</code></td></tr>
+<tr><td>Zig</td><td><code>cd Zig-version &amp;&amp; zig build run -- ch03</code></td></tr></table>
+<p>All five print the same text, character for character. Without an argument each program runs every chapter.</p>
+<h2>What to compare with the book</h2>
+<ul>
+<li><b>3.3 and 3.4</b> match the book exactly: scores, weights, <code>query_2 = [0.4306, 1.4551]</code>, <code>context_2 = [0.3061, 0.8210]</code>, and the six context vectors of <code>SelfAttention_v1</code>. The 3.4 weights are the book's <code>torch.manual_seed(123)</code> matrices, written out in the code so no language needs torch.</li>
+<li><b>3.5 weights</b> follow from the same matrices. The book's causal example uses its v2 weights, so those rows differ.</li>
+<li><b>Dropout and 3.6</b> use the seeded generator shared by all languages, so they differ from the book's torch output but agree with each other.</li>
+</ul>
+<h2>Expected output (excerpt)</h2>
+<pre class="out">== 3.3.1 simple attention for one query (x2, 'journey') ==
+scores    : [0.9544, 1.4950, 1.4754, 0.8434, 0.7070, 1.0865]
+weights   : [0.1385, 0.2379, 0.2333, 0.1240, 0.1082, 0.1581]
+context z2: [0.4419, 0.6515, 0.5683]
+...
+== 3.4 self-attention with trainable weights (d_in=3, d_out=2) ==
+query_2: [0.4306, 1.4551]
+keys shape: (6, 2), values shape: (6, 2)
+scores_2 (q2 . keys): [1.2705, 1.8524, 1.8111, 1.0795, 0.5577, 1.5440]
+weights_2 (scaled): [0.1500, 0.2264, 0.2199, 0.1311, 0.0906, 0.1820]
+context_2: [0.3061, 0.8210]
+...
+== 3.6 multi-head attention (d_in=3, d_out=2, heads=2) ==
+input shape: (2, 6, 3)  output shape: (2, 6, 2)</pre>
+<h2>The runner code</h2>
+<!--code-->

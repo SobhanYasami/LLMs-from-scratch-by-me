@@ -1,0 +1,18 @@
+{{- $cur := .RelPermalink -}}
+{{- $lang := site.Language.Lang -}}
+{{- /* one nav link */ -}}
+<h4>{{ i18n "h_start" }}</h4>
+{{ range partial "seq.html" . }}{{ if and (eq (string .p.Params.chapter) "start") }}{{ $on := eq .p.RelPermalink $cur }}<a class="{{ if $on }}on{{ end }}" href="{{ .p.RelPermalink }}"{{ if $on }} aria-current="page"{{ end }}>{{ .p.Params.nav }}</a>{{ end }}{{ end }}
+{{ range hugo.Data.chapters }}
+{{- $ch := . -}}{{- $st := partial "chstatus.html" . -}}
+{{- $head := site.GetPage (printf "chapter-%s" .num) -}}
+<h4><a class="h4link{{ if eq $head.RelPermalink $cur }} on{{ end }}" href="{{ $head.RelPermalink }}">{{ partial "chlabel.html" . }}</a>{{ if ne $st.status "ready" }} <em>{{ i18n (cond (eq $st.status "planned") "s_planned" "s_progress") }}</em>{{ end }}</h4>
+{{- if ne $st.status "planned" }}
+{{- $pages := where (where site.RegularPages "Params.chapter" (string .num)) "Params.order" "gt" 0 -}}
+{{ range (where $pages "Params.extra" "ne" true).ByParam "order" }}<a class="{{ if eq .RelPermalink $cur }}on{{ end }}" href="{{ .RelPermalink }}"{{ if eq .RelPermalink $cur }} aria-current="page"{{ end }}>{{ .Params.nav }}</a>{{ end }}
+{{ range (where $pages "Params.extra" true).ByParam "order" }}<a class="extra{{ if eq .RelPermalink $cur }} on{{ end }}" href="{{ .RelPermalink }}"{{ if eq .RelPermalink $cur }} aria-current="page"{{ end }}>{{ .Params.nav }}</a>{{ end }}
+{{- end }}
+{{ end }}
+<h4>{{ i18n "h_reference" }}</h4>
+{{ range (where site.RegularPages "Params.chapter" "reference").ByParam "order" }}<a class="{{ if eq .RelPermalink $cur }}on{{ end }}" href="{{ .RelPermalink }}"{{ if eq .RelPermalink $cur }} aria-current="page"{{ end }}>{{ .Params.nav }}</a>{{ end }}
+<h4>{{ i18n "h_source" }}</h4><a href="{{ site.Params.thisRepo }}">{{ i18n "this_repo" }}</a><a href="{{ site.Params.bookRepo }}">{{ i18n "book_repo" }}</a>

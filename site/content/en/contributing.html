@@ -1,0 +1,72 @@
+---
+title: Contributing and extending
+nav: Contributing
+chapter: reference
+order: 20
+---
+<p class="lede">The site is built with <a href="https://gohugo.io/">Hugo</a>. A new page is one file; a new chapter is a few lines of data. Navigation, roadmap, progress bars, chapter pages and the code tabs are generated from that.</p>
+<h2>The pieces</h2>
+<p>Everything lives in <code>site/</code>:</p>
+<table><tr><th>Where</th><th>What it holds</th></tr>
+<tr><td><code>site/content/en/*.html</code></td><td>One file per page: a front-matter block, then HTML. The home page is <code>_index.html</code>.</td></tr>
+<tr><td><code>site/content/fa/*.html</code></td><td>Persian translations, one file per English page, same file name.</td></tr>
+<tr><td><code>site/data/chapters.yaml</code></td><td>The whole book: chapters, sections (English and Persian titles), and which languages implement each chapter.</td></tr>
+<tr><td><code>site/data/code.yaml</code>, <code>languages.yaml</code></td><td>Which source files each code tab shows, and the list of implementations.</td></tr>
+<tr><td><code>site/i18n/en.yaml</code>, <code>fa.yaml</code></td><td>Interface strings (buttons, labels) per language.</td></tr>
+<tr><td><code>site/layouts/</code></td><td>The page templates. Rarely need editing.</td></tr>
+<tr><td><code>site/assets/css</code>, <code>assets/js</code></td><td>Look, and the behaviour (language tabs, theme, mobile menu).</td></tr>
+<tr><td><code>site/hugo.toml</code></td><td>Configuration, including where the code tabs read the real source files from.</td></tr></table>
+<h2>Build and preview</h2>
+<p>Install <a href="https://gohugo.io/installation/">Hugo</a> (extended edition, 0.158 or newer), then from <code>site/</code>:</p>
+<pre class="out">hugo server            # live preview at http://localhost:1313/, English and /fa/
+hugo --minify          # build the site into site/public/</pre>
+<p>Nothing generated is committed. A GitHub Actions workflow (<code>.github/workflows/hugo.yml</code>) builds the site on every push to <code>main</code> and publishes it to GitHub Pages (Settings, Pages, Source: <b>GitHub Actions</b>).</p>
+<h2>Add a page</h2>
+<ol>
+<li>Create <code>site/content/en/ch03-3-self-attention.html</code> starting with:
+<pre class="out">---
+title: "3.3: A simple self-attention mechanism"
+nav: 3.3 Self-attention
+chapter: "3"
+sections: ["3.3"]
+order: 30
+code: attn_self
+---
+&lt;div class="aim"&gt;&lt;b&gt;Aim.&lt;/b&gt; ...&lt;/div&gt;
+...
+&lt;!--code--&gt;</pre></li>
+<li><code>chapter</code> is the chapter number as a string (or <code>A</code> for appendices, <code>start</code> and <code>reference</code> for the first and last groups); <code>sections</code> lists the book sections the page covers (<code>["2.7", "2.8"]</code> for two); <code>order</code> sorts pages inside a chapter. <code>nav</code> is the short name in the side menu.</li>
+<li>Put the comment <code>&lt;!--code--&gt;</code> where the Python / Go / Rust / C / Zig tabs should go, and name the entry in <code>code:</code> (defined in <code>data/code.yaml</code>, see below).</li>
+<li>Add the Persian page with the same file name in <code>site/content/fa/</code>.</li>
+<li>Run <code>hugo server</code>. The section flips from <i>planned</i> to <i>ready</i> on the roadmap by itself. Other markers you can use in a page body: <code>&lt;!--cards--&gt;</code> (chapter cards), <code>&lt;!--progress--&gt;</code> and <code>&lt;!--matrix--&gt;</code> (the roadmap tables).</li>
+</ol>
+<h2>Add an extra</h2>
+<p>An extra goes beyond the book. Use the same front matter, add <code>extra: true</code>, and leave <code>sections</code> out. It appears under its chapter, marked with a plus, and on the chapter page.</p>
+<h2>Add code for a chapter</h2>
+<ol>
+<li>Write the same module in every language folder, using the same names (see the layout on the <a href="reference.html">reference page</a>). Match outputs across languages.</li>
+<li>In <code>site/data/code.yaml</code> add an entry listing the files each language tab shows, e.g. <code>attn_self: {python: [attention/self_attention.py], go: [...], ...}</code>. A language you leave out shows "Not implemented in this language yet". The site reads the files straight from the repository at build time, so the tabs never drift from the code. (If you add a new folder, mount it in <code>hugo.toml</code>.)</li>
+<li>Set the chapter's <code>langs</code> in <code>data/chapters.yaml</code> to the languages that now implement it. The language matrix on the roadmap updates.</li>
+</ol>
+<h2>Add a language</h2>
+<ol>
+<li>Create <code>Lang-version/</code> with the same layout and a README, and mount its source folder in <code>hugo.toml</code>.</li>
+<li>Add it to <code>site/data/languages.yaml</code> with the name of its syntax highlighter (a <a href="https://gohugo.io/content-management/syntax-highlighting/#list-of-chroma-highlighting-languages">Chroma lexer</a>). Code is highlighted at build time, no JavaScript.</li>
+<li>Add its files to each <code>code.yaml</code> entry and to the chapters' <code>langs</code> as it catches up.</li>
+</ol>
+<h2>Add a chapter</h2>
+<p>Chapters 5 to 7 and the appendices are already outlined in <code>data/chapters.yaml</code> as planned, each with a <code>chapter-N.md</code> stub. To refine one, edit its <code>sections</code> list; to write it, add pages as above. A brand-new chapter needs a block in <code>chapters.yaml</code> and a stub file in both languages.</p>
+<h2>Add a translation</h2>
+<p>The site is built in English and Persian. A translated page is a file with the <b>same name</b> in <code>site/content/fa/</code>. Copy the English page, translate <code>title</code>, <code>nav</code> and the text, and keep the other front-matter keys (<code>chapter</code>, <code>sections</code>, <code>order</code>, <code>code</code>, <code>extra</code>) identical. Keep code blocks, output blocks and the <code>&lt;!--code--&gt;</code> marker unchanged.</p>
+<ul>
+<li>Chapter titles, summaries and section names come from <code>data/chapters.yaml</code>; buttons and labels from <code>i18n/fa.yaml</code>. A new language is one more block in <code>hugo.toml</code>, a new <code>content/&lt;lang&gt;/</code> folder, an <code>i18n/&lt;lang&gt;.yaml</code> file and a title per language in <code>chapters.yaml</code>.</li>
+<li>Hugo does not fall back to English for a page missing in another language: the page is simply absent there (and absent from its menu). Translate all pages of a chapter together.</li>
+</ul>
+<h2>Writing guidelines</h2>
+<ul>
+<li>Start every page with an <b>Aim</b>: what the reader will understand.</li>
+<li>Explain in plain words first, then show code. Keep the book's section numbers in titles.</li>
+<li>Real numbers from real runs beat invented ones. If you paste output, run the code first.</li>
+<li>Own words only. Do not copy the book's text or figures.</li>
+<li>End with exercises or "check yourself" questions, and hide answers in a <code>&lt;details class="qa"&gt;</code> block.</li>
+</ul>

@@ -1,0 +1,29 @@
+---
+title: '1.1-1.2: What is an LLM, and what is it for?'
+nav: 1.1-1.2 What is an LLM?
+chapter: '1'
+order: 10
+sections:
+- '1.1'
+- '1.2'
+---
+<div class="aim"><b>Aim.</b> Place LLMs in the bigger picture (AI, machine learning, deep learning) and see what they are used for.</div>
+<h2>A neural network that predicts the next word</h2>
+<p>A <b>large language model</b> is a deep neural network trained on huge amounts of text to understand and generate human-like text. "Large" means two things: many <b>parameters</b> (the adjustable weights, often billions) and a very large training set. All those weights are tuned for one simple job: <b>predict the next word</b>. It is surprising how capable that job makes the model.</p>
+<h2>Where LLMs sit</h2>
+<div class="nest"><div><i>ARTIFICIAL INTELLIGENCE</i><div><i>MACHINE LEARNING</i><div><i>DEEP LEARNING</i><div>LLMs</div></div></div></div></div>
+<ul>
+<li><b>AI</b>: machines doing tasks that need human-like intelligence.</li>
+<li><b>Machine learning</b>: learn rules from data instead of writing them. A spam filter learns from labelled emails instead of a hand-written rule list.</li>
+<li><b>Deep learning</b>: machine learning with neural networks of three or more layers. It removes manual <i>feature extraction</i>: no expert has to decide that "free", "win" and many exclamation marks signal spam.</li>
+<li><b>LLMs</b>: deep learning applied to text. Because they generate text, they are also called <i>generative AI</i>.</li>
+</ul>
+<div class="tip">Even deep learning needs labels in the usual setup (spam / not spam). LLM pretraining is different: the next word itself is the label. That is 1.6.</div>
+<h2>Applications (1.2)</h2>
+<p>Anything that parses or produces text: translation, summaries, sentiment analysis, writing articles or code, chatbots and assistants, and answering questions over large specialised document sets such as law or medicine.</p>
+<h2>Why build one yourself?</h2>
+<p>Coding an LLM is the best way to learn how it works and where it breaks. It also prepares you to pretrain or finetune open models on your own data, and custom models can beat general ones on their own domain (finance and medical question answering are the book's examples).</p>
+<h2>Check yourself</h2>
+<details class="qa"><summary>What does "large" refer to?</summary>Parameter count and training-set size.</details>
+<details class="qa"><summary>What single task is an LLM trained on?</summary>Predicting the next word.</details>
+<details class="qa"><summary>What does deep learning remove compared with classic machine learning?</summary>Manual feature extraction by human experts.</details>

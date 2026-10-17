@@ -1,0 +1,57 @@
+---
+title: '4.6: Coding the GPT model'
+nav: 4.6 The GPT model
+chapter: '4'
+order: 60
+sections:
+- '4.6'
+code: gpt_model
+---
+<div class="aim"><b>Aim.</b> Assemble the full GPT model, count its parameters, and understand where the "124 million" comes from.</div>
+<h2>Assembly</h2>
+<p>The model is the pipeline of 4.1 with the real parts plugged in: token embedding, position embedding, N transformer blocks, a final layer norm and a linear output head with no bias.</p>
+<pre class="out">x = token_embedding[ids] + position_embedding[0..T-1]      [T, D]
+for each block:  x = block(x)                              [T, D]
+x = final_layer_norm(x)                                    [T, D]
+logits = x @ output_head                                   [T, vocab]</pre>
+<p>The position table is read with 0, 1, ..., T-1 (chapter 2) and added to every token. The class is short because the transformer block carries the complexity.</p>
+<h2>How the weights are initialised</h2>
+<p>Every weight matrix is filled from the shared seeded generator as Normal(0, 0.02), in a fixed order: token embedding, position embedding, then for each block <i>W_query, W_key, W_value, out projection, feed forward 1, feed forward 2</i>, and finally the output head. Biases start at 0, layer-norm scales at 1, shifts at 0. Because the <b>order is part of the recipe</b>, every language ends up with the same model.</p>
+<h2>How many parameters?</h2>
+<pre class="out">tiny model: 3,242,240 parameters (arithmetic says 3,242,240)
+GPT-2 small, no model built: 163,009,536 parameters
+  minus the output head (weight tying in the original GPT-2): 124,412,160
+  float32 size: 621.83 MB</pre>
+<p>The code counts the model by <i>building it</i> and also by <i>arithmetic</i>, and the two agree. For GPT-2 small the parts are:</p>
+<table><tr><th>Part</th><th>Count</th><th>Parameters</th></tr>
+<tr><td>token embedding</td><td>50,257 x 768</td><td>38,597,376</td></tr>
+<tr><td>position embedding</td><td>1,024 x 768</td><td>786,432</td></tr>
+<tr><td>12 transformer blocks</td><td>12 x 7,085,568</td><td>85,026,816</td></tr>
+<tr><td>final layer norm</td><td>2 x 768</td><td>1,536</td></tr>
+<tr><td>output head</td><td>768 x 50,257</td><td>38,597,376</td></tr>
+<tr><td><b>total</b></td><td></td><td><b>163,009,536</b></td></tr></table>
+<p>The step-by-step derivation, including the 7,085,568 per block, is in <a href="gpt-parameter-count.html">the extra on parameter counting</a>.</p>
+<h2>Why 163 million and not 124 million?</h2>
+<p>The original GPT-2 uses <b>weight tying</b>: the output head reuses the token embedding matrix (the embedding maps ID to vector, the head maps vector back to a score for each ID, so the two matrices have the same shape [50,257, 768]). Counting that matrix only once removes 38,597,376 parameters: <b>124,412,160</b>, the famous "124M". Our model keeps them separate, which the book finds trains a little better, and so do modern LLMs. Chapter 6 loads OpenAI's weights and revisits tying.</p>
+<h2>Memory</h2>
+<p>Each parameter is a 32-bit float, 4 bytes: 163,009,536 x 4 bytes = <b>621.83 MB</b> just for the weights of a "small" model.</p>
+<h2>Bigger models, same code</h2>
+<pre class="out">                           parameters    weight-tied  float32 MB
+  gpt2-small              163,009,536    124,412,160      621.83
+  gpt2-medium             406,212,608    354,749,440    1,549.58
+  gpt2-large              838,220,800    773,891,840    3,197.56
+  gpt2-xl               1,637,792,000  1,557,380,800    6,247.68</pre>
+<p>This is book exercise 4.2: the bigger GPT-2 models differ <i>only in configuration</i> (emb 1024/1280/1600, layers 24/36/48, heads 16/20/25). The program computes them by arithmetic without building them; the XL model would take 6 GB.</p>
+<h2>Code</h2>
+<!--code-->
+<h2>Exercises</h2>
+<ol>
+<li>Book exercise 4.1: how many parameters are in the feed forward part and in the attention part of one block? Which is larger, and by how much?</li>
+<li>Book exercise 4.2: check the table above by changing the configuration (no code changes besides the config).</li>
+<li>Book exercise 4.3: the book uses one <code>drop_rate</code> in three places. How would you give each its own rate?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) Feed forward 768x3072 + 3072 + 3072x768 + 768 = <b>4,722,432</b>; attention 4 x 768x768 + 768 = <b>2,360,064</b>. The feed forward part is twice as big. 2) The table comes straight from <code>parameter_count</code>; build a model with each config to confirm (the 124M one needs ~1 GB). 3) Replace the single value with three config entries (embedding, attention weights, shortcut/residual) and pass each to its own dropout layer. Dropout lives only in the Python version and is off at inference.</details>
+<h2>Check yourself</h2>
+<details class="qa"><summary>What is weight tying?</summary>Using the token embedding matrix also as the output head, so its parameters are counted once.</details>
+<details class="qa"><summary>How much memory do 163,009,536 float32 parameters need?</summary>About 622 MB (4 bytes each).</details>
+<details class="qa"><summary>What changes between GPT-2 small and GPT-2 XL?</summary>Only the configuration: embedding size, number of layers and heads.</details>

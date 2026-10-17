@@ -13,7 +13,7 @@ void arena_free(Arena *a) {
     *a = (Arena){0};
 }
 
-static void *arena_alloc(Arena *a, size_t bytes) {
+void *arena_alloc(Arena *a, size_t bytes) {
     bytes = (bytes + 15) & ~(size_t)15; /* keep every block 16-byte aligned */
     if (a->used + bytes > a->capacity) {
         fputs("arena out of memory: raise the capacity passed to arena_new\n", stderr);
@@ -42,14 +42,25 @@ Matrix matrix_rand(Arena *a, size_t rows, size_t cols, Rng *rng) {
     return m;
 }
 
+Matrix matrix_randn(Arena *a, size_t rows, size_t cols, float std, Rng *rng) {
+    Matrix m = matrix_new(a, rows, cols);
+    for (size_t i = 0; i < rows * cols; i++) m.data[i] = rng_normal(rng) * std;
+    return m;
+}
+
+/* Tip: the loops run i, k, j so both matrices are read row by row, which is much
+ * faster on big matrices. Each output element is still summed over k in order,
+ * so the numbers are the same as with the textbook i, j, k order. */
 Matrix matmul(Arena *a, Matrix x, Matrix y) {
     Matrix out = matrix_new(a, x.rows, y.cols);
-    for (size_t i = 0; i < x.rows; i++)
-        for (size_t j = 0; j < y.cols; j++) {
-            float sum = 0;
-            for (size_t k = 0; k < x.cols; k++) sum += matrix_at(x, i, k) * matrix_at(y, k, j);
-            out.data[i * out.cols + j] = sum;
+    for (size_t i = 0; i < x.rows; i++) {
+        float *out_row = matrix_row(out, i);
+        for (size_t k = 0; k < x.cols; k++) {
+            float xik = matrix_at(x, i, k);
+            const float *y_row = matrix_row(y, k);
+            for (size_t j = 0; j < y.cols; j++) out_row[j] += xik * y_row[j];
         }
+    }
     return out;
 }
 

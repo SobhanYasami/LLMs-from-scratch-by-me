@@ -10,7 +10,7 @@ Learning repo and future reference, following *Build a Large Language Model (Fro
 | `C-version/` | `cd C-version && make run` |
 | `Zig-version/` | `cd Zig-version && zig build run` |
 
-All five print identical token IDs. Shared data lives in `assets/` (`the-verdict.txt`, and `gpt2-ranks.txt`, the GPT-2 BPE vocabulary used by the C and Zig encoders).
+All five print identical token IDs, and identical output for chapters 3 and 4 (the GPT model is built from the same seeded random weights in every language). Shared data lives in `assets/` (`the-verdict.txt`, and `gpt2-ranks.txt`, the GPT-2 BPE vocabulary used by the C and Zig encoders).
 
 ## Layout convention
 
@@ -22,23 +22,26 @@ Every version has a README, a demo runner, and a `tokenization` module with one 
 4. `dataset`: sliding-window (input, target) pairs, batching (DataLoader)
 5. `embedding`: token + positional embeddings
 
-Chapter 3 adds a sibling `attention` module with `simple`, `self_attention`, `causal` and `multihead`. Each `main` runs one chapter with an argument (`ch02`, `ch03`) or all of them.
+Chapter 3 adds a sibling `attention` module with `simple`, `self_attention`, `causal` and `multihead`. Chapter 4 adds a `gpt` module with `layers` (layer norm, GELU, feed forward), `shortcut`, `block` and `model` (the GPT model, parameter count, text generation). Each `main` runs one chapter with an argument (`ch02`, `ch03`, `ch04`) or all of them; `ch04-124m` runs the real 124M-parameter GPT-2 (about 1 GB of memory, build in release mode).
 
 New chapters (embeddings, attention, ...) get a new sibling module in each language, in the same order as the book. `python-version/README.md` holds the concept walkthrough; the others note language differences only.
 
 ## Docs site
 
-A living tutorial and reference for the whole book, published with GitHub Pages from `docs/`. It is built to grow:
+A living tutorial and reference for the whole book, built with [Hugo](https://gohugo.io/) from `site/` and published with GitHub Pages. It is built to grow, and it is available in English and Persian:
 
-- `docs/pages/*.html`: one file per page (small front-matter block, then HTML). Add a file to add a page.
-- `docs/pages/fa/*.html`: Persian translation of each page (same file name). Untranslated pages fall back to English. UI strings and Persian chapter names are in `docs/i18n.py`. The Persian site is built to `docs/fa/`.
-- `docs/syllabus.py`: the whole book (chapters, sections), the languages, and which source files each code tab shows. The roadmap, progress bars, chapter pages and navigation are generated from it, so unwritten parts show up as "planned".
-- Code on the site is read from the source files, so regenerate after any change and commit the result:
+- `site/content/en/*.html`: one file per page (small front-matter block, then HTML). Add a file to add a page.
+- `site/content/fa/*.html`: the Persian translation of each page (same file name).
+- `site/data/chapters.yaml`: the whole book (chapters, sections, both languages) and which languages implement each chapter. The roadmap, progress bars, chapter pages and navigation are generated from it, so unwritten parts show up as "planned".
+- `site/data/code.yaml`: which source files each code tab shows. Code on the site is read from the real source files at build time and highlighted by Hugo, so it never drifts from the code.
+- `site/i18n/`: interface strings per language. `site/layouts/`, `site/assets/`: templates, CSS and JS.
 
 ```bash
-python3 docs/build.py
+cd site
+hugo server        # live preview at http://localhost:1313/
+hugo --minify      # build into site/public/ (not committed)
 ```
 
-Step-by-step guide for adding pages, extras, chapters, code and languages: `docs/pages/contributing.html` (published as "Contributing").
+Needs Hugo extended 0.158 or newer. Step-by-step guide for adding pages, extras, chapters, code and languages: the "Contributing" page of the site (`site/content/en/contributing.html`).
 
-To publish: GitHub repo -> Settings -> Pages -> Source: "Deploy from a branch", branch `main`, folder `/docs`.
+To publish: repository Settings -> Pages -> Source: **GitHub Actions**. The workflow in `.github/workflows/hugo.yml` builds and deploys the site on every push to `main`.

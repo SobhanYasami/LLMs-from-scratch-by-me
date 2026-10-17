@@ -1,5 +1,7 @@
 package attention
 
+import "math"
+
 // Tiny seeded random generator (splitmix64), so every language gives the same
 // numbers. Used for random weights and for dropout masks.
 type Rng struct{ state uint64 }
@@ -16,6 +18,23 @@ func (r *Rng) nextU64() uint64 {
 
 // NextF64 is uniform in [0, 1).
 func (r *Rng) NextF64() float64 { return float64(r.nextU64()>>11) / 9007199254740992.0 }
+
+// Normal is a Normal(0, 1) draw (Box-Muller). It uses two uniforms and keeps
+// one value, so every language walks the same random stream.
+func (r *Rng) Normal() float32 {
+	u1 := 1 - r.NextF64() // avoid log(0)
+	u2 := r.NextF64()
+	return float32(math.Sqrt(-2*math.Log(u1)) * math.Cos(2*math.Pi*u2))
+}
+
+// Randn returns a rows x cols matrix of Normal(0, std) values.
+func (r *Rng) Randn(rows, cols int, std float32) Matrix {
+	m := NewMatrix(rows, cols)
+	for i := range m.Data {
+		m.Data[i] = r.Normal() * std
+	}
+	return m
+}
 
 // Rand returns a rows x cols matrix, uniform in [0, 1), like torch.rand.
 func (r *Rng) Rand(rows, cols int) Matrix {

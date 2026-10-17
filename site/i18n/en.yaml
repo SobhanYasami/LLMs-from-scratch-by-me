@@ -1,0 +1,92 @@
+brand:
+  other: LLM from scratch
+site_title:
+  other: Build an LLM from scratch
+chapter:
+  other: Chapter
+appendices:
+  other: Appendices
+s_ready:
+  other: ready
+s_progress:
+  other: in progress
+s_planned:
+  other: planned
+none_yet:
+  other: none yet
+h_start:
+  other: Start
+h_reference:
+  other: Reference
+h_source:
+  other: Source
+this_repo:
+  other: This repo
+book_repo:
+  other: Raschka's repo
+th_book:
+  other: Book
+th_section:
+  other: Section
+th_status:
+  other: Status
+th_topic:
+  other: Topic
+th_written:
+  other: Written
+open:
+  other: open
+sections_word:
+  other: sections
+companion:
+  other: Companion code in Raschka's repo
+code_label:
+  other: 'Code:'
+planned_note:
+  other: Not written yet. The outline below follows the book. To add it, follow <a href="contributing.html">Contributing</a>; the roadmap and navigation update by themselves.
+sections_h:
+  other: Sections
+extras_h:
+  other: Extras
+no_sections:
+  other: Section list not mapped yet. See the book for the outline.
+not_impl:
+  other: Not implemented in this language yet.
+book_section:
+  other: Book section
+code_in:
+  other: code in
+extra:
+  other: extra
+edit:
+  other: Edit this page on GitHub
+prev:
+  other: Previous
+next:
+  other: Next
+skip:
+  other: Skip to content
+menu:
+  other: Menu
+theme:
+  other: Toggle theme
+filter:
+  other: Filter pages
+filter_ph:
+  other: Filter pages…
+no_match:
+  other: No page matches.
+toc:
+  other: On this page
+copy:
+  other: Copy
+copied:
+  other: Copied
+lang_switch:
+  other: Switch language
+fallback:
+  other: This page has not been translated into Persian yet. The English original is shown below.
+untranslated:
+  other: EN
+roadmap_title:
+  other: Roadmap

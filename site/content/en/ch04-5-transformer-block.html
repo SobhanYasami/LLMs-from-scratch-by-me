@@ -1,0 +1,49 @@
+---
+title: '4.5: Connecting attention and linear layers in a transformer block'
+nav: 4.5 Transformer block
+chapter: '4'
+order: 50
+sections:
+- '4.5'
+code: gpt_block
+---
+<div class="aim"><b>Aim.</b> Put layer norm, attention, the feed forward block and shortcuts together into the one block a GPT repeats.</div>
+<p>The transformer block is the heart of the model. It is two sub-layers in a row, and both follow <b>the same recipe</b>: normalize, run the layer, add the input back.</p>
+<div class="flow">
+<div><b>x</b>[T, D]</div><span>&rarr;</span>
+<div><b>layer norm 1</b></div><span>&rarr;</span>
+<div class="hot"><b>multi-head attention</b>from chapter 3</div><span>&rarr;</span>
+<div><b>+ x</b>shortcut</div><span>&rarr;</span>
+<div><b>layer norm 2</b></div><span>&rarr;</span>
+<div class="hot"><b>feed forward</b>from 4.3</div><span>&rarr;</span>
+<div><b>+ input</b>shortcut</div>
+</div>
+<pre class="out">x = x + attention(norm1(x))      &lt;- tokens look at each other
+x = x + feed_forward(norm2(x))   &lt;- each token is processed on its own</pre>
+<h2>Division of labour</h2>
+<ul>
+<li><b>Attention</b> relates each token to the earlier ones and builds a context vector (chapter 3). This is the only place where tokens exchange information.</li>
+<li><b>Feed forward</b> then transforms each token's vector independently, giving the model capacity to compute with what attention gathered.</li>
+<li><b>Shortcuts</b> keep gradients healthy (4.4); <b>layer norm</b> keeps the numbers in range (4.2).</li>
+</ul>
+<h2>Shape in, shape out</h2>
+<pre class="out">input shape: (2, 4, 32)  output shape: (2, 4, 32)
+input[0][0], first 4 numbers: [0.0038, 0.0152, 0.0213, -0.0097]
+output[0][0], first 4 numbers: [0.0137, 0.0182, 0.0086, -0.0207]</pre>
+<p>The shape does not change, but the <i>content</i> does: each output vector now mixes in information from the tokens before it. That is the whole point, and it is why 12 blocks in a row can refine the representation step by step.</p>
+<div class="tip"><b>Pre-LayerNorm.</b> We normalize <i>before</i> each sub-layer. The original 2017 transformer normalized <i>after</i> (post-LayerNorm), which tends to train less smoothly in deep stacks. GPT-2 and nearly every LLM since use the pre-norm layout shown here.</div>
+<div class="tip"><b>Dropout.</b> The book also applies dropout after each sub-layer (only while training). The Python version has it as an <code>nn.Dropout</code> that <code>model.eval()</code> switches off. The other four languages implement the inference path only, so they leave it out; the output is identical when dropout is off. Training arrives in chapter 5.</div>
+<h2>It reuses chapter 3 unchanged</h2>
+<p><code>MultiHeadAttention</code> is the exact class from chapter 3, built with <code>d_in = d_out = emb_dim</code> and weights from the random generator. Nothing new was needed, which is a good sign for the design.</p>
+<h2>Code</h2>
+<!--code-->
+<h2>Exercises</h2>
+<ol>
+<li>Remove the first shortcut (<code>+ shortcut</code> after attention). Run the demo: how do the output numbers change?</li>
+<li>Swap to post-LayerNorm: apply norm after attention and after the feed forward instead of before. What do you expect to see for the size of the numbers?</li>
+</ol>
+<details class="qa"><summary>Hint for 2</summary>Post-norm re-normalizes the sum <code>x + sublayer(x)</code>, so the numbers stay at unit scale after every block; pre-norm lets the residual stream grow. Try printing the largest absolute value after each block.</details>
+<h2>Check yourself</h2>
+<details class="qa"><summary>Which part of the block lets tokens interact?</summary>Multi-head attention. The feed forward network treats each token separately.</details>
+<details class="qa"><summary>Why does the block keep the shape [T, D]?</summary>So that blocks can be stacked, and so shortcuts can add the input to the output.</details>
+<details class="qa"><summary>What is "pre-LayerNorm"?</summary>Normalizing the input of each sub-layer (before attention and before the feed forward), not its output.</details>

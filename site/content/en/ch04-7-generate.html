@@ -1,0 +1,70 @@
+---
+title: '4.7: Generating text'
+nav: 4.7 Generating text
+chapter: '4'
+order: 70
+sections:
+- '4.7'
+code: gpt_model
+---
+<div class="aim"><b>Aim.</b> Turn the model's scores into text: pick the next token, append it, and repeat. See why an untrained model produces gibberish.</div>
+<h2>One token at a time</h2>
+<p>A GPT never writes a sentence in one go. It predicts <b>one token</b>, adds it to the input, and runs again. The sentence grows by one token per round.</p>
+<div class="flow">
+<div><b>tokens so far</b>"Hello, I am"</div><span>&rarr;</span>
+<div class="hot"><b>model</b>logits for every position</div><span>&rarr;</span>
+<div><b>last position</b>scores for the next token</div><span>&rarr;</span>
+<div><b>pick the best</b>argmax &rarr; token ID</div><span>&rarr;</span>
+<div><b>append</b>and go again</div>
+</div>
+<h2>The four steps inside the loop</h2>
+<ol>
+<li><b>Crop</b> the tokens to the last <code>context_size</code> (the model cannot look further back than its context length).</li>
+<li><b>Forward pass</b> to get logits [tokens, vocab].</li>
+<li><b>Take the last row.</b> Only the last position predicts what comes next; the earlier rows predict tokens we already have.</li>
+<li><b>Pick</b> the entry with the highest score and append its ID.</li>
+</ol>
+<div class="tip"><b>Softmax is optional here.</b> The book first turns the scores into probabilities with softmax, then takes the largest. Softmax keeps the order of the numbers, so the largest score is the largest probability: argmax of the logits gives the same token. The Python version keeps the softmax so you can see the probabilities; the others skip it. Always picking the most likely token is called <b>greedy decoding</b>. Chapter 5 adds randomness (temperature, top-k) for more varied text.</div>
+<h2>Running it</h2>
+<pre class="out">encoded: [15496, 11, 314, 716]
+output IDs: [15496, 11, 314, 716, 29873, 23577, 16126, 30619, 37917, 27703]
+output length: 10
+decoded: Hello, I amickauj Neithersort glandWindow
+(gibberish: the weights are random, nothing has been trained yet)</pre>
+<ul>
+<li>The prompt <i>"Hello, I am"</i> is four token IDs. Six rounds append six more: output length 10.</li>
+<li>The words that follow are nonsense, and that is the point of the chapter. The model has the right <b>structure</b>, but its weights are random, so its scores carry no knowledge of language. Training (chapter 5) is what turns this skeleton into a model that writes coherently.</li>
+<li>The text is the same in all five languages, because they build the same model and take the same argmax.</li>
+</ul>
+<h2>The real 124M model</h2>
+<p>The same code runs the full GPT-2 small. With random weights it is just as unhelpful, here it starts repeating tokens:</p>
+<pre class="out">== GPT-2 small (124M) ==
+parameters built: 163,009,536
+logits shape: (2, 4, 50257)
+encoded: [15496, 11, 314, 716]
+output IDs: [15496, 11, 314, 716, 27631, 27631, 5417, 5417, 27631, 5417]
+decoded: Hello, I am Pros Pros sea sea Pros sea</pre>
+<p>It needs about 1 GB of memory and roughly 10 to 30 seconds (build in release mode: <code>cargo run --release</code>, <code>zig build run -Doptimize=ReleaseFast</code>). Commands are on page 4.1.</p>
+<div class="tip"><b>Why it is slow-ish.</b> Every round recomputes the whole input from scratch, although the earlier tokens did not change. Real systems cache the keys and values of past tokens (a <i>KV cache</i>) so each round only processes the new token. Raschka's repo has this as a bonus: <a href="https://github.com/rasbt/LLMs-from-scratch/tree/main/ch04/03_kv-cache">ch04/03_kv-cache</a>.</div>
+<h2>Code</h2>
+<p>The generation function is at the bottom of the model file.</p>
+<!--code-->
+<h2>Exercises</h2>
+<ol>
+<li>Generate 20 tokens instead of 6. Does the output ever repeat? Why can a greedy model get stuck in a loop?</li>
+<li>Print the <b>top 3</b> token IDs and their scores for the last position at each round. How close is the winner to the runner-up for the untrained model?</li>
+<li>Make the context size 5 (smaller than the text): what does the <i>crop</i> step do once the text is longer?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) Often yes: greedy always takes the same token for the same context, and once the context repeats, the output repeats. 2) For an untrained model the scores are within a hair of each other; for a trained one the top token usually stands out. 3) The model sees only the last 5 tokens; older ones are forgotten.</details>
+<h2>Chapter summary</h2>
+<ul>
+<li>Layer normalization keeps each token's numbers at mean 0 and variance 1.</li>
+<li>Shortcut connections keep gradients alive in deep stacks.</li>
+<li>A transformer block is attention plus feed forward (GELU), each normalized first and wrapped in a shortcut.</li>
+<li>A GPT is embeddings, N blocks, a final norm and an output head; size is set by configuration alone.</li>
+<li>Generation predicts one token, appends it, repeats. Untrained weights give gibberish: next, chapter 5 trains the model.</li>
+</ul>
+<h2>Check yourself</h2>
+<details class="qa"><summary>Which row of the logits is used to pick the next token?</summary>The last one, for the last input position.</details>
+<details class="qa"><summary>What is greedy decoding?</summary>Always picking the token with the highest score.</details>
+<details class="qa"><summary>Why is the generated text gibberish?</summary>The model's weights are random; it has not been trained.</details>

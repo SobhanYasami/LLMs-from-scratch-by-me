@@ -1,0 +1,32 @@
+---
+title: Build an LLM from scratch
+nav: Overview
+chapter: start
+order: 10
+---
+<p class="lede">A living tutorial and reference for <i>Build a Large Language Model (From Scratch)</i>. The goal is to cover the whole book, one chapter at a time, with the ideas explained in plain words and the code written in five languages side by side.</p>
+<div class="aim"><b>Aim.</b> Understand how a GPT-style model works by reading small programs instead of a framework, and keep a reference you can come back to.</div>
+<h2>Where we are</h2>
+<!--cards-->
+<p>Detail, language coverage and what is next are on the <a href="roadmap.html">Roadmap</a>. Pages marked <i>planned</i> are outlined from the book but not written yet.</p>
+<h2>How each page works</h2>
+<ul>
+<li><b>Aim</b> at the top says what you will understand by the end.</li>
+<li>The page title carries the book's section numbers (2.2, 2.7-2.8, ...) so you can read along with the PDF.</li>
+<li>Code blocks have tabs for <b>Python, Go, Rust, C and Zig</b>. They are the real source files from this repo, and your tab choice is remembered.</li>
+<li>Chapter 1 pages end with <b>check yourself</b> questions; code chapters end with <b>exercises</b>. Pages marked <i>extra</i> go beyond the book.</li>
+</ul>
+<h2>Run the code</h2>
+<table><tr><th>Language</th><th>Command</th></tr>
+<tr><td>Python</td><td><code>python-version/.venv/bin/python python-version/main.py</code></td></tr>
+<tr><td>Go</td><td><code>cd go-version &amp;&amp; go run ./cmd</code></td></tr>
+<tr><td>Rust</td><td><code>cd rust-version &amp;&amp; cargo run</code></td></tr>
+<tr><td>C</td><td><code>cd C-version &amp;&amp; make run</code></td></tr>
+<tr><td>Zig</td><td><code>cd Zig-version &amp;&amp; zig build run</code></td></tr></table>
+<p>Add an argument to run one chapter: <code>ch02</code>, <code>ch03</code> or <code>ch04</code> (and <code>ch04-124m</code> for the real 124M-parameter GPT).</p>
+<p>All five print identical output for the tokenizers, BPE, data sampling, attention and the GPT model of chapter 4. (Chapter 2 embeddings differ because each language draws its own random weights there, but the shapes match.)</p>
+<h2>Why five languages?</h2>
+<p>Seeing the same idea in a high-level and in a low-level language shows what is essential and what is language plumbing. Python hides memory and uses a tensor library; C and Zig make every allocation visible; Go and Rust sit in between. When a concept is hard to see in one, read it in another.</p>
+<h2>Sources and credit</h2>
+<p>Text follows the book and Sebastian Raschka's companion repo, <a href="https://github.com/rasbt/LLMs-from-scratch">rasbt/LLMs-from-scratch</a>, in my own words. The code here is a separate re-implementation for learning. Buy the book for the full story.</p>
+<p><a href="contributing.html">Want to add a chapter, a page or a language? Start here.</a></p>

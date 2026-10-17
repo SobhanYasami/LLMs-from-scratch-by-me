@@ -1,0 +1,26 @@
+---
+title: '2.5: Byte pair encoding'
+nav: 2.5 Byte pair encoding
+chapter: '2'
+order: 50
+sections:
+- '2.5'
+code: bpe
+---
+<div class="aim"><b>Aim.</b> Replace the word-level tokenizer with the one GPT-2, GPT-3 and the original ChatGPT use: sub-word pieces, so no <code>&lt;|unk|&gt;</code> is ever needed.</div>
+<p>We do not implement BPE <i>training</i> here. Python, Go and Rust call <b>tiktoken</b> (OpenAI, written in Rust) with the GPT-2 vocabulary of <b>50,257</b> tokens. <code>&lt;|endoftext|&gt;</code> gets the last ID, <b>50256</b>.</p>
+<pre class="out">[15496, 11, 466, 345, 588, 8887, 30, 220, 50256, 554, 262, 4252, 18250, 8812, 2114, 286, 262, 20562, 13]
+Hello, do you like tea? &lt;|endoftext|&gt; In the sunlit terraces of the palace.</pre>
+<h2>How BPE avoids unknown words</h2>
+<p>Training starts with every single character as a token, then repeatedly <b>merges the most frequent neighbouring pairs</b> into new tokens (<code>d</code> + <code>e</code> becomes <code>de</code>, then maybe <code>def</code>, and so on) up to a size limit. At encode time, an unfamiliar word is split into the largest known pieces, down to single characters or bytes if needed. Any string can be encoded.</p>
+<div class="tip"><b>C and Zig have no tiktoken</b>, so they ship a small from-scratch BPE <i>encoder</i> (<code>bpe.c</code>, <code>bpe.zig</code>, shown in their tabs). It reads the GPT-2 vocabulary from <code>assets/gpt2-ranks.txt</code> and repeatedly merges the neighbouring pair with the lowest rank. It matches tiktoken's IDs, including on emoji, tabs and repeated special tokens. Reading it is the best way to see how BPE merges work.</div>
+<div class="tip">tiktoken refuses special-token text by default, to prevent injection. Python passes <code>allowed_special</code> to opt in. Go and Rust use <code>r50k_base</code>, the same vocabulary as GPT-2 under its tiktoken name.</div>
+<h2>Code (the BPE demo is <code>demo_bpe</code> / <code>demoBPE</code> in each runner)</h2>
+<!--code-->
+<h2>Exercises</h2>
+<ol>
+<li>Book exercise 2.1: encode the made-up text <code>"Akwirw ier"</code>, print each ID, decode each ID on its own, then decode the whole list. Does it round-trip?</li>
+<li>Encode <code>Zorblax</code>. How many tokens?</li>
+</ol>
+<details class="qa"><summary>Answer to 2</summary>Four: <code>Z | or | bl | ax</code> (IDs 57, 273, 2436, 897). See the <a href="bpe-walkthrough.html">step-by-step trace</a>.</details>
+<p>Want to see the merge loop work on real words? <a href="bpe-walkthrough.html">Extra: a BPE encode, step by step</a>.</p>

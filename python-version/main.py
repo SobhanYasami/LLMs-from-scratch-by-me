@@ -164,8 +164,8 @@ def run_chapter2() -> None:
 
 
 def main() -> None:
-    """``main.py [ch02|ch03]``: run one chapter's demos, or both when no argument is given."""
-    chapters = sys.argv[1:] or ["ch02", "ch03"]
+    """``main.py [ch02|ch03|ch04|ch04-124m]``: run one chapter's demos, or all three when no argument is given."""
+    chapters = sys.argv[1:] or ["ch02", "ch03", "ch04"]
     for chapter in chapters:
         if chapter == "ch02":
             run_chapter2()
@@ -173,8 +173,16 @@ def main() -> None:
             import ch03
 
             ch03.run()
+        elif chapter == "ch04":
+            import ch04
+
+            ch04.run()
+        elif chapter == "ch04-124m":
+            import ch04
+
+            ch04.run_124m()
         else:
-            sys.exit(f"unknown chapter {chapter!r}; use ch02 or ch03")
+            sys.exit(f"unknown chapter {chapter!r}; use ch02, ch03, ch04 or ch04-124m")
 
 
 if __name__ == "__main__":

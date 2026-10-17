@@ -1,0 +1,46 @@
+---
+title: '2.7-2.8: Token embeddings and word positions'
+nav: 2.7-2.8 Embeddings & positions
+chapter: '2'
+order: 70
+sections:
+- '2.7'
+- '2.8'
+code: embedding
+---
+<div class="aim"><b>Aim.</b> Turn integer IDs into vectors the model can learn from, and put word order into those vectors.</div>
+<h2>2.7 Token embeddings</h2>
+<p>An <b>embedding layer</b> is a weight matrix with one row per vocabulary entry and one column per dimension. Converting an ID is a <b>row lookup</b>.</p>
+<pre class="out">vocab_size = 6, output_dim = 3
+weight matrix (random at start):
+ id 0  [ 0.3374, -0.1778, -0.1690]
+ id 1  [ 0.9178,  1.5810,  1.3010]
+ id 2  [ 1.2753, -0.2010, -0.1606]
+ id 3  [-0.4015,  0.9666, -1.1481]   &lt;- embedding of token 3
+ id 4  [-1.1589,  0.3255, -0.6315]
+ id 5  [-2.8400, -0.7849, -1.4096]
+
+input_ids [2, 3, 5, 1]  ->  rows 2, 3, 5, 1  (a 4 x 3 matrix)</pre>
+<ul>
+<li>Weights start <b>random</b> and are tuned by backpropagation during training (chapter 5). That is why the layer is trainable and why vectors become meaningful.</li>
+<li>An embedding layer is just a faster version of one-hot encoding times a matrix multiply (see Raschka's bonus folder 03).</li>
+<li>With the real BPE vocabulary: <b>50,257 rows</b>, and the book uses <b>256 dimensions</b> (GPT-3 uses 12,288).</li>
+</ul>
+<h2>2.8 Encoding word positions</h2>
+<p>The same ID always maps to the same vector, wherever it sits. Self-attention is also blind to order. So we add position information.</p>
+<ul>
+<li><b>Absolute</b> position embeddings: one vector per position (first, second, ...). GPT uses these, learned during training.</li>
+<li><b>Relative</b> ones encode the distance between tokens and generalise better to unseen sequence lengths.</li>
+</ul>
+<pre class="out">token ids          (8, 4)         batch of 8 windows, 4 tokens each
+token embeddings   (8, 4, 256)    every ID became a 256-d vector
+position embeddings (4, 256)      one vector per position 0..3
+input embeddings   (8, 4, 256)    token + position  &lt;- what the model reads</pre>
+<p>The position table is looked up with <code>0, 1, ..., context_length - 1</code> and added to every window in the batch. Text longer than the context length must be truncated.</p>
+<h2>Code</h2>
+<!--code-->
+<div class="tip">Python uses <code>torch.nn.Embedding</code>. Go and Rust use nested slices; C and Zig use one flat float array. All four use a small seeded random generator (<code>rng.rs</code>, <code>rng.c</code>, <code>rng.zig</code>), so there are no heavy dependencies. Values differ across languages; shapes do not.</div>
+<h2>Where next?</h2>
+<p>These input embeddings are exactly what chapter 3 (attention) consumes.</p>
+<h2>Exercise</h2>
+<p>Change <code>output_dim</code> from 256 to 8 and print the shapes again. What changes, and what does not?</p>

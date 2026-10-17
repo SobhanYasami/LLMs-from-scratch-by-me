@@ -1,0 +1,43 @@
+---
+title: 'Extra: follow one text through GPT-2 small'
+nav: Follow a text through GPT
+chapter: '4'
+order: 100
+extra: true
+---
+<div class="aim"><b>Aim.</b> Walk the four tokens of <i>"Hello, I am"</i> through the real 124M model and write down the shape of every tensor, so the whole chapter fits in one table.</div>
+<p>T = 4 tokens, D = 768, 12 heads of 64 numbers each, vocabulary 50,257. Every step below is a function from the previous tensor to the next.</p>
+<table><tr><th>Step</th><th>What happens</th><th>Shape after</th></tr>
+<tr><td>0</td><td>token IDs <code>[15496, 11, 314, 716]</code></td><td>[4]</td></tr>
+<tr><td>1</td><td>look up rows of the token embedding (50,257 x 768)</td><td>[4, 768]</td></tr>
+<tr><td>2</td><td>add position embedding rows 0..3 (1,024 x 768)</td><td>[4, 768]</td></tr>
+<tr><td colspan="3"><b>transformer block, repeated 12 times</b></td></tr>
+<tr><td>3</td><td>layer norm 1</td><td>[4, 768]</td></tr>
+<tr><td>4</td><td>multiply by W_query, W_key, W_value (768 x 768 each)</td><td>3 x [4, 768]</td></tr>
+<tr><td>5</td><td>split into 12 heads of 64 columns</td><td>12 x [4, 64]</td></tr>
+<tr><td>6</td><td>per head: scores = q x k<sup>T</sup>, mask the future, softmax</td><td>12 x [4, 4]</td></tr>
+<tr><td>7</td><td>per head: weights x v, glue the heads back</td><td>[4, 768]</td></tr>
+<tr><td>8</td><td>output projection (768 x 768) + bias, then add the block's input (shortcut)</td><td>[4, 768]</td></tr>
+<tr><td>9</td><td>layer norm 2</td><td>[4, 768]</td></tr>
+<tr><td>10</td><td>feed forward: expand to 3,072, GELU, shrink to 768</td><td>[4, 3072] then [4, 768]</td></tr>
+<tr><td>11</td><td>add the input of this sub-layer (shortcut)</td><td>[4, 768]</td></tr>
+<tr><td colspan="3"><b>after the 12th block</b></td></tr>
+<tr><td>12</td><td>final layer norm</td><td>[4, 768]</td></tr>
+<tr><td>13</td><td>output head (768 x 50,257)</td><td>[4, 50257]</td></tr>
+<tr><td>14</td><td>take the last row, pick the biggest score</td><td>one token ID</td></tr></table>
+<p>The only <i>mixing between tokens</i> is step 6: the 4 x 4 attention weights. Everything else treats each of the 4 rows separately.</p>
+<h2>Where the time goes</h2>
+<p>Almost all the work is matrix multiplication. Counting multiply-adds <i>per token</i>:</p>
+<table><tr><th>Part</th><th>Multiply-adds per token</th></tr>
+<tr><td>one block: query/key/value/out projections, 4 x 768 x 768</td><td>2,359,296</td></tr>
+<tr><td>one block: feed forward, 2 x 768 x 3,072</td><td>4,718,592</td></tr>
+<tr><td>12 blocks together</td><td>84,934,656</td></tr>
+<tr><td>output head, 768 x 50,257</td><td>38,597,376</td></tr>
+<tr><td><b>total</b> (attention scores add a little more)</td><td><b>about 123.5 million</b></td></tr></table>
+<p>So one forward pass over a 14-token text is about 1.7 billion multiply-adds, and generating six tokens without a KV cache repeats that six times with growing input. That is why the 124M demo takes seconds, while the tiny model takes milliseconds. Notice that the <b>output head alone is almost a third</b> of the work: it scores all 50,257 words at every position, although generation only needs the last one.</p>
+<h2>Try it</h2>
+<ol>
+<li>Redo the table for the tiny model (D = 32, 4 heads, 2 blocks). What are the shapes of steps 5 and 6?</li>
+<li>How would the cost per token change if you doubled D? Which part of the table grows fastest?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) Step 5: 4 x [4, 8]; step 6: 4 x [4, 4]. 2) The block cost grows with D squared (both rows), so it quadruples; the output head only doubles.</details>

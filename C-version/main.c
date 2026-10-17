@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "ch03.h"
+#include "ch04.h"
 #include "tokenization/bpe.h"
 #include "tokenization/dataloader.h"
 #include "tokenization/dataset.h"
@@ -250,12 +251,15 @@ int main(int argc, char **argv) {
     if (argc == 1) {
         run_chapter2();
         run_chapter3();
+        run_chapter4();
         return 0;
     }
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "ch02") == 0) run_chapter2();
         else if (strcmp(argv[i], "ch03") == 0) run_chapter3();
-        else die("unknown chapter; use ch02 or ch03");
+        else if (strcmp(argv[i], "ch04") == 0) run_chapter4();
+        else if (strcmp(argv[i], "ch04-124m") == 0) run_chapter4_124m();
+        else die("unknown chapter; use ch02, ch03, ch04 or ch04-124m");
     }
     return 0;
 }

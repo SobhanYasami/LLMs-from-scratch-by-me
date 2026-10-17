@@ -37,6 +37,12 @@ impl Matrix {
         Self { rows, cols, data }
     }
 
+    /// A rows x cols matrix of Normal(0, std) values.
+    pub fn randn(rows: usize, cols: usize, std: f32, rng: &mut Rng) -> Self {
+        let data = (0..rows * cols).map(|_| rng.normal() * std).collect();
+        Self { rows, cols, data }
+    }
+
     pub fn at(&self, i: usize, j: usize) -> f32 {
         self.data[i * self.cols + j]
     }
@@ -46,15 +52,19 @@ impl Matrix {
     }
 
     /// a x b: [n,k] x [k,m] -> [n,m].
+    ///
+    /// Tip: the loops run i, k, j so both matrices are read row by row, which is
+    /// much faster on big matrices. Each output element is still summed over k in
+    /// order, so the numbers are the same as with the textbook i, j, k order.
     pub fn matmul(&self, b: &Matrix) -> Matrix {
         let mut out = Matrix::new(self.rows, b.cols);
         for i in 0..self.rows {
-            for j in 0..b.cols {
-                let mut sum = 0.0;
-                for k in 0..self.cols {
-                    sum += self.at(i, k) * b.at(k, j);
+            let out_row = &mut out.data[i * b.cols..(i + 1) * b.cols];
+            for k in 0..self.cols {
+                let aik = self.at(i, k);
+                for (o, &bkj) in out_row.iter_mut().zip(b.row(k)) {
+                    *o += aik * bkj;
                 }
-                out.data[i * b.cols + j] = sum;
             }
         }
         out

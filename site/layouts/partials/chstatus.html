@@ -1,0 +1,11 @@
+{{- $ch := . -}}
+{{- $ready := slice -}}
+{{- range where site.RegularPages "Params.chapter" (string $ch.num) -}}
+  {{- if not .Params.extra -}}{{- range .Params.sections -}}{{- $ready = $ready | append (string .) -}}{{- end -}}{{- end -}}
+{{- end -}}
+{{- $n := 0 -}}
+{{- range $ch.sections -}}{{- if in $ready .id -}}{{- $n = add $n 1 -}}{{- end -}}{{- end -}}
+{{- $total := len $ch.sections -}}
+{{- $st := "planned" -}}
+{{- if and (gt $total 0) (eq $n $total) -}}{{- $st = "ready" -}}{{- else if gt $n 0 -}}{{- $st = "in progress" -}}{{- end -}}
+{{- return (dict "total" $total "ready" $n "status" $st) -}}

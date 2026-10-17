@@ -1,0 +1,8 @@
+{{- $seq := partial "seq.html" . -}}
+{{- $i := -1 -}}
+{{- range $j, $e := $seq -}}{{- if eq $e.p.RelPermalink $.RelPermalink -}}{{- $i = $j -}}{{- end -}}{{- end -}}
+{{- $rtl := eq site.Language.Direction "rtl" -}}
+<div class="pager">
+{{- if gt $i 0 -}}{{- $q := (index $seq (sub $i 1)).p -}}<a class="pg prev" href="{{ $q.RelPermalink }}" rel="prev"><small>{{ if $rtl }}&rarr;{{ else }}&larr;{{ end }} {{ i18n "prev" }}</small><span>{{ $q.Params.nav }}</span></a>{{- else -}}<span></span>{{- end -}}
+{{- if lt $i (sub (len $seq) 1) -}}{{- $q := (index $seq (add $i 1)).p -}}<a class="pg next" href="{{ $q.RelPermalink }}" rel="next"><small>{{ i18n "next" }} {{ if $rtl }}&larr;{{ else }}&rarr;{{ end }}</small><span>{{ $q.Params.nav }}</span></a>{{- else -}}<span></span>{{- end -}}
+</div>

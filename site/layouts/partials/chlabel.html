@@ -1,0 +1,3 @@
+{{- $l := i18n "appendices" -}}
+{{- if findRE "^[0-9]+$" (string .num) -}}{{- $l = printf "%s %s" (i18n "chapter") .num -}}{{- end -}}
+{{- return $l -}}

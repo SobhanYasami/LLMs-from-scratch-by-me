@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="{{ site.Language.Locale }}" dir="{{ site.Language.Direction }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ if .IsHome }}{{ .Title }}{{ else }}{{ .Title }} · {{ i18n "site_title" }}{{ end }}</title>
+<meta name="description" content="{{ i18n "site_title" }}">
+<meta name="color-scheme" content="light dark">
+{{ range .Translations }}<link rel="alternate" hreflang="{{ .Language.Locale }}" href="{{ .RelPermalink }}">
+{{ end }}
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+{{- if eq site.Language.Lang "fa" }}
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap">
+{{- end }}
+{{- $css := resources.Concat "css/site.css" (slice (resources.Get "css/style.css") (resources.Get "css/chroma.css")) | minify | fingerprint }}
+<link rel="stylesheet" href="{{ $css.RelPermalink }}">
+</head>
+<body>
+<a class="skip" href="#main">{{ i18n "skip" }}</a>
+{{ partial "header.html" . }}
+<div class="layout">
+<nav class="side" id="side" aria-label="{{ i18n "brand" }}">
+<input class="filter" type="search" placeholder="{{ i18n "filter_ph" }}" aria-label="{{ i18n "filter" }}" data-nomatch="{{ i18n "no_match" }}">
+<div class="navlinks">{{ partial "nav.html" . }}</div>
+</nav>
+<div class="scrim" hidden></div>
+<main id="main" tabindex="-1">
+{{ block "main" . }}{{ end }}
+</main>
+{{ with .Scratch.Get "toc" }}{{ . }}{{ end }}
+</div>
+<script>window.I18N={copy:{{ i18n "copy" }},copied:{{ i18n "copied" }}}</script>
+{{- $js := resources.Get "js/site.js" | minify | fingerprint }}
+<script src="{{ $js.RelPermalink }}"></script>
+</body>
+</html>

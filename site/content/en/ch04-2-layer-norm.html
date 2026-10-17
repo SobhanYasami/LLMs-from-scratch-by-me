@@ -1,0 +1,52 @@
+---
+title: '4.2: Normalizing activations with layer normalization'
+nav: 4.2 Layer normalization
+chapter: '4'
+order: 20
+sections:
+- '4.2'
+code: gpt_layers
+---
+<div class="aim"><b>Aim.</b> Learn what layer normalization does to a token's vector, why GPT does it before every sub-layer, and why the code adds a tiny <code>eps</code>.</div>
+<p>Deep networks are hard to train when the numbers flowing through them drift to very large or very small values: gradients explode or fade, and learning stalls. <b>Layer normalization</b> keeps each token's vector in a friendly range by forcing its D numbers to have <b>mean 0 and variance 1</b>.</p>
+<h2>The recipe</h2>
+<div class="flow">
+<div><b>subtract the mean</b>centre the numbers on 0</div><span>&rarr;</span>
+<div><b>divide by the spread</b>sqrt(variance + eps)</div><span>&rarr;</span>
+<div class="hot"><b>scale and shift</b>two learned vectors, start at 1 and 0</div>
+</div>
+<p>Take one row of numbers, for instance the outputs of a small layer for one token (these are the book's numbers):</p>
+<pre class="out">row 0:  [0.2260, 0.3470, 0.0000, 0.2216, 0.0000, 0.0000]
+mean per row:     [0.1324, 0.2170]
+variance per row: [0.0231, 0.0398]
+normalized, row 0: [0.6160, 1.4126, -0.8719, 0.5870, -0.8719, -0.8719]</pre>
+<p>The normalized row now sums to about 0 and has variance 1. Entries that were below the mean became negative, the big one (0.3470) became the biggest. The <i>shape</i> of the row is preserved, only its position and size changed.</p>
+<h2>Over which numbers?</h2>
+<p>The mean and variance are taken <b>along the last axis</b>: over the D numbers of <i>one token</i>. Never across tokens and never across the batch. So each token is normalized on its own, and the result does not depend on the batch size. That is the difference from <i>batch normalization</i>, which averages over the batch and behaves badly with small or changing batches.</p>
+<div class="cmp">
+<div><h3>Layer norm (used here)</h3>One token at a time, over its D numbers. Same result for batch size 1 or 1,000. Works for variable-length text.</div>
+<div><h3>Batch norm</h3>Each feature, averaged over the batch. Depends on the other examples, awkward for LLMs.</div>
+</div>
+<h2>Two small details</h2>
+<ul>
+<li><b>eps = 1e-5</b> is added to the variance before the square root, so a row of identical numbers (variance 0) does not divide by zero. It also explains the output of the demo: with a tiny variance like 0.0231 the eps nudges the result, so the normalized variance prints as <b>0.9995</b> instead of exactly 1.</li>
+<li><b>Biased variance.</b> The code divides by n, not n-1 (<code>unbiased=False</code> in torch). With hundreds of numbers per token the difference is invisible, and dividing by n matches the original GPT-2, which matters when we load its weights later. The first lines of the demo use n-1 because the book's first example does; the <code>LayerNorm</code> class uses n.</li>
+</ul>
+<h2>Scale and shift</h2>
+<p>After normalizing, each entry is multiplied by a learned <code>scale</code> and shifted by a learned <code>shift</code> (vectors of D numbers, initialised to 1 and 0, so at first the layer does nothing extra). If training finds that some position works better with a different size or offset, it can learn that.</p>
+<pre class="out">LayerNorm output mean: [0.0000, 0.0000]
+LayerNorm output variance (biased): [0.9995, 0.9997]</pre>
+<h2>Code: layer norm, GELU and the feed forward block</h2>
+<p>This file holds the building blocks of 4.2 and 4.3. Look at <code>LayerNorm</code> now; GELU and the feed forward block come on the next page.</p>
+<!--code-->
+<h2>Exercises</h2>
+<ol>
+<li>Normalize a row of identical numbers, e.g. <code>[5, 5, 5, 5]</code>. What do you get, and what would happen without <code>eps</code>?</li>
+<li>Multiply a row by 100 before normalizing. How does the result change?</li>
+<li>Set <code>scale</code> to 2 and <code>shift</code> to 1. What are the new mean and variance of the output?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) All zeros: every number equals the mean, so the numerator is 0; without eps it would be 0/0. 2) It does not change: normalization removes the overall size of the row (up to the tiny eps). 3) Mean 1 and variance 4, since scale multiplies the spread (variance by scale squared) and shift moves the centre.</details>
+<h2>Check yourself</h2>
+<details class="qa"><summary>Which numbers does layer norm average over?</summary>The D numbers of a single token's vector.</details>
+<details class="qa"><summary>Why is <code>eps</code> in the formula?</summary>To avoid dividing by zero when the variance is zero (and to keep things stable when it is tiny).</details>
+<details class="qa"><summary>What are scale and shift for?</summary>They let the model learn to undo or adjust the normalization where that helps.</details>

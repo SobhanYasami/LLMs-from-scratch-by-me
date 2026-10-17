@@ -1,0 +1,26 @@
+---
+title: 'Extra: why divide by the square root of d_k'
+nav: Why scale by sqrt(d_k)
+chapter: '3'
+order: 100
+extra: true
+---
+<div class="aim"><b>Aim.</b> See with numbers what goes wrong in attention without the <code>1/sqrt(d_k)</code> scaling, and why that particular factor.</div>
+<h2>Dot products grow with dimension</h2>
+<p>A dot product adds up <code>d</code> products. If the entries are roughly random with spread 1, the sum has a spread of about <code>sqrt(d)</code>. Doubling the dimension makes scores wider, so for realistic sizes (64 to 1024 and beyond) the scores are large.</p>
+<h2>Large scores make softmax harsh</h2>
+<p>Softmax exponentiates its inputs. A score gap of 10 means a factor of e<sup>10</sup> (about 22,000) between two weights. With big scores one token takes nearly all of the weight and the others get almost none. In that regime the gradient of softmax is close to zero, so learning crawls.</p>
+<h2>Real numbers</h2>
+<p>One random query against 6 random keys, with and without scaling (a seeded sample; the exact figures vary, the pattern does not):</p>
+<table><tr><th>dimension d</th><th>score spread</th><th>largest weight, no scaling</th><th>largest weight, scaled</th></tr>
+<tr><td>4</td><td>1.5</td><td>0.570</td><td>0.370</td></tr>
+<tr><td>64</td><td>5.8</td><td>0.651</td><td>0.294</td></tr>
+<tr><td>1024</td><td>31.9</td><td>1.000</td><td>0.517</td></tr></table>
+<p>At d = 1024 without scaling the largest weight is 1.000: the other five tokens are effectively ignored. With scaling the weights stay spread out, so every token still contributes and gradients stay healthy.</p>
+<h2>Why exactly sqrt(d)?</h2>
+<p>If scores have spread about <code>sqrt(d)</code>, dividing by <code>sqrt(d)</code> brings the spread back to about 1, whatever the dimension. That is the smallest, simplest fix that makes training behave the same at every model size. The name <b>scaled dot-product attention</b> comes from this step.</p>
+<h2>Try it</h2>
+<ol>
+<li>Use the book's 6-token example with <code>d_out = 2</code>. Compute the weights for "journey" with and without the scaling. How different are they? (They differ little: 2 is a small dimension.)</li>
+<li>Scale up: multiply the scores by 10 before softmax and look at the largest weight. This mimics a much larger dimension.</li>
+</ol>

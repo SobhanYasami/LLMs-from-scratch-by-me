@@ -1,0 +1,44 @@
+---
+title: 'Extra: counting GPT parameters by hand'
+nav: Counting parameters
+chapter: '4'
+order: 110
+extra: true
+---
+<div class="aim"><b>Aim.</b> Derive the 163,009,536 parameters of the model yourself from the configuration, and turn it into a formula you can reuse for any size.</div>
+<p>A parameter is one learned number. Count them tensor by tensor. Let <b>V</b> be the vocabulary size, <b>C</b> the context length, <b>D</b> the embedding size and <b>N</b> the number of blocks.</p>
+<h2>One transformer block</h2>
+<table><tr><th>Piece</th><th>Shape</th><th>Parameters (D = 768)</th></tr>
+<tr><td>W_query, W_key, W_value</td><td>3 x (D x D)</td><td>3 x 589,824 = 1,769,472</td></tr>
+<tr><td>output projection weight</td><td>D x D</td><td>589,824</td></tr>
+<tr><td>output projection bias</td><td>D</td><td>768</td></tr>
+<tr><td colspan="2"><i>attention total: 4 D<sup>2</sup> + D</i></td><td><b>2,360,064</b></td></tr>
+<tr><td>feed forward, expand: weight + bias</td><td>D x 4D, 4D</td><td>2,359,296 + 3,072</td></tr>
+<tr><td>feed forward, shrink: weight + bias</td><td>4D x D, D</td><td>2,359,296 + 768</td></tr>
+<tr><td colspan="2"><i>feed forward total: 8 D<sup>2</sup> + 5 D</i></td><td><b>4,722,432</b></td></tr>
+<tr><td>two layer norms: scale + shift each</td><td>4 x D</td><td>3,072</td></tr>
+<tr><td colspan="2"><b>one block: 12 D<sup>2</sup> + 10 D</b></td><td><b>7,085,568</b></td></tr></table>
+<p>The query, key and value projections have <b>no bias</b> (the <code>qkv_bias = False</code> setting), but the output projection does.</p>
+<h2>The whole model</h2>
+<pre class="out">total = V*D                  token embedding
+      + C*D                  position embedding
+      + N * (12*D^2 + 10*D)  the blocks
+      + 2*D                  final layer norm
+      + D*V                  output head
+
+GPT-2 small: 38,597,376 + 786,432 + 12 x 7,085,568 + 1,536 + 38,597,376
+           = 163,009,536</pre>
+<p>That is the function <code>parameter_count</code> in the model file, in every language. The program checks it against the model it actually builds, and a unit test pins the book's number.</p>
+<h2>Which parts are big?</h2>
+<table><tr><th>Part</th><th>Parameters</th><th>Share</th></tr>
+<tr><td>2 x vocabulary matrices (embedding + head)</td><td>77,194,752</td><td>47%</td></tr>
+<tr><td>12 blocks</td><td>85,026,816</td><td>52%</td></tr>
+<tr><td>position embedding + final norm</td><td>787,968</td><td>0.5%</td></tr></table>
+<p>For a small model the two vocabulary matrices are about as heavy as all twelve blocks together. As models grow, the blocks (growing with D<sup>2</sup> and N) take over: in GPT-2 XL the vocabulary matrices are only about 10% of the total.</p>
+<h2>Try it</h2>
+<ol>
+<li>Use the formula for GPT-2 medium (D = 1024, N = 24, 16 heads). Do you get 406,212,608?</li>
+<li>Do the number of heads matter for the parameter count? Why or why not?</li>
+<li>Subtract D x V to get the weight-tied count. Which of the four sizes comes closest to its marketing name (124M, 355M, 774M, 1558M)?</li>
+</ol>
+<details class="qa"><summary>Answers</summary>1) 50,257x1024 + 1024x1024 + 24 x (12x1024<sup>2</sup> + 10x1024) + 2048 + 1024x50,257 = 406,212,608. 2) No: heads only split the D columns into groups, the matrices keep the same total size. 3) All four match when weight-tied: 124.4M, 354.7M, 773.9M, 1,557.4M.</details>
