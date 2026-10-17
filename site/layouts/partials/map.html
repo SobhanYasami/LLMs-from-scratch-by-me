@@ -1,0 +1,26 @@
+{{- /* The global roadmap: three stages, each a timeline of steps. A step is "ready" when its page exists. */ -}}
+{{ $lang := site.Language.Lang }}
+<div class="map">
+{{ range $si, $st := hugo.Data.roadmap.stages }}
+{{ if $si }}<div class="map-arrow" aria-hidden="true"></div>{{ end }}
+<section class="stage stage-{{ $st.id }}">
+  <header>
+    <span class="stage-label">{{ index $st.label $lang }}</span>
+    <h3>{{ index $st.title $lang }}</h3>
+    <p class="stage-goal">{{ index $st.goal $lang }}</p>
+    <span class="stage-ch">{{ index $st.chapters $lang }}</span>
+  </header>
+  <ol class="steps">
+  {{ range $st.steps }}
+    {{ $p := site.GetPage (printf "/%s" .page) }}
+    {{ $href := printf "chapter-%s.html" .ch }}{{ if $p }}{{ $href = $p.RelPermalink }}{{ end }}
+    <li class="step {{ if $p }}ready{{ else }}planned{{ end }}"><a href="{{ $href }}">
+      <span class="step-ref" dir="ltr">{{ .ref }}</span>
+      <span class="step-title">{{ index .title $lang }}</span>
+      <span class="step-detail">{{ index .detail $lang }}</span>
+    </a></li>
+  {{ end }}
+  </ol>
+</section>
+{{ end }}
+</div>

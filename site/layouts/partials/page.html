@@ -18,6 +18,8 @@
 {{- $c = replace $c "<!--cards-->" (partial "cards.html" . | string) -}}
 {{- $c = replace $c "<!--progress-->" (partial "progress.html" . | string) -}}
 {{- $c = replace $c "<!--matrix-->" (partial "matrix.html" . | string) -}}
+{{- $c = replace $c "<!--map-->" (partial "map.html" . | string) -}}
+{{- $c = replace $c "<!--anatomy-->" (partial "anatomy.html" . | string) -}}
 {{- $c = replaceRE `(?s)(<table.*?</table>)` `<div class="tbl">$1</div>` $c -}}
 {{- /* h1 with the section number kept in reading order for right-to-left text */ -}}
 {{- $h1 := .Title -}}

@@ -1,0 +1,53 @@
+# The global map: what we are building and how the parts fit.
+# `page` is the page a box links to (a file name without .html); a box is "ready" when that page exists.
+# Boxes whose page does not exist yet link to their chapter page and show as planned.
+stages:
+  - id: build
+    label: {en: "Stage 1", fa: "مرحله ۱"}
+    title: {en: "Build the model", fa: "ساختن مدل"}
+    goal: {en: "Turn text into numbers and assemble a GPT that can read them.", fa: "متن را به عدد تبدیل کن و یک GPT بساز که بتواند آن‌ها را بخواند."}
+    chapters: {en: "Chapters 2 to 4", fa: "فصل‌های ۲ تا ۴"}
+    steps:
+      - {ref: "2.2-2.4", ch: "2", page: ch02-2-tokenizing, title: {en: "Text to tokens", fa: "متن به توکن"}, detail: {en: "Split text, give every token an ID.", fa: "متن را بشکن و به هر توکن یک شناسه بده."}}
+      - {ref: "2.5", ch: "2", page: ch02-5-bpe, title: {en: "Byte pair encoding", fa: "رمزگذاری جفت‌بایت"}, detail: {en: "The GPT-2 tokenizer: sub-words, no unknown words.", fa: "توکن‌ساز GPT-2: زیرکلمه‌ها، بدون کلمهٔ ناشناخته."}}
+      - {ref: "2.6", ch: "2", page: ch02-6-sampling, title: {en: "Training pairs", fa: "جفت‌های آموزشی"}, detail: {en: "Sliding window: input and the same text shifted by one.", fa: "پنجرهٔ لغزان: ورودی و همان متن با یک خانه جابه‌جایی."}}
+      - {ref: "2.7-2.8", ch: "2", page: ch02-7-embeddings, title: {en: "Embeddings and positions", fa: "امبدینگ و جایگاه"}, detail: {en: "Every ID becomes a vector that also knows its position.", fa: "هر شناسه به برداری تبدیل می‌شود که جایگاهش را هم می‌داند."}}
+      - {ref: "3.1-3.6", ch: "3", page: ch03-1-long-sequences, title: {en: "Attention", fa: "توجه"}, detail: {en: "Tokens look at earlier tokens: self, causal and multi-head attention.", fa: "توکن‌ها به توکن‌های پیشین نگاه می‌کنند: خودتوجهی، علّی و چندسَری."}}
+      - {ref: "4.2-4.5", ch: "4", page: ch04-5-transformer-block, title: {en: "The transformer block", fa: "بلوک ترنسفورمر"}, detail: {en: "Layer norm, attention, feed forward and shortcuts in one repeatable unit.", fa: "نرمال‌سازی لایه، توجه، پیش‌خور و میان‌بر در یک واحد تکرارشدنی."}}
+      - {ref: "4.6-4.7", ch: "4", page: ch04-6-gpt-model, title: {en: "The GPT model", fa: "مدل GPT"}, detail: {en: "Stack the blocks, add the output head, generate text (still gibberish).", fa: "بلوک‌ها را روی هم بچین، سر خروجی را اضافه کن، متن تولید کن (هنوز بی‌معنی)."}}
+  - id: pretrain
+    label: {en: "Stage 2", fa: "مرحله ۲"}
+    title: {en: "Pretrain it", fa: "پیش‌آموزش"}
+    goal: {en: "Teach the untrained model language by predicting the next word on lots of text.", fa: "با پیش‌بینی کلمهٔ بعدی روی متن فراوان، به مدل آموزش‌ندیده زبان یاد بده."}
+    chapters: {en: "Chapter 5", fa: "فصل ۵"}
+    steps:
+      - {ref: "5.1", ch: "5", page: ch05-1-evaluating, title: {en: "Measure the loss", fa: "اندازه‌گیری زیان"}, detail: {en: "A number that says how wrong the next-word guesses are.", fa: "عددی که می‌گوید حدس‌های کلمهٔ بعدی چقدر غلط‌اند."}}
+      - {ref: "5.2", ch: "5", page: ch05-2-training, title: {en: "The training loop", fa: "حلقهٔ آموزش"}, detail: {en: "Predict, measure, nudge the weights, repeat.", fa: "پیش‌بینی کن، بسنج، وزن‌ها را کمی تغییر بده، تکرار کن."}}
+      - {ref: "5.3", ch: "5", page: ch05-3-decoding, title: {en: "Decoding strategies", fa: "راهبردهای رمزگشایی"}, detail: {en: "Temperature and top-k for text that is not always the same.", fa: "دما و top-k برای متنی که همیشه یکسان نباشد."}}
+      - {ref: "5.4-5.5", ch: "5", page: ch05-5-pretrained, title: {en: "Save, load, reuse OpenAI weights", fa: "ذخیره، بارگذاری، استفاده از وزن‌های OpenAI"}, detail: {en: "Skip the expensive part: start from published GPT-2 weights.", fa: "از بخش گران بگذر: از وزن‌های منتشرشدهٔ GPT-2 شروع کن."}}
+  - id: adapt
+    label: {en: "Stage 3", fa: "مرحله ۳"}
+    title: {en: "Adapt it", fa: "سازگارسازی"}
+    goal: {en: "Finetune the pretrained model on small labelled data for a real job.", fa: "مدل پیش‌آموزش‌دیده را روی داده‌های برچسب‌دار کوچک برای یک کار واقعی فاین‌تیون کن."}
+    chapters: {en: "Chapters 6 and 7", fa: "فصل‌های ۶ و ۷"}
+    steps:
+      - {ref: "6", ch: "6", page: ch06-classifier, title: {en: "A text classifier", fa: "دسته‌بند متن"}, detail: {en: "Swap the output head: spam or not spam.", fa: "سر خروجی را عوض کن: هرزنامه یا غیر هرزنامه."}}
+      - {ref: "7", ch: "7", page: ch07-instructions, title: {en: "Follow instructions", fa: "پیروی از دستور"}, detail: {en: "Instruction and answer pairs turn the model into an assistant.", fa: "جفت‌های دستور و پاسخ مدل را به یک دستیار تبدیل می‌کنند."}}
+      - {ref: "App. E", ch: "A", page: appendix-lora, title: {en: "LoRA (optional)", fa: "LoRA (اختیاری)"}, detail: {en: "Finetune with a tiny fraction of the parameters.", fa: "با کسر کوچکی از پارامترها فاین‌تیون کن."}}
+
+# "Inside the model": the same GPT, drawn as it is built. Each box says where it is explained.
+anatomy:
+  text:      {ref: "2.2", page: ch02-2-tokenizing, title: {en: "Input text", fa: "متن ورودی"}, note: {en: "\"Hello, I am\"", fa: "\"Hello, I am\""}}
+  tokens:    {ref: "2.2-2.5", page: ch02-5-bpe, title: {en: "Tokenizer (BPE): text to token IDs", fa: "توکن‌ساز (BPE): متن به شناسهٔ توکن"}, note: {en: "[15496, 11, 314, 716]", fa: "[15496, 11, 314, 716]"}}
+  embed:     {ref: "2.7-2.8", page: ch02-7-embeddings, title: {en: "Token embedding + position embedding", fa: "امبدینگ توکن + امبدینگ جایگاه"}, note: {en: "IDs to vectors [T, D]", fa: "شناسه‌ها به بردار [T, D]"}}
+  norm1:     {ref: "4.2", page: ch04-2-layer-norm, title: {en: "Layer norm", fa: "نرمال‌سازی لایه"}}
+  attention: {ref: "3.1-3.6", page: ch03-6-multihead, title: {en: "Multi-head causal attention", fa: "توجه علّی چندسَری"}, note: {en: "tokens look at earlier tokens", fa: "توکن‌ها به توکن‌های پیشین نگاه می‌کنند"}}
+  norm2:     {ref: "4.2", page: ch04-2-layer-norm, title: {en: "Layer norm", fa: "نرمال‌سازی لایه"}}
+  ffn:       {ref: "4.3", page: ch04-3-gelu-ffn, title: {en: "Feed forward (GELU)", fa: "پیش‌خور (GELU)"}, note: {en: "each token on its own", fa: "هر توکن جداگانه"}}
+  shortcut:  {ref: "4.4", page: ch04-4-shortcut, title: {en: "+ shortcut", fa: "+ میان‌بر"}}
+  block:     {ref: "4.5", page: ch04-5-transformer-block, title: {en: "Transformer block", fa: "بلوک ترنسفورمر"}}
+  final:     {ref: "4.2", page: ch04-2-layer-norm, title: {en: "Final layer norm", fa: "نرمال‌سازی نهایی"}}
+  head:      {ref: "4.6", page: ch04-6-gpt-model, title: {en: "Output head: a score for every word", fa: "سر خروجی: امتیاز برای هر کلمه"}, note: {en: "logits [T, 50257]", fa: "لاجیت [T, 50257]"}}
+  pick:      {ref: "4.7", page: ch04-7-generate, title: {en: "Pick the next token, append, repeat", fa: "توکن بعدی را بردار، اضافه کن، تکرار کن"}, note: {en: "text generation", fa: "تولید متن"}}
+  train:     {future: true, ref: "5", page: chapter-5, title: {en: "Pretraining adjusts every weight above", fa: "پیش‌آموزش همهٔ وزن‌های بالا را تنظیم می‌کند"}}
+  tune:      {future: true, ref: "6-7", page: chapter-6, title: {en: "Finetuning adapts it to a task", fa: "فاین‌تیون آن را با یک وظیفه سازگار می‌کند"}}

@@ -1,0 +1,34 @@
+{{- /* "Inside the model": the GPT drawn top to bottom, input to output, each box linking to its page. */ -}}
+{{- $lang := site.Language.Lang -}}
+{{- $a := hugo.Data.roadmap.anatomy -}}
+<div class="anat">
+  {{ partial "anode.html" (dict "n" $a.text "lang" $lang "cls" "io") }}
+  <span class="anat-arrow" aria-hidden="true"></span>
+  {{ partial "anode.html" (dict "n" $a.tokens "lang" $lang "cls" "data") }}
+  <span class="anat-arrow" aria-hidden="true"></span>
+  {{ partial "anode.html" (dict "n" $a.embed "lang" $lang "cls" "data") }}
+  <span class="anat-arrow" aria-hidden="true"></span>
+  <div class="anat-block">
+    <a class="anat-block-title" href="{{ with site.GetPage (printf "/%s" $a.block.page) }}{{ .RelPermalink }}{{ else }}#{{ end }}"><span class="anode-ref" dir="ltr">{{ $a.block.ref }}</span> {{ index $a.block.title $lang }} <span class="anat-times" dir="ltr">&times; N</span></a>
+    <div class="anat-part">
+      {{ partial "anode.html" (dict "n" $a.norm1 "lang" $lang "cls" "small") }}
+      {{ partial "anode.html" (dict "n" $a.attention "lang" $lang "cls" "core") }}
+      {{ partial "anode.html" (dict "n" $a.shortcut "lang" $lang "cls" "small") }}
+    </div>
+    <div class="anat-part">
+      {{ partial "anode.html" (dict "n" $a.norm2 "lang" $lang "cls" "small") }}
+      {{ partial "anode.html" (dict "n" $a.ffn "lang" $lang "cls" "core") }}
+      {{ partial "anode.html" (dict "n" $a.shortcut "lang" $lang "cls" "small") }}
+    </div>
+  </div>
+  <span class="anat-arrow" aria-hidden="true"></span>
+  {{ partial "anode.html" (dict "n" $a.final "lang" $lang "cls" "small wide") }}
+  <span class="anat-arrow" aria-hidden="true"></span>
+  {{ partial "anode.html" (dict "n" $a.head "lang" $lang "cls" "data") }}
+  <span class="anat-arrow" aria-hidden="true"></span>
+  {{ partial "anode.html" (dict "n" $a.pick "lang" $lang "cls" "io") }}
+  <div class="anat-side">
+    {{ partial "anode.html" (dict "n" $a.train "lang" $lang "cls" "side train") }}
+    {{ partial "anode.html" (dict "n" $a.tune "lang" $lang "cls" "side tune") }}
+  </div>
+</div>

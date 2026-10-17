@@ -4,9 +4,39 @@ nav: Roadmap
 chapter: start
 order: 15
 ---
-
-<p class="lede">Where the project is, and what is next. This page is generated from <code>data/chapters.yaml</code> and the page files, so it is always current.</p>
-<h2>The book, chapter by chapter</h2>
+<p class="lede">The whole project on one page: what we are building, in what order, and where every piece sits in the finished model. Every box is a link. Boxes whose page is not written yet are dashed.</p>
+<h2>What we are building</h2>
+<p>A <b>GPT-style language model</b>, from an empty file to something that follows instructions. The book builds it in three stages, and each stage uses only what the stage before it produced.</p>
+<div class="legend"><span><i class="key ready"></i> written, with code in five languages</span><span><i class="key planned"></i> planned</span></div>
+<!--map-->
+<p>Read it top to bottom. Stage 1 produces a model that has the right <i>shape</i> but knows nothing. Stage 2 gives it language. Stage 3 gives that language a job.</p>
+<h2>Inside the model</h2>
+<p>The same GPT, drawn as it is built, from the input text at the top to the next token at the bottom. The grey tags are book sections. The two boxes on the side show when each part is <i>trained</i>.</p>
+<!--anatomy-->
+<ul>
+<li><b>Chapter 2</b> builds the front door: everything that turns text into vectors the model can read.</li>
+<li><b>Chapter 3</b> builds the one idea that makes it a transformer: attention, the only place tokens look at each other.</li>
+<li><b>Chapter 4</b> wraps attention in a repeatable block and stacks it into the full model (the box marked &times; N is repeated 12 times in GPT-2 small).</li>
+<li><b>Chapters 5 to 7</b> do not change this picture. They change the <i>numbers inside the boxes</i>: pretraining finds them, finetuning adjusts them.</li>
+</ul>
+<h2>How the parts depend on each other</h2>
+<div class="flow">
+<div><b>Tokens + embeddings</b>ch. 2</div><span>&rarr;</span>
+<div><b>Attention</b>ch. 3, needs embeddings</div><span>&rarr;</span>
+<div class="hot"><b>GPT model</b>ch. 4, needs attention</div><span>&rarr;</span>
+<div><b>Training</b>ch. 5, needs a model</div><span>&rarr;</span>
+<div><b>Finetuning</b>ch. 6-7, needs trained weights</div>
+</div>
+<p>That is why the book, and this site, go in this order: each chapter ends with something the next chapter plugs into. The same input travels through all of it, which you can see on the page <a href="gpt-forward-trace.html">Follow a text through GPT</a>.</p>
+<h2>Where each piece lives in the code</h2>
+<p>Every language implements the same folders with the same names, so you can find a piece in any of them.</p>
+<table><tr><th>Part</th><th>Chapter</th><th>Folder</th><th>What is inside</th></tr>
+<tr><td>Data pipeline</td><td>2</td><td><code>tokenization/</code></td><td>splitting, vocabulary, tokenizers, BPE, training pairs, data loader, embeddings</td></tr>
+<tr><td>Attention</td><td>3</td><td><code>attention/</code></td><td>matrix helpers, simple, self, causal and multi-head attention</td></tr>
+<tr><td>GPT model</td><td>4</td><td><code>gpt/</code></td><td>layer norm, GELU, feed forward, shortcut demo, transformer block, model, generation</td></tr>
+<tr><td>Training</td><td>5</td><td class="muted">planned</td><td class="muted">loss, training loop, decoding, weight loading</td></tr>
+<tr><td>Finetuning</td><td>6, 7</td><td class="muted">planned</td><td class="muted">classifier head, instruction data, evaluation</td></tr></table>
+<h2>Progress</h2>
 <!--progress-->
 <h2>Code by language</h2>
 <p>A tick means that language implements the chapter's code, tested to give the same results as the others.</p>

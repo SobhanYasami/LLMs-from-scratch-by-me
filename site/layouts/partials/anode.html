@@ -1,0 +1,5 @@
+{{- /* One box of the anatomy diagram. Context: dict "n" (node) "lang" "cls" */ -}}
+{{- $p := site.GetPage (printf "/%s" .n.page) -}}
+{{- $href := "#" -}}{{- if $p -}}{{- $href = $p.RelPermalink -}}{{- end -}}
+{{- $state := "ready" -}}{{- if or .n.future (not $p) -}}{{- $state = "planned" -}}{{- end -}}
+<a class="anode {{ .cls }} {{ $state }}" href="{{ $href }}"><span class="anode-ref" dir="ltr">{{ .n.ref }}</span><span class="anode-title">{{ index .n.title .lang }}</span>{{ with .n.note }}<span class="anode-note">{{ index . $.lang }}</span>{{ end }}</a>
