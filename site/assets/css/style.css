@@ -222,3 +222,8 @@ td small{color:var(--muted);font-size:12px}
 .fig .ac{stroke:var(--accent);fill:none}
 .fig .bar{fill:var(--accent);opacity:.75}
 .fig .mid{text-anchor:middle}
+sub,sup{line-height:0}
+.fig .hl{fill:none;stroke:var(--accent);stroke-width:2.5}
+.fig .v2{stroke:var(--s2);fill:none}.fig .v2f{fill:var(--s2)}
+.fig .af{fill:var(--accent)}
+.fig .sm{font-size:11.5px}
