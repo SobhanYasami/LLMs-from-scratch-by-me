@@ -85,6 +85,7 @@ Thumbs.db
 graphify-out/
 
 Build-a-LLM.pdf
+NIPS-2017-attention-is-all-you-need-Paper.pdf
 # ---- Hugo site (site/) ----
 site/public/
 site/resources/

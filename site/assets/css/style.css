@@ -211,3 +211,14 @@ td small{color:var(--muted);font-size:12px}
 .anode.side.train{border-color:var(--s2)}
 .anode.side.tune{border-color:var(--s3)}
 @media(max-width:520px){.anat-part{grid-template-columns:1fr}}
+.fig{margin:1.4em 0;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:12px 12px 8px;box-shadow:var(--shadow)}
+.fig svg{display:block;width:100%;height:auto;font:13px var(--sans);direction:ltr}
+.fig figcaption{font:14px/1.5 var(--sans);color:var(--muted);margin-top:6px}
+.fig .bx{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+.fig .bx.hot{fill:var(--accent-soft);stroke:var(--accent)}
+.fig .bx.dim{stroke-dasharray:4 3;fill:var(--code)}
+.fig .t{fill:var(--fg)}.fig .m{fill:var(--muted)}.fig .a{fill:var(--accent)}
+.fig .ln{stroke:var(--muted);stroke-width:1.5;fill:none}
+.fig .ac{stroke:var(--accent);fill:none}
+.fig .bar{fill:var(--accent);opacity:.75}
+.fig .mid{text-anchor:middle}
